@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <style>
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+      min-height: 50vh;
+    }
+    .empty-icon {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .empty-icon i {
+      font-size: 48px;
+      color: #9ca3af;
+    }
+    .empty-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 12px;
+    }
+    .empty-text {
+      font-size: 15px;
+      color: #6b7280;
+      line-height: 1.6;
+      max-width: 320px;
+    }
+    /* Notification cards */
+    .notif-list { padding: 14px 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+    .notif-card {
+      background: #fff; border: 1px solid #eef1f5; border-left: 4px solid #FE5722;
+      border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: relative;
+    }
+    .notif-card.unread { background: #fff8f4; border-left-color: #FE5722; }
+    .notif-card.read { border-left-color: #d1d5db; }
+    .notif-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .notif-title { font-weight: 700; color: #1f2937; font-size: 15px; flex: 1; }
+    .notif-dot { width: 9px; height: 9px; border-radius: 50%; background: #FE5722; flex: 0 0 auto; }
+    .notif-msg { color: #374151; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+    .notif-time { color: #9ca3af; font-size: 12px; margin-top: 8px; }
+    .notif-type {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+      padding: 2px 8px; border-radius: 20px; background: #eef1f5; color: #6b7280;
+    }
+    .notif-type.success { background:#e8f7ee; color:#1e9e5a; }
+    .notif-type.warning { background:#fff4e5; color:#b7791f; }
+    .notif-type.announcement { background:#fdecea; color:#c0392b; }
+  </style>
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+     TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <!-- Back Button -->
+      <a href="profile.html" class="topbar-back">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+
+      <!-- Title -->
+      <div class="topbar-title">Notifications</div>
+
+      <!-- Right side (empty for now) -->
+      <div class="topbar-right"></div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <div class="page-layout">
+    <main class="main-content">
+      <!-- Notifications render here (list or empty state) -->
+      <div id="notifList">
+        <div class="empty-state">
+          <div class="empty-icon"><i class="ri-notification-off-line"></i></div>
+          <h2 class="empty-title">Loading…</h2>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAVIGATION
+  ══════════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="index.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span data-i18n="nav.home">Home</span>
+      </a>
+      <a href="support.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+          <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+          <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+          <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+        </svg>
+        <span data-i18n="nav.services">Services</span>
+      </a>
+      <a href="markets.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span data-i18n="nav.menu">Menu</span>
+      </a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+        <span data-i18n="nav.history">History</span>
+      </a>
+      <a href="profile.html" class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span data-i18n="nav.profile">Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <script src="js/toast-notifications.js"></script>
+
+  <!-- Load + render real notifications -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    (function () {
+      var listEl = document.getElementById('notifList');
+
+      function esc(s) {
+        var d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+      }
+
+      function timeAgo(dateStr) {
+        var d = new Date(dateStr);
+        if (isNaN(d)) return '';
+        var diff = Math.floor((Date.now() - d.getTime()) / 1000);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' hr ago';
+        return d.toLocaleString();
+      }
+
+      function render(items) {
+        if (!items || !items.length) {
+          listEl.className = '';
+          listEl.innerHTML =
+            '<div class="empty-state">' +
+              '<div class="empty-icon"><i class="ri-notification-off-line"></i></div>' +
+              '<h2 class="empty-title">No Notifications Yet</h2>' +
+              '<p class="empty-text">When admin sends you a message or notification, it will appear here.</p>' +
+            '</div>';
+          return;
+        }
+        listEl.className = 'notif-list';
+        listEl.innerHTML = items.map(function (n) {
+          var unread = !(n.is_read === 1 || n.is_read === true);
+          var type = (n.type || 'info').toLowerCase();
+          return (
+            '<div class="notif-card ' + (unread ? 'unread' : 'read') + '">' +
+              '<div class="notif-top">' +
+                (unread ? '<span class="notif-dot"></span>' : '') +
+                '<span class="notif-title">' + esc(n.title) + '</span>' +
+                '<span class="notif-type ' + type + '">' + esc(type) + '</span>' +
+              '</div>' +
+              '<div class="notif-msg">' + esc(n.message) + '</div>' +
+              '<div class="notif-time">' + timeAgo(n.created_at) + '</div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      async function load() {
+        try {
+          var res = await apiRequest('/user/notifications?limit=100');
+          if (res && res.success && res.data) {
+            render(res.data.notifications || []);
+            // Mark all as read now that the page is open, so the bell clears.
+            if ((res.data.unreadCount || 0) > 0) {
+              apiRequest('/user/notifications/read-all', { method: 'PUT' }).catch(function(){});
+            }
+          } else {
+            render([]);
+          }
+        } catch (e) {
+          render([]);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', load);
+    })();
+  </script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>

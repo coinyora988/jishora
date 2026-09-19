@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deposit - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/deposit.css">
+  <link rel="stylesheet" href="css/page-topbar.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <div class="deposit-container">
+    
+    <!-- Header: back arrow · centered title · notifications -->
+    <header class="page-topbar">
+      <div class="page-topbar-inner">
+        <button class="page-topbar-back" onclick="history.back()" aria-label="Go back">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="page-topbar-title" data-i18n="common.deposit">Deposit</div>
+        <div class="page-topbar-right">
+          <a href="notifications.html" class="page-topbar-notif" aria-label="Notifications">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notif-dot" id="notifBadge" style="display:none;"></span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Available Balance -->
+    <div class="balance-card">
+      <div class="balance-label" data-i18n="withdraw.availableBalance">AVAILABLE BALANCE</div>
+      <div class="balance-amount">
+        <i class="fa-solid fa-wallet"></i>
+        <span data-live="availableBalance">--</span> USDT
+      </div>
+      <button class="deposit-icon-btn">
+        <i class="fa-solid fa-arrow-down"></i>
+      </button>
+    </div>
+
+    <!-- Select Network (populated dynamically from admin-configured wallets) -->
+    <div class="section-title" data-i18n="wallet.selectNetwork">SELECT NETWORK</div>
+    <div class="network-selection" id="networkSelection">
+      <div class="network-loading" style="grid-column:1/-1;text-align:center;padding:16px;color:#94a3b8;">Loading networks…</div>
+    </div>
+
+    <!-- Deposit Address Section -->
+    <div class="address-section">
+      <h3 class="address-title">USDT Deposit Address</h3>
+      
+      <!-- QR Code -->
+      <div class="qr-container">
+        <div class="qr-code" id="qrCode">
+          <!-- QR Code will be generated here -->
+        </div>
+      </div>
+
+      <div class="address-label">DEPOSIT ADDRESS</div>
+      
+      <!-- Address Display -->
+      <div class="address-display">
+        <span class="address-text" id="addressText">TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE</span>
+      </div>
+
+      <!-- Copy Button -->
+      <button class="copy-btn">
+        <i class="fa-regular fa-copy"></i>
+        Copy Address
+      </button>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <p class="instruction-text">Please use a digital currency wallet to scan the QR code or copy the address to make a transfer.</p>
+        
+        <div class="warning-box">
+          <i class="fa-solid fa-circle-info"></i>
+          <div class="warning-text">
+            <strong>Note:</strong> Please confirm that the deposited currency matches the address. Otherwise, your assets may be lost.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transfer Information -->
+    <div class="transfer-section">
+      <h3 class="transfer-title">Transfer Information</h3>
+      
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input type="number" step="0.01" min="10" id="depositAmount" class="form-input" placeholder="Enter Deposit Amount (min 10 USDT)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Screenshot</label>
+        <div class="upload-box">
+          <div class="upload-icon">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <div class="upload-text">Click to upload</div>
+          <div class="upload-hint">Support JPG, PNG, WEBP format</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm Button -->
+    <button class="confirm-btn">
+      <i class="fa-solid fa-check-circle"></i>
+      Confirm Deposit
+    </button>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+    <a href="index.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="support.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+        <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+        <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+        <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+      </svg>
+      <span>Services</span>
+    </a>
+    <a href="markets.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
+      </svg>
+      <span>Menu</span>
+    </a>
+    <a href="transactions.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <line x1="10" y1="9" x2="8" y2="9"></line>
+      </svg>
+      <span>History</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>Profile</span>
+    </a>
+    </div>
+  </nav>
+
+  <!-- QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Shared network logos/labels (same set as withdraw) -->
+  <script src="js/network-icons.js"></script>
+  <script>
+    // Deposit networks are configured by the admin (payment_wallets). Each has
+    // its own address; picking a network shows that address + its QR code.
+    let depositNetworks = [];   // [{ network, address, name, currency }]
+    let qrCode = null;
+    let selectedNetwork = null;
+    let selectedAddress = '';
+    let uploadedFile = null;
+
+    // Generate QR Code
+    function generateQRCode(address) {
+      const qrContainer = document.getElementById('qrCode');
+      qrContainer.innerHTML = '';
+      if (!address) return;
+      qrCode = new QRCode(qrContainer, {
+        text: address,
+        width: 160,
+        height: 160,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    // Normalise an admin-entered network label to a known key (trc20/bep20/aptos/erc20).
+    function normaliseNetwork(raw) {
+      const s = String(raw || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (s.includes('trc') || s.includes('tron')) return 'trc20';
+      if (s.includes('bep') || s.includes('bnb') || s.includes('binance') || s.includes('bsc')) return 'bep20';
+      if (s.includes('aptos') || s === 'apt') return 'aptos';
+      if (s.includes('erc') || s.includes('eth')) return 'erc20';
+      return s || 'other';
+    }
+
+    // The 4 networks are ALWAYS shown on the deposit page (like withdraw). The
+    // ADDRESS(es) for each come from the admin panel. When the admin configures
+    // several addresses for a network, the customer sees a DIFFERENT one each
+    // time they open the deposit page (round-robin rotation), so the same
+    // address is not reused for every deposit.
+    const FIXED_NETWORKS = [
+      { key: 'trc20', label: 'TRC20', fee: 1 },
+      { key: 'bep20', label: 'BEP20', fee: 1 },
+      { key: 'aptos', label: 'Aptos', fee: 1 },
+      { key: 'erc20', label: 'ERC20', fee: 5 }
+    ];
+
+    // Cards built from FIXED_NETWORKS, each holding the POOL of admin addresses
+    // for that network plus the one currently chosen (rotated).
+    let networkCardsData = [];
+
+    // Advance the per-network rotation index and return the address to show.
+    // Persisted in localStorage so each page visit moves to the next address.
+    function pickRotatingAddress(key, pool) {
+      if (!pool.length) return '';
+      const storeKey = 'depositAddrIdx_' + key;
+      let idx = parseInt(localStorage.getItem(storeKey) || '0', 10);
+      if (isNaN(idx) || idx < 0) idx = 0;
+      idx = idx % pool.length;
+      const address = pool[idx];
+      // Advance for next time (wraps around the pool).
+      localStorage.setItem(storeKey, String((idx + 1) % pool.length));
+      return address;
+    }
+
+    function renderNetworks() {
+      // Group all active admin addresses by normalised network key.
+      const poolByKey = {};
+      depositNetworks.forEach(function (n) {
+        const k = normaliseNetwork(n.network);
+        if (!poolByKey[k]) poolByKey[k] = [];
+        if (n.address) poolByKey[k].push(n.address);
+      });
+
+      networkCardsData = FIXED_NETWORKS.map(function (net) {
+        const meta = (window.NETWORK_ICONS && window.NETWORK_ICONS[net.key]) || { cls: 'trc', svg: '' };
+        const pool = poolByKey[net.key] || [];
+        return {
+          key: net.key,
+          label: net.label,
+          fee: net.fee,
+          pool: pool,                                  // all admin addresses
+          address: pickRotatingAddress(net.key, pool), // the rotated one to show
+          cls: meta.cls,
+          svg: meta.svg
+        };
+      });
+
+      const wrap = document.getElementById('networkSelection');
+      wrap.innerHTML = networkCardsData.map(function (c, i) {
+        return (
+          '<label class="network-card ' + (i === 0 ? 'active' : '') + '" data-idx="' + i + '">' +
+            '<input type="radio" name="network" value="' + i + '" ' + (i === 0 ? 'checked' : '') + '>' +
+            '<div class="network-icon ' + c.cls + '">' + c.svg + '</div>' +
+            '<div class="network-info">' +
+              '<div class="network-name">' + c.label + '</div>' +
+              '<div class="network-fee">Fee: ' + c.fee + ' USDT</div>' +
+            '</div>' +
+            '<div class="network-check"><i class="fa-solid fa-circle-check"></i></div>' +
+          '</label>'
+        );
+      }).join('');
+
+      wrap.querySelectorAll('.network-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+          wrap.querySelectorAll('.network-card').forEach(function (c) { c.classList.remove('active'); });
+          this.classList.add('active');
+          selectDepositNetwork(parseInt(this.getAttribute('data-idx'), 10));
+        });
+      });
+
+      selectDepositNetwork(0);
+    }
+
+    function selectDepositNetwork(idx) {
+      const c = networkCardsData[idx];
+      if (!c) return;
+      selectedNetwork = c.label;
+      // If this network's pool has more than one address, rotate to the next
+      // one each time the customer switches to it (so it also varies within a
+      // single visit, not just across visits).
+      if (c.pool && c.pool.length > 1) {
+        c.address = pickRotatingAddress(c.key, c.pool);
+      }
+      selectedAddress = c.address || '';
+      document.getElementById('addressText').textContent =
+        selectedAddress || 'Address not set yet — please contact support.';
+      generateQRCode(selectedAddress);
+    }
+
+    // Load networks from the API on page ready.
+    window.addEventListener('DOMContentLoaded', async function () {
+      try {
+        const res = await API.getDepositNetworks();
+        if (res && res.success && Array.isArray(res.data)) {
+          depositNetworks = res.data;
+        }
+      } catch (e) { /* handled by empty render */ }
+      renderNetworks();
+    });
+
+    // Copy address functionality
+    document.querySelector('.copy-btn').addEventListener('click', function() {
+      const address = document.getElementById('addressText').textContent;
+      navigator.clipboard.writeText(address).then(() => {
+        const btn = this;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        btn.style.background = 'var(--c-primary)';
+        btn.style.color = '#fff';
+        
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      });
+    });
+
+    // (Network selection is wired dynamically in renderNetworks above.)
+
+    // Upload file
+    const uploadBox = document.querySelector('.upload-box');
+    uploadBox.addEventListener('click', function() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/jpeg,image/png,image/webp';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          uploadedFile = file;
+          this.querySelector('.upload-text').textContent = file.name;
+          this.querySelector('.upload-icon').innerHTML = '<i class="fa-solid fa-check-circle"></i>';
+          this.style.borderColor = 'var(--c-primary)';
+          this.style.background = 'var(--c-primary-pale)';
+        }
+      };
+      input.click();
+    });
+
+    // Confirm Deposit - Form Validation and Redirect
+    document.querySelector('.confirm-btn').addEventListener('click', async function() {
+      const amountInput = document.getElementById('depositAmount');
+      const amount = parseFloat(amountInput.value);
+
+      // Validate amount
+      if (!amount || amount < 10) {
+        showNotification('Please enter a valid amount (minimum 10 USDT)', 'error');
+        amountInput.focus();
+        return;
+      }
+
+      // Validate screenshot upload
+      if (!uploadedFile) {
+        showNotification('Please upload a payment screenshot', 'error');
+        uploadBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      // Show loading state
+      const btn = this;
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+
+      // Upload the actual screenshot first so the admin can SEE the proof
+      // image (previously only the filename was sent). We store the returned
+      // URL as the deposit's proof_image. If the upload fails we fall back to
+      // the filename so the deposit can still be submitted.
+      let proofRef = uploadedFile.name;
+      try {
+        const token = localStorage.getItem('authToken');
+        const fd = new FormData();
+        fd.append('proof', uploadedFile);
+        const upRes = await fetch(`${API_BASE_URL}/upload/deposit-proof`, {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          body: fd
+        });
+        const upData = await upRes.json();
+        if (upData && upData.success && upData.data && upData.data.proofUrl) {
+          proofRef = upData.data.proofUrl;
+        }
+      } catch (e) { /* fall back to filename */ }
+
+      // Real request. This creates a PENDING transaction only. The balance
+      // does not move until an admin approves it in the admin panel.
+      const response = await API.createDeposit(
+        amount,
+        String(selectedNetwork || 'TRC20').toUpperCase(),
+        proofRef
+      );
+
+      if (!response || !response.success) {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+        btn.style.opacity = '';
+        showNotification(
+          (response && response.message) || 'Deposit request failed',
+          'error'
+        );
+        return;
+      }
+
+      btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Deposit Submitted!';
+      btn.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
+      showNotification('Deposit submitted. Awaiting admin approval.', 'success');
+
+      setTimeout(() => {
+        window.location.href = 'transactions.html';
+      }, 1200);
+    });
+  </script>
+  <!-- Live data: api.js must load before live-data.js -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live-data.js"></script>
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <script src="js/toast-notifications.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>

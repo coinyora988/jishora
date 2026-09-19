@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet Setup - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/wallet-setup.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <script src="js/network-icons.js"></script>
+  <style>
+    /* Withdraw-style network cards for the setup page. */
+    .ws-networks {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .ws-networks .network-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px 12px;
+      cursor: pointer;
+      position: relative;
+      transition: all .2s;
+    }
+    .ws-networks .network-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+    .ws-networks .network-card.active { border-color: #FE5722; background: #fff4ee; }
+    .ws-networks .network-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    }
+    .ws-networks .network-info { flex: 1; min-width: 0; }
+    .ws-networks .network-name { font-weight: 700; font-size: 15px; color: #1f2937; }
+    .ws-networks .network-fee { font-size: 12px; color: #6b7280; }
+    .ws-networks .network-check { color: #FE5722; opacity: 0; flex: 0 0 auto; }
+    .ws-networks .network-card.active .network-check { opacity: 1; }
+    @media (max-width: 640px) {
+      .ws-networks { grid-template-columns: 1fr; }
+    }
+  </style>
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+     TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <!-- Back Button -->
+      <a href="profile.html" class="topbar-back">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+
+      <!-- Title -->
+      <div class="topbar-title">Wallet Setup</div>
+
+      <!-- Right side -->
+      <div class="topbar-right">
+        <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <div class="wallet-setup-container">
+    
+    <!-- Hero Section -->
+    <div class="wallet-hero">
+      <div class="wallet-hero-icon">
+        <i class="ri-wallet-3-line"></i>
+      </div>
+      <h1 class="wallet-hero-title">Setup Your Withdrawal Wallet</h1>
+      <p class="wallet-hero-subtitle">Configure your USDT wallet address for withdrawals</p>
+    </div>
+
+    <!-- Wallet Form -->
+    <div class="wallet-form-section">
+      
+      <!-- Network Selection -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="ri-links-line"></i>
+          Select Network
+        </label>
+        <div class="network-selection ws-networks">
+          <label class="network-card active" data-network="trc20">
+            <div class="network-icon trc" id="wsIconTrc"></div>
+            <div class="network-info">
+              <div class="network-name">TRC20</div>
+              <div class="network-fee">Recommended</div>
+            </div>
+            <div class="network-check"><i class="fa-solid fa-circle-check"></i></div>
+          </label>
+          <label class="network-card" data-network="bep20">
+            <div class="network-icon bnb" id="wsIconBnb"></div>
+            <div class="network-info">
+              <div class="network-name">BEP20</div>
+              <div class="network-fee">BNB Chain</div>
+            </div>
+            <div class="network-check"><i class="fa-solid fa-circle-check"></i></div>
+          </label>
+          <label class="network-card" data-network="aptos">
+            <div class="network-icon aptos" id="wsIconAptos"></div>
+            <div class="network-info">
+              <div class="network-name">Aptos</div>
+              <div class="network-fee">APT</div>
+            </div>
+            <div class="network-check"><i class="fa-solid fa-circle-check"></i></div>
+          </label>
+          <label class="network-card" data-network="erc20">
+            <div class="network-icon erc" id="wsIconErc"></div>
+            <div class="network-info">
+              <div class="network-name">ERC20</div>
+              <div class="network-fee">Ethereum</div>
+            </div>
+            <div class="network-check"><i class="fa-solid fa-circle-check"></i></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Wallet Address Input -->
+      <div class="form-group">
+        <label class="form-label" for="walletAddress">
+          <i class="ri-wallet-line"></i>
+          Wallet Address
+        </label>
+        <div class="wallet-input-wrapper">
+          <input 
+            type="text" 
+            id="walletAddress" 
+            class="wallet-input" 
+            placeholder="Enter your USDT wallet address"
+            autocomplete="off"
+          >
+          <button class="paste-button" id="pasteBtn">
+            <i class="ri-clipboard-line"></i>
+          </button>
+        </div>
+        <div class="input-helper" id="addressHelper">
+          <i class="ri-information-line"></i>
+          <span>Please double-check your wallet address. Wrong address = lost funds!</span>
+        </div>
+      </div>
+
+      <!-- Important Notice -->
+      <div class="wallet-notice">
+        <div class="notice-header">
+          <i class="ri-alert-line"></i>
+          <span>Important Notice</span>
+        </div>
+        <ul class="notice-list">
+          <li>Once configured, this wallet will be used for all future withdrawals</li>
+          <li>Ensure your wallet supports the selected network (TRC20, BEP20, Aptos, or ERC20)</li>
+          <li>Double-check the address - transactions cannot be reversed</li>
+        </ul>
+      </div>
+
+      <!-- Save Button -->
+      <button class="wallet-save-btn" id="saveWalletBtn">
+        <span class="btn-content">
+          <i class="ri-save-line"></i>
+          <span>Save Wallet Configuration</span>
+        </span>
+        <span class="btn-loader">
+          <span class="loader-spinner"></span>
+          <span>Saving...</span>
+        </span>
+      </button>
+
+    </div>
+
+    <!-- Already Configured Section (Hidden by default) -->
+    <div class="wallet-configured-section" id="configuredSection" style="display: none;">
+      <div class="configured-card">
+        <div class="configured-icon">
+          <i class="ri-checkbox-circle-fill"></i>
+        </div>
+        <h3 class="configured-title">Wallet Already Configured</h3>
+        <div class="configured-details">
+          <div class="configured-row">
+            <span class="configured-label">Network:</span>
+            <span class="configured-value" id="configuredNetwork">TRC20</span>
+          </div>
+          <div class="configured-row">
+            <span class="configured-label">Wallet Address:</span>
+            <span class="configured-value address" id="configuredAddress">TXn...abc123</span>
+          </div>
+        </div>
+        <button class="change-wallet-btn" id="changeWalletBtn">
+          <i class="ri-edit-line"></i>
+          <span>Change Wallet Address</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Confirmation Popup Modal -->
+  <div class="confirm-popup-overlay" id="confirmPopup" style="display: none;">
+    <div class="confirm-popup">
+      <div class="confirm-popup-icon">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <h3 class="confirm-popup-title">Change Wallet Address</h3>
+      <p class="confirm-popup-message">Are you sure you want to change your wallet address?</p>
+      <div class="confirm-popup-buttons">
+        <button class="confirm-popup-btn cancel-btn" onclick="closeConfirmPopup()">Cancel</button>
+        <button class="confirm-popup-btn ok-btn" onclick="confirmChangeWallet()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAVIGATION
+  ══════════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="index.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="support.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+          <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+          <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+          <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+        </svg>
+        <span>Services</span>
+      </a>
+      <a href="markets.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>Menu</span>
+      </a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+        <span>History</span>
+      </a>
+      <a href="profile.html" class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <script>
+    // Check if wallet is already configured
+    const walletConfig = JSON.parse(localStorage.getItem('walletConfig'));
+    
+    const formSection = document.querySelector('.wallet-form-section');
+    const configuredSection = document.getElementById('configuredSection');
+    const walletAddressInput = document.getElementById('walletAddress');
+    const saveBtn = document.getElementById('saveWalletBtn');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const changeWalletBtn = document.getElementById('changeWalletBtn');
+    const networkOptions = document.querySelectorAll('.network-card');
+
+    let selectedNetwork = 'trc20';
+
+    // Fill the network card logos from the shared icon set.
+    (function fillWsIcons() {
+      const map = { wsIconTrc: 'trc20', wsIconBnb: 'bep20', wsIconAptos: 'aptos', wsIconErc: 'erc20' };
+      if (!window.NETWORK_ICONS) return;
+      Object.keys(map).forEach(function (id) {
+        const el = document.getElementById(id);
+        const meta = window.NETWORK_ICONS[map[id]];
+        if (el && meta) el.innerHTML = meta.svg;
+      });
+    })();
+
+    // Friendly label per network for the "configured" summary.
+    const NET_LABEL = {
+      trc20: 'TRC20 (Tron)', bep20: 'BEP20 (BNB Chain)',
+      aptos: 'Aptos', erc20: 'ERC20 (Ethereum)'
+    };
+
+    // Show configured wallet or setup form
+    if (walletConfig && walletConfig.address) {
+      showConfiguredWallet();
+    }
+
+    function showConfiguredWallet() {
+      formSection.style.display = 'none';
+      configuredSection.style.display = 'block';
+      
+      document.getElementById('configuredNetwork').textContent =
+        NET_LABEL[walletConfig.network] || (walletConfig.network || '').toUpperCase();
+      
+      const address = walletConfig.address;
+      const masked = address.substring(0, 6) + '...' + address.substring(address.length - 6);
+      document.getElementById('configuredAddress').textContent = masked;
+      document.getElementById('configuredAddress').title = address;
+    }
+
+    function showSetupForm() {
+      formSection.style.display = 'block';
+      configuredSection.style.display = 'none';
+      
+      // Pre-fill if editing
+      if (walletConfig) {
+        selectedNetwork = walletConfig.network;
+        walletAddressInput.value = walletConfig.address;
+        
+        networkOptions.forEach(opt => {
+          opt.classList.toggle('active', opt.dataset.network === selectedNetwork);
+        });
+      }
+    }
+
+    // Network selection
+    networkOptions.forEach(option => {
+      option.addEventListener('click', function() {
+        networkOptions.forEach(opt => opt.classList.remove('active'));
+        this.classList.add('active');
+        selectedNetwork = this.dataset.network;
+      });
+    });
+
+    // Paste button
+    pasteBtn.addEventListener('click', async function() {
+      try {
+        const text = await navigator.clipboard.readText();
+        walletAddressInput.value = text.trim();
+        walletAddressInput.focus();
+        
+        // Visual feedback
+        pasteBtn.innerHTML = '<i class="ri-check-line"></i>';
+        setTimeout(() => {
+          pasteBtn.innerHTML = '<i class="ri-clipboard-line"></i>';
+        }, 2000);
+      } catch (err) {
+        alert('Failed to paste. Please paste manually.');
+      }
+    });
+
+    // Validate wallet address
+    function validateAddress(address, network) {
+      if (!address || address.length < 20) {
+        return { valid: false, message: 'Address is too short' };
+      }
+      
+      if (network === 'trc20') {
+        if (!address.startsWith('T')) {
+          return { valid: false, message: 'TRC20 address must start with "T"' };
+        }
+        if (address.length !== 34) {
+          return { valid: false, message: 'TRC20 address must be 34 characters' };
+        }
+      } else if (network === 'erc20') {
+        if (!address.startsWith('0x')) {
+          return { valid: false, message: 'ERC20 address must start with "0x"' };
+        }
+        if (address.length !== 42) {
+          return { valid: false, message: 'ERC20 address must be 42 characters' };
+        }
+      }
+      
+      return { valid: true };
+    }
+
+    // Save wallet configuration
+    saveBtn.addEventListener('click', function() {
+      const address = walletAddressInput.value.trim();
+      
+      if (!address) {
+        alert('Please enter a wallet address');
+        walletAddressInput.focus();
+        return;
+      }
+
+      // Validate address
+      const validation = validateAddress(address, selectedNetwork);
+      if (!validation.valid) {
+        alert(validation.message);
+        walletAddressInput.focus();
+        return;
+      }
+
+      // Show loading
+      saveBtn.classList.add('loading');
+      saveBtn.disabled = true;
+
+      // Simulate API call
+      setTimeout(() => {
+        // Save to localStorage
+        const config = {
+          network: selectedNetwork,
+          address: address,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem('walletConfig', JSON.stringify(config));
+
+        // Remove loading
+        saveBtn.classList.remove('loading');
+        saveBtn.disabled = false;
+
+        // Show success notification
+        showSuccessNotification();
+
+        // Refresh view
+        setTimeout(() => {
+          location.reload();
+        }, 1500);
+      }, 2000);
+    });
+
+    // Change wallet button
+    changeWalletBtn.addEventListener('click', function() {
+      showConfirmPopup();
+    });
+
+    // Confirmation popup functions
+    function showConfirmPopup() {
+      document.getElementById('confirmPopup').style.display = 'flex';
+    }
+
+    function closeConfirmPopup() {
+      document.getElementById('confirmPopup').style.display = 'none';
+    }
+
+    function confirmChangeWallet() {
+      closeConfirmPopup();
+      showSetupForm();
+    }
+
+    // Success notification
+    function showSuccessNotification() {
+      const notification = document.createElement('div');
+      notification.className = 'wallet-notification success';
+      notification.innerHTML = `
+        <i class="ri-checkbox-circle-fill"></i>
+        <div>
+          <div class="notification-title">Wallet Configured!</div>
+          <div class="notification-text">Your withdrawal wallet has been set successfully</div>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => notification.classList.add('show'), 100);
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+  </script>
+
+  <script src="js/toast-notifications.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>

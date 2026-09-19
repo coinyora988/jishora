@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In – Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png" />
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css" />
+  <link rel="stylesheet" href="css/page-loader.css" />
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* Page-specific tweaks */
+    .floating-shapes {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.06;
+      animation: floatShape linear infinite;
+    }
+    .shape:nth-child(1){ width:120px;height:120px;background:var(--primary);top:10%;left:8%;animation-duration:12s; }
+    .shape:nth-child(2){ width:80px;height:80px;background:var(--accent);top:60%;left:5%;animation-duration:9s;animation-delay:-3s; }
+    .shape:nth-child(3){ width:160px;height:160px;background:var(--secondary);top:20%;right:6%;animation-duration:15s;animation-delay:-6s; }
+    .shape:nth-child(4){ width:60px;height:60px;background:var(--primary);bottom:15%;right:10%;animation-duration:8s;animation-delay:-2s; }
+    .shape:nth-child(5){ width:100px;height:100px;background:var(--accent);bottom:30%;left:50%;animation-duration:11s;animation-delay:-5s; }
+
+    /* Input icon color fix (using FA) */
+    .input-icon-fa {
+      position: absolute;
+      left: 16px;
+      font-size: 0.95rem;
+      color: var(--primary);
+      pointer-events: none;
+      transition: var(--transition);
+    }
+    .input-wrap:focus-within .input-icon-fa { color: var(--primary-dark); }
+    .input-wrap input { padding-left: 46px; }
+
+    /* Captcha refresh tooltip */
+    .captcha-box .refresh-tip {
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      color: var(--text-light);
+      white-space: nowrap;
+      opacity: 0;
+      transition: var(--transition);
+    }
+    .captcha-box:hover .refresh-tip { opacity: 1; }
+
+    /* Animated underline on title */
+    .auth-title h1 {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* Trust badges */
+    .trust-row {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 6px;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+    .trust-item i { color: #22c55e; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Floating decorative shapes -->
+  <div class="floating-shapes" aria-hidden="true">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+  </div>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <!-- ── Header ── -->
+      <div class="card-header">
+        <a href="index.html" class="logo-area" aria-label="Jishora Home">
+          <img src="images/logo/logo.png" alt="Jishora Logo" />
+        </a>
+        <div class="lang-selector" id="langSelector">
+          <button type="button" class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Select language">
+            <img class="lang-flag" id="langFlag" src="https://flagcdn.com/w40/us.png" alt="US flag" />
+            <span id="langLabel">English</span>
+            <i class="fa-solid fa-chevron-down lang-chevron"></i>
+          </button>
+          <div class="lang-dropdown" role="listbox" id="langDropdown">
+            <button type="button" class="lang-option active" data-lang="en" data-flag="https://flagcdn.com/w40/us.png" data-flag-alt="US flag" data-label="English" role="option">
+              <img class="opt-flag" src="https://flagcdn.com/w40/us.png" alt="US flag" />
+              English
+              <i class="fa-solid fa-check opt-check"></i>
+            </button>
+            <button type="button" class="lang-option" data-lang="ar" data-flag="https://flagcdn.com/w40/sa.png" data-flag-alt="Saudi Arabia flag" data-label="العربية" role="option">
+              <img class="opt-flag" src="https://flagcdn.com/w40/sa.png" alt="Saudi Arabia flag" />
+              العربية
+              <i class="fa-solid fa-check opt-check"></i>
+            </button>
+            <button type="button" class="lang-option" data-lang="fr" data-flag="https://flagcdn.com/w40/fr.png" data-flag-alt="France flag" data-label="Français" role="option">
+              <img class="opt-flag" src="https://flagcdn.com/w40/fr.png" alt="France flag" />
+              Français
+              <i class="fa-solid fa-check opt-check"></i>
+            </button>
+            <button type="button" class="lang-option" data-lang="es" data-flag="https://flagcdn.com/w40/es.png" data-flag-alt="Spain flag" data-label="Español" role="option">
+              <img class="opt-flag" src="https://flagcdn.com/w40/es.png" alt="Spain flag" />
+              Español
+              <i class="fa-solid fa-check opt-check"></i>
+            </button>
+            <button type="button" class="lang-option" data-lang="de" data-flag="https://flagcdn.com/w40/de.png" data-flag-alt="Germany flag" data-label="Deutsch" role="option">
+              <img class="opt-flag" src="https://flagcdn.com/w40/de.png" alt="Germany flag" />
+              Deutsch
+              <i class="fa-solid fa-check opt-check"></i>
+            </button>
+            <button type="button" class="lang-option" data-lang="tr" data-flag="https://flagcdn.com/w40/tr.png" data-flag-alt="Turkey flag" data-label="Türkçe" role="option">
+              <img class="opt-flag" src="https://flagcdn.com/w40/tr.png" alt="Turkey flag" />
+              Türkçe
+              <i class="fa-solid fa-check opt-check"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Title ── -->
+      <div class="auth-title">
+        <h1 data-i18n="login.title">Welcome Back</h1>
+        <div class="title-divider"></div>
+        <p data-i18n="login.subtitle">Sign in to your account</p>
+      </div>
+
+      <!-- ── Form ── -->
+      <form class="auth-form" id="loginForm" novalidate>
+
+        <!-- Email -->
+        <div class="field-group" id="emailGroup">
+          <label class="field-label" for="email" data-i18n="login.emailLabel">Username or Email</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-envelope input-icon-fa" aria-hidden="true"></i>
+            <input
+              type="text"
+              id="email"
+              name="email"
+              placeholder="Username or Email"
+              autocomplete="email"
+              required
+            />
+          </div>
+          <span class="field-error" id="emailError">Please enter your username or email address.</span>
+        </div>
+
+        <!-- Password -->
+        <div class="field-group" id="passwordGroup">
+          <label class="field-label" for="password" data-i18n="login.passwordLabel">Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock input-icon-fa" aria-hidden="true"></i>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+            />
+            <button type="button" class="pwd-toggle" id="togglePwd" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+          <span class="field-error" id="passwordError">Password cannot be empty.</span>
+        </div>
+
+        <!-- Captcha -->
+        <div class="field-group" id="captchaGroup">
+          <label class="field-label" for="captcha">Verification Code</label>
+          <div class="captcha-row">
+            <div class="input-wrap">
+              <i class="fa-solid fa-shield-halved input-icon-fa" aria-hidden="true"></i>
+              <input
+                type="text"
+                id="captcha"
+                name="captcha"
+                placeholder="Enter code"
+                maxlength="6"
+                autocomplete="off"
+                required
+              />
+            </div>
+            <div class="captcha-box" id="captchaBox" role="button" tabindex="0" aria-label="Refresh captcha code" title="Click to refresh">
+              <span class="captcha-code" id="captchaCode">6868</span>
+              <span class="refresh-tip">Click to refresh</span>
+            </div>
+          </div>
+          <span class="field-error" id="captchaError">Please enter the verification code.</span>
+          <span class="captcha-hint">
+            <i class="fa-solid fa-rotate-right" style="font-size:0.65rem;margin-right:3px;"></i>
+            Click the code to refresh
+          </span>
+        </div>
+
+        <!-- Remember / Forgot -->
+        <div class="options-row">
+          <label class="remember-label">
+            <input type="checkbox" id="remember" name="remember" />
+            <span class="custom-check">
+              <svg viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polyline points="1,5 4.5,8.5 11,1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span data-i18n="common.rememberMe">Remember me</span>
+          </label>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-submit" id="loginBtn">
+          <i class="fa-solid fa-right-to-bracket" style="margin-right:8px;"></i>
+          <span data-i18n="login.signInButton">Sign In</span>
+        </button>
+
+      </form>
+
+      <!-- Footer link -->
+      <div class="auth-footer">
+        <span data-i18n="login.noAccount">Don't have an account?</span> <a href="register.html" data-i18n="login.signUp">Sign Up</a>
+      </div>
+
+    </div><!-- /.auth-card -->
+
+  </div><!-- /.auth-wrapper -->
+
+  <script src="js/page-loader.js"></script>
+  <script src="js/language-system.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <!-- Load the toast system AFTER api.js so its centered showNotification wins
+       (api.js defines a plain, unpositioned showNotification that otherwise
+       overrode the toast and made messages float beside the form). -->
+  <script src="js/toast-notifications.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/auth-page-handler.js"></script>
+</body>
+</html>
+

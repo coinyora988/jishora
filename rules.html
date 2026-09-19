@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platform Rules - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/info-page.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+     TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <!-- Back Button -->
+      <a href="index.html" class="topbar-back">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+
+      <!-- Title -->
+      <div class="topbar-title">Platform Rules</div>
+
+      <!-- Right side -->
+      <div class="topbar-right">
+        <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <div class="info-container">
+    
+    <!-- Hero Section -->
+    <div class="info-hero">
+      <div class="info-hero-icon">
+        <i class="ri-file-list-3-line"></i>
+      </div>
+      <h1 class="info-hero-title">Platform Rules</h1>
+      <p class="info-hero-subtitle">Platform Rules & User Guidelines</p>
+    </div>
+
+    <!-- Content Section -->
+    <div class="info-content">
+      
+      <!-- General Rules -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-shield-check-line"></i>
+          General Rules
+        </h2>
+        
+        <div class="info-benefits">
+          <div class="info-benefit">
+            <div class="info-benefit-icon primary">
+              <i class="ri-user-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">One Account Per User</h4>
+              <p class="info-benefit-text">Each user is allowed only one account. Multiple accounts will be suspended.</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon success">
+              <i class="ri-shield-user-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Account Security</h4>
+              <p class="info-benefit-text">Keep your login credentials secure. Never share your password with anyone.</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon warning">
+              <i class="ri-verified-badge-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Real Information</h4>
+              <p class="info-benefit-text">Provide accurate personal information during registration and verification.</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon secondary">
+              <i class="ri-user-forbid-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">No Fraudulent Activity</h4>
+              <p class="info-benefit-text">Any attempt to manipulate or cheat the system will result in permanent ban.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task Rules -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-task-line"></i>
+          Task Completion Rules
+        </h2>
+        
+        <div class="info-steps">
+          <div class="info-step">
+            <div class="info-step-number">1</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Complete Tasks Honestly</h3>
+              <p class="info-step-text">Follow all task instructions carefully and complete them genuinely. Fake submissions will be detected and rejected.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">2</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Time Limits</h3>
+              <p class="info-step-text">Complete grabbed tasks within the specified time limit. Expired tasks will be automatically cancelled.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">3</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Daily Task Limits</h3>
+              <p class="info-step-text">You can complete up to 10 tasks per day based on your VIP level and account balance.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">4</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Submission Verification</h3>
+              <p class="info-step-text">All task submissions are verified. Provide accurate proof and screenshots when required.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Withdrawal Rules -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-wallet-3-line"></i>
+          Deposit & Withdrawal Rules
+        </h2>
+        
+        <div class="info-benefits">
+          <div class="info-benefit">
+            <div class="info-benefit-icon success">
+              <i class="ri-download-cloud-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Minimum Deposit: 10 USDT</h4>
+              <p class="info-benefit-text">The minimum deposit amount is 10 USDT (TRC20, BEP20, Aptos, or ERC20).</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon primary">
+              <i class="ri-upload-cloud-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Minimum Withdrawal: 10 USDT</h4>
+              <p class="info-benefit-text">You can withdraw a minimum of 10 USDT to your wallet.</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon warning">
+              <i class="ri-time-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Processing Time</h4>
+              <p class="info-benefit-text">The withdrawal process is completed within 10–15 minutes. In most cases, it is completed instantly.</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon secondary">
+              <i class="ri-shield-check-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Wallet Verification</h4>
+              <p class="info-benefit-text">Ensure your withdrawal wallet address is correct. Transactions cannot be reversed.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div class="info-cta">
+        <div class="info-cta-content">
+          <h3 class="info-cta-title">Have Questions?</h3>
+          <p class="info-cta-text">Contact our customer support team for any clarifications</p>
+        </div>
+        <a href="support.html" class="info-cta-button">
+          <span>Contact Support</span>
+          <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAVIGATION
+  ══════════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="index.html" class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="support.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+          <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+          <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+          <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+        </svg>
+        <span>Services</span>
+      </a>
+      <a href="markets.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>Menu</span>
+      </a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+        <span>History</span>
+      </a>
+      <a href="profile.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
+

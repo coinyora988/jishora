@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Profile - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/profile-edit.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <!-- Back Button -->
+      <a href="profile.html" class="topbar-back">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+
+      <!-- Title -->
+      <div class="topbar-title">Edit Profile</div>
+
+      <!-- Right side -->
+      <div class="topbar-right">
+        <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <div class="profile-edit-container">
+    
+    <!-- Profile Picture Section -->
+    <div class="profile-picture-section">
+      <div class="picture-label">Profile Picture</div>
+      <div class="picture-upload-area">
+        <div class="current-avatar" id="currentAvatar">
+          <img id="avatarPreview" style="display: none;" alt="Profile">
+          <div class="avatar-letter" id="avatarLetter">?</div>
+        </div>
+        <button class="upload-picture-btn" id="uploadPictureBtn">
+          <i class="ri-camera-line"></i>
+          <span>Change Photo</span>
+        </button>
+        <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+        <div class="picture-hint">JPG, PNG or GIF. Max size 5MB</div>
+      </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="edit-form">
+      
+      <!-- Username -->
+      <div class="form-group">
+        <label class="form-label" for="username">
+          <i class="ri-user-3-line"></i>
+          <span data-i18n="profileEdit.username">Username</span>
+        </label>
+        <input 
+          type="text" 
+          id="username" 
+          class="form-input" 
+          data-live="username"
+          placeholder="Enter your username"
+        >
+      </div>
+
+      <!-- Email (readonly) -->
+      <div class="form-group">
+        <label class="form-label" for="email">
+          <i class="ri-mail-line"></i>
+          <span data-i18n="profileEdit.email">Email Address</span>
+        </label>
+        <input 
+          type="email" 
+          id="email" 
+          class="form-input" 
+          data-live="email"
+          placeholder="your@email.com"
+          readonly
+        >
+        <div class="input-hint">
+          <i class="ri-information-line"></i>
+          Email cannot be changed
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Change Password Section -->
+    <div class="password-section">
+      <div class="section-header" id="togglePasswordSection">
+        <div class="section-icon-wrapper">
+          <i class="ri-lock-password-line"></i>
+        </div>
+        <h3 class="section-title" data-i18n="profileEdit.passwordSection">Change Password</h3>
+        <button class="toggle-password-btn">
+          <span id="togglePasswordText">Show</span>
+          <i class="ri-arrow-down-s-line" id="togglePasswordIcon"></i>
+        </button>
+      </div>
+
+      <div class="password-form" id="passwordForm" style="display: none;">
+        
+        <!-- Current Password -->
+        <div class="form-group">
+          <label class="form-label" for="currentPassword">
+            <i class="ri-lock-line"></i>
+            Current Password
+          </label>
+          <div class="password-input-wrapper">
+            <input 
+              type="password" 
+              id="currentPassword" 
+              class="form-input" 
+              placeholder="Enter current password"
+            >
+            <button type="button" class="toggle-visibility-btn" data-target="currentPassword">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- New Password -->
+        <div class="form-group">
+          <label class="form-label" for="newPassword">
+            <i class="ri-lock-line"></i>
+            New Password
+          </label>
+          <div class="password-input-wrapper">
+            <input 
+              type="password" 
+              id="newPassword" 
+              class="form-input" 
+              placeholder="Enter new password"
+            >
+            <button type="button" class="toggle-visibility-btn" data-target="newPassword">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+          <div class="password-strength" id="passwordStrength">
+            <div class="strength-bars">
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+            </div>
+            <div class="strength-text">Password strength: <span id="strengthText">-</span></div>
+          </div>
+        </div>
+
+        <!-- Confirm New Password -->
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">
+            <i class="ri-lock-line"></i>
+            Confirm New Password
+          </label>
+          <div class="password-input-wrapper">
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              class="form-input" 
+              placeholder="Confirm new password"
+            >
+            <button type="button" class="toggle-visibility-btn" data-target="confirmPassword">
+              <i class="ri-eye-line"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Password Requirements -->
+        <div class="password-requirements">
+          <div class="requirement-title">Password must contain:</div>
+          <div class="requirement-item" id="req-length">
+            <i class="ri-close-circle-line"></i>
+            <span>At least 8 characters</span>
+          </div>
+          <div class="requirement-item" id="req-uppercase">
+            <i class="ri-close-circle-line"></i>
+            <span>One uppercase letter</span>
+          </div>
+          <div class="requirement-item" id="req-lowercase">
+            <i class="ri-close-circle-line"></i>
+            <span>One lowercase letter</span>
+          </div>
+          <div class="requirement-item" id="req-number">
+            <i class="ri-close-circle-line"></i>
+            <span>One number</span>
+          </div>
+        </div>
+
+        <!-- Change Password Button -->
+        <button class="change-password-btn" id="changePasswordBtn">
+          <span class="btn-content">
+            <i class="ri-lock-unlock-line"></i>
+            <span>Change Password</span>
+          </span>
+          <span class="btn-loader">
+            <span class="loader-spinner"></span>
+            <span>Updating...</span>
+          </span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Save Profile Section -->
+    <div class="edit-form save-profile-section">
+
+      <!-- Save Button -->
+      <button class="save-btn" id="saveBtn">
+        <span class="btn-content">
+          <i class="ri-save-line"></i>
+          <span>Save Changes</span>
+        </span>
+        <span class="btn-loader">
+          <span class="loader-spinner"></span>
+          <span>Saving...</span>
+        </span>
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="index.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="support.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+          <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+          <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+          <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+        </svg>
+        <span>Services</span>
+      </a>
+      <a href="markets.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>Menu</span>
+      </a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+        <span>History</span>
+      </a>
+      <a href="profile.html" class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Live data. Loaded before the inline script below so that this page's own
+       showNotification (which matches its CSS) takes precedence over the
+       generic one in api.js. -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live-data.js"></script>
+  <script src="js/notif-badge.js"></script>
+
+  <script>
+    // Username and email are bound from the API by js/live-data.js.
+    // The avatar is uploaded to the server, so it is loaded from there too.
+    const uploadBtn = document.getElementById('uploadPictureBtn');
+    const fileInput = document.getElementById('profilePictureInput');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const avatarLetter = document.getElementById('avatarLetter');
+
+    function showAvatar(src) {
+      avatarPreview.src = src;
+      avatarPreview.style.display = 'block';
+      // Fill the circle neatly instead of overflowing/showing the orange bg.
+      avatarPreview.style.width = '100%';
+      avatarPreview.style.height = '100%';
+      avatarPreview.style.objectFit = 'cover';
+      avatarPreview.style.borderRadius = '50%';
+      avatarLetter.style.display = 'none';
+      // If the image ever fails to load, fall back to the initial letter.
+      avatarPreview.onerror = function () {
+        avatarPreview.style.display = 'none';
+        avatarLetter.style.display = 'flex';
+      };
+    }
+
+    // Build a full, cache-busted URL from the stored (relative) avatar path.
+    function fullAvatarUrl(raw) {
+      if (!raw) return '';
+      const origin = API_BASE_URL.replace(/\/api\/?$/, '');
+      const url = /^https?:\/\//i.test(raw) ? raw : origin + raw;
+      return url + (url.indexOf('?') === -1 ? '?t=' + Date.now() : '');
+    }
+
+    document.addEventListener('jishora:data-loaded', (event) => {
+      const user = event.detail.user || {};
+      // Always set the fallback initial from the real username (not a
+      // hardcoded "S"), so with no photo it shows e.g. "J" for jack11.
+      avatarLetter.textContent = (user.username || '?').charAt(0).toUpperCase();
+      if (user.avatarUrl) {
+        showAvatar(fullAvatarUrl(user.avatarUrl));
+      }
+    });
+
+    uploadBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Mirrors the server-side limits in uploadRoutes.js so the user gets
+      // instant feedback instead of waiting for a rejected upload.
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('Image must be smaller than 5MB', 'error');
+        fileInput.value = '';
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        showNotification('Please choose an image file', 'error');
+        fileInput.value = '';
+        return;
+      }
+
+      // Optimistic local preview while the upload is in flight.
+      const reader = new FileReader();
+      reader.onload = (ev) => showAvatar(ev.target.result);
+      reader.readAsDataURL(file);
+
+      // Real upload. multipart/form-data, so the Content-Type header must be
+      // left unset for the browser to add the correct multipart boundary.
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const token = localStorage.getItem('authToken');
+      try {
+        const response = await fetch(`${API_BASE_URL}/upload/avatar`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          showNotification(result.message || 'Could not upload picture', 'error');
+          return;
+        }
+
+        // Show the real saved image from the server (cache-busted) so the
+        // preview matches what other pages will load.
+        if (result.data && result.data.avatarUrl) {
+          showAvatar(fullAvatarUrl(result.data.avatarUrl));
+        }
+        showNotification('Profile picture updated', 'success');
+      } catch (err) {
+        showNotification('Upload failed. Please check your connection.', 'error');
+      } finally {
+        fileInput.value = '';
+      }
+    });
+
+    // Copy Invitation Code - REMOVED (field no longer exists)
+
+    // Toggle Password Section
+    const togglePasswordSection = document.getElementById('togglePasswordSection');
+    const passwordForm = document.getElementById('passwordForm');
+    const togglePasswordText = document.getElementById('togglePasswordText');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+    togglePasswordSection.addEventListener('click', (e) => {
+      // Prevent toggle if clicking on the button itself
+      if (e.target.closest('.toggle-password-btn') && e.target !== togglePasswordSection) {
+        return;
+      }
+      
+      const isHidden = passwordForm.style.display === 'none';
+      passwordForm.style.display = isHidden ? 'block' : 'none';
+      togglePasswordText.textContent = isHidden ? 'Hide' : 'Show';
+      togglePasswordIcon.className = isHidden ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line';
+    });
+
+    // Also allow button click
+    document.querySelector('.toggle-password-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = passwordForm.style.display === 'none';
+      passwordForm.style.display = isHidden ? 'block' : 'none';
+      togglePasswordText.textContent = isHidden ? 'Hide' : 'Show';
+      togglePasswordIcon.className = isHidden ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line';
+    });
+
+    // Toggle Password Visibility
+    document.querySelectorAll('.toggle-visibility-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        const icon = this.querySelector('i');
+        
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.className = 'ri-eye-off-line';
+        } else {
+          input.type = 'password';
+          icon.className = 'ri-eye-line';
+        }
+      });
+    });
+
+    // Password Strength Checker
+    const newPasswordInput = document.getElementById('newPassword');
+    const strengthBars = document.querySelectorAll('.strength-bar');
+    const strengthText = document.getElementById('strengthText');
+
+    newPasswordInput.addEventListener('input', function() {
+      const password = this.value;
+      let strength = 0;
+      
+      // Check requirements
+      const hasLength = password.length >= 8;
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      
+      // Update requirement indicators
+      updateRequirement('req-length', hasLength);
+      updateRequirement('req-uppercase', hasUppercase);
+      updateRequirement('req-lowercase', hasLowercase);
+      updateRequirement('req-number', hasNumber);
+      
+      // Calculate strength
+      if (hasLength) strength++;
+      if (hasUppercase) strength++;
+      if (hasLowercase) strength++;
+      if (hasNumber) strength++;
+      if (password.length >= 12) strength++;
+      if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+      
+      // Update strength display
+      const strengthLevel = Math.min(Math.floor(strength / 1.5), 4);
+      const strengthLabels = ['-', 'Weak', 'Fair', 'Good', 'Strong'];
+      const strengthColors = ['#cbd5e1', '#ef4444', '#f59e0b', '#10b981', '#059669'];
+      
+      strengthText.textContent = strengthLabels[strengthLevel];
+      strengthText.style.color = strengthColors[strengthLevel];
+      
+      strengthBars.forEach((bar, index) => {
+        if (index < strengthLevel) {
+          bar.classList.add('active');
+          bar.style.background = strengthColors[strengthLevel];
+        } else {
+          bar.classList.remove('active');
+          bar.style.background = '';
+        }
+      });
+    });
+
+    function updateRequirement(id, met) {
+      const el = document.getElementById(id);
+      const icon = el.querySelector('i');
+      if (met) {
+        el.classList.add('met');
+        icon.className = 'ri-checkbox-circle-fill';
+      } else {
+        el.classList.remove('met');
+        icon.className = 'ri-close-circle-line';
+      }
+    }
+
+    // Change Password
+    document.getElementById('changePasswordBtn').addEventListener('click', async function() {
+      const currentPassword = document.getElementById('currentPassword').value.trim();
+      const newPassword = document.getElementById('newPassword').value.trim();
+      const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+      // Validation
+      if (!currentPassword) {
+        showNotification('Please enter your current password', 'error');
+        return;
+      }
+
+      if (!newPassword) {
+        showNotification('Please enter a new password', 'error');
+        return;
+      }
+
+      // Check password requirements
+      if (newPassword.length < 8) {
+        showNotification('Password must be at least 8 characters', 'error');
+        return;
+      }
+
+      if (!/[A-Z]/.test(newPassword)) {
+        showNotification('Password must contain an uppercase letter', 'error');
+        return;
+      }
+
+      if (!/[a-z]/.test(newPassword)) {
+        showNotification('Password must contain a lowercase letter', 'error');
+        return;
+      }
+
+      if (!/[0-9]/.test(newPassword)) {
+        showNotification('Password must contain a number', 'error');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showNotification('Passwords do not match', 'error');
+        return;
+      }
+
+      if (currentPassword === newPassword) {
+        showNotification('New password must be different from current password', 'error');
+        return;
+      }
+
+      // Show loading
+      this.classList.add('loading');
+      this.disabled = true;
+
+      // The password is verified and hashed server-side. It is never stored
+      // locally; an earlier version wrote it to localStorage in plaintext.
+      const response = await API.changePassword(currentPassword, newPassword);
+
+      this.classList.remove('loading');
+      this.disabled = false;
+
+      if (!response || !response.success) {
+        showNotification(
+          (response && response.message) || 'Could not change password',
+          'error'
+        );
+        return;
+      }
+
+      // Clear password fields
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+
+      // Reset strength indicators
+      strengthBars.forEach(bar => {
+        bar.classList.remove('active');
+        bar.style.background = '';
+      });
+      strengthText.textContent = '-';
+      document.querySelectorAll('.requirement-item').forEach(item => {
+        item.classList.remove('met');
+        item.querySelector('i').className = 'ri-close-circle-line';
+      });
+
+      showNotification('Password changed successfully!', 'success');
+
+      // Collapse password section
+      setTimeout(() => {
+        passwordForm.style.display = 'none';
+        togglePasswordText.textContent = 'Show';
+        togglePasswordIcon.className = 'ri-arrow-down-s-line';
+      }, 1000);
+    });
+
+    // Save Profile
+    document.getElementById('saveBtn').addEventListener('click', async function() {
+      const username = document.getElementById('username').value.trim();
+
+      if (!username) {
+        showNotification('Username is required', 'error');
+        return;
+      }
+
+      // Show loading
+      this.classList.add('loading');
+      this.disabled = true;
+
+      // Persist the username server-side via PUT /api/user/profile.
+      const response = await API.updateProfile({ username });
+
+      this.classList.remove('loading');
+      this.disabled = false;
+
+      if (!response || !response.success) {
+        showNotification(
+          (response && response.message) || 'Could not update profile',
+          'error'
+        );
+        return;
+      }
+
+      // Nothing is cached locally: the avatar is uploaded separately and both
+      // the username and picture are read back from the API, so the two views
+      // can never disagree.
+      showNotification('Profile updated successfully!', 'success');
+
+      setTimeout(() => {
+        window.location.href = 'profile.html';
+      }, 1000);
+    });
+
+    // Notification function
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <i class="ri-${type === 'success' ? 'checkbox-circle' : 'alert'}-fill"></i>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => notification.classList.add('show'), 100);
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+  </script>
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <script src="js/toast-notifications.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>

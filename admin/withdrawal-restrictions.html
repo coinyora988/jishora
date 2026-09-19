@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdrawal Restrictions - Jishora Admin</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Jishora Admin</span>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item"><i class="fas fa-home"></i><span>Dashboard</span></a>
+                <a href="users.html" class="nav-item"><i class="fas fa-users"></i><span>Users</span></a>
+                <a href="markets.html" class="nav-item"><i class="fas fa-store"></i><span>Markets</span></a>
+                <a href="tasks.html" class="nav-item"><i class="fas fa-tasks"></i><span>Tasks</span></a>
+                <a href="transactions.html" class="nav-item"><i class="fas fa-exchange-alt"></i><span>Transactions</span></a>
+                <a href="deposits.html" class="nav-item"><i class="fas fa-plus-circle"></i><span>Deposits</span><span class="badge" id="pendingDeposits">0</span></a>
+                <a href="withdrawals.html" class="nav-item"><i class="fas fa-minus-circle"></i><span>Withdrawals</span><span class="badge" id="pendingWithdrawals">0</span></a>
+                <a href="messages.html" class="nav-item"><i class="fas fa-envelope"></i><span>Messages</span></a>
+                <a href="combo-offers.html" class="nav-item"><i class="fas fa-gift"></i><span>Combo Offers</span></a>
+                <a href="proxy-accounts.html" class="nav-item"><i class="fas fa-user-secret"></i><span>Proxy Accounts</span></a>
+                <a href="invitations.html" class="nav-item"><i class="fas fa-user-plus"></i><span>Invitations</span></a>
+                <a href="notifications.html" class="nav-item"><i class="fas fa-bell"></i><span>Notifications</span></a>
+                <a href="reports.html" class="nav-item"><i class="fas fa-chart-line"></i><span>Reports</span></a>
+                <a href="withdrawal-restrictions.html" class="nav-item active"><i class="fas fa-hand"></i><span>Withdrawal Restrictions</span></a>
+                <a href="settings.html" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-menu" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <h1>Withdrawal Restrictions</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <div class="admin-avatar"><i class="fas fa-user-shield"></i></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Apply restriction card -->
+                <div class="card wr-apply-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-hand"></i> Apply / Remove a Restriction</h3>
+                    </div>
+                    <div class="wr-form">
+                        <p class="wr-help">
+                            Search a customer by username or email, write the reason the customer
+                            will see on their withdraw page, then apply the restriction. Remove it
+                            once they meet the requirements. You can re-apply different restrictions
+                            any time.
+                        </p>
+                        <div class="form-group">
+                            <label>Customer Username (or Email)</label>
+                            <input type="text" id="wrUsername" placeholder="e.g. jack33">
+                        </div>
+                        <div class="form-group">
+                            <label>Restriction Message (shown to the customer)</label>
+                            <textarea id="wrReason" rows="3" placeholder="e.g. Please complete your remaining tasks before withdrawing. Contact customer service for details."></textarea>
+                        </div>
+                        <div class="wr-actions">
+                            <button class="btn btn-secondary" onclick="clearRestriction()"><i class="fas fa-unlock"></i> Remove Restriction</button>
+                            <button class="btn btn-danger" onclick="applyRestriction()"><i class="fas fa-ban"></i> Apply Restriction</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Currently restricted customers -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-list"></i> Currently Restricted Customers</h3>
+                        <button class="btn btn-sm btn-secondary" onclick="loadRestricted()"><i class="fas fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Restriction Message</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="restrictedTableBody">
+                                <tr><td colspan="5" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <style>
+        .wr-apply-card { margin-bottom: 22px; }
+        .wr-form { padding: 4px 4px 8px; }
+        .wr-help {
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            background: var(--primary-pale);
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+        .wr-form .form-group { display: flex; flex-direction: column; margin-bottom: 14px; }
+        .wr-form label { font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--text-primary); }
+        .wr-form input, .wr-form textarea {
+            width: 100%; box-sizing: border-box;
+            padding: 10px 12px; border: 2px solid var(--border-color);
+            border-radius: 8px; font-size: 15px; font-family: inherit; resize: vertical;
+        }
+        .wr-form input:focus, .wr-form textarea:focus {
+            outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(254, 87, 34, 0.15);
+        }
+        .wr-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+        .wr-msg-cell { max-width: 380px; color: var(--text-secondary); }
+    </style>
+
+    <script src="../js/config.js"></script>
+    <script src="js/admin-common.js"></script>
+    <script src="js/withdrawal-restrictions.js"></script>
+</body>
+</html>

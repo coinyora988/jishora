@@ -1,0 +1,39 @@
+# ── Jishora root .gitignore ──
+# Protects secrets and local-only files from being pushed to GitHub.
+
+# Dependencies (backend has its own node_modules; never commit it)
+node_modules/
+**/node_modules/
+
+# Environment / secrets — NEVER commit these
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
+# Database backups created locally
+backup-*.sql
+*.sql.bak
+
+# Logs and stray scratch files
+*.log
+logs/
+backend/logs/
+synccheck.log
+tmp-*.js
+
+# Uploaded user files (regenerated at runtime; keep folder via .gitkeep)
+backend/uploads/avatars/*
+backend/uploads/proofs/*
+!backend/uploads/avatars/.gitkeep
+!backend/uploads/proofs/.gitkeep
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~

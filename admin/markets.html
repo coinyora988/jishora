@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markets Management - Jishora Admin</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar (same as users.html) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Jishora Admin</span>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="markets.html" class="nav-item active">
+                    <i class="fas fa-store"></i>
+                    <span>Markets</span>
+                </a>
+                <a href="tasks.html" class="nav-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>Tasks</span>
+                </a>
+                <a href="transactions.html" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </a>
+                <a href="deposits.html" class="nav-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Deposits</span>
+                    <span class="badge" id="pendingDeposits">0</span>
+                </a>
+                <a href="withdrawals.html" class="nav-item">
+                    <i class="fas fa-minus-circle"></i>
+                    <span>Withdrawals</span>
+                    <span class="badge" id="pendingWithdrawals">0</span>
+                </a>
+                <a href="messages.html" class="nav-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>Messages</span>
+                </a>
+                <a href="combo-offers.html" class="nav-item">
+                    <i class="fas fa-gift"></i>
+                    <span>Combo Offers</span>
+                </a>
+                <a href="proxy-accounts.html" class="nav-item">
+                    <i class="fas fa-user-secret"></i>
+                    <span>Proxy Accounts</span>
+                </a>
+                <a href="invitations.html" class="nav-item">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Invitations</span>
+                </a>
+                <a href="notifications.html" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="withdrawal-restrictions.html" class="nav-item">
+                    <i class="fas fa-hand"></i>
+                    <span>Withdrawal Restrictions</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-menu" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Markets Management</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <div class="admin-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h2>All Markets</h2>
+                    <button class="btn btn-primary" onclick="showAddMarketModal()">
+                        <i class="fas fa-plus"></i> Add Market
+                    </button>
+                </div>
+
+                <!-- Markets Grid -->
+                <div id="marketsGrid" class="markets-grid">
+                    <div class="loading-card">Loading markets...</div>
+                </div>
+
+                <!-- Products Section -->
+                <div id="productsSection" style="display: none;">
+                    <div class="section-header">
+                        <h3>Products - <span id="currentMarketName"></span></h3>
+                        <button class="btn btn-primary" onclick="showAddProductModal()">
+                            <i class="fas fa-plus"></i> Add Product
+                        </button>
+                    </div>
+                    <div id="productsGrid" class="products-grid"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Market Modal -->
+    <div class="modal" id="marketModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="marketModalTitle">Add Market</h3>
+                <button class="modal-close" onclick="closeMarketModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="marketForm">
+                    <input type="hidden" id="marketId">
+                    
+                    <div class="form-group">
+                        <label>Market Name *</label>
+                        <input type="text" id="marketName" required placeholder="e.g., JD.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="marketDescription" rows="3" placeholder="Market description..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <input type="text" id="marketCategory" placeholder="e.g., shopping">
+                        </div>
+                        <div class="form-group">
+                            <label>Logo URL</label>
+                            <input type="text" id="marketLogo" placeholder="URL or path">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Min Balance ($) *</label>
+                            <input type="number" id="marketMinBalance" step="0.01" required placeholder="20.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Max Balance ($) *</label>
+                            <input type="number" id="marketMaxBalance" step="0.01" required placeholder="498.00">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Commission Rate (%) *</label>
+                            <input type="number" id="marketCommission" step="0.01" required placeholder="5.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="marketStatus">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeMarketModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Market</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="productModalTitle">Add Product</h3>
+                <button class="modal-close" onclick="closeProductModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+                    <input type="hidden" id="productMarketId">
+                    
+                    <div class="form-group">
+                        <label>Product Name *</label>
+                        <input type="text" id="productName" required placeholder="e.g., Wireless Headphones">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="productDescription" rows="2" placeholder="Product description..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <input type="text" id="productImage" placeholder="Product image URL">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Price ($) *</label>
+                            <input type="number" id="productPrice" step="0.01" required placeholder="45.99">
+                        </div>
+                        <div class="form-group">
+                            <label>Commission ($) *</label>
+                            <input type="number" id="productCommission" step="0.01" required placeholder="2.30">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Min Balance ($) *</label>
+                            <input type="number" id="productMinBalance" step="0.01" required placeholder="20.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Max Balance ($) *</label>
+                            <input type="number" id="productMaxBalance" step="0.01" required placeholder="498.00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="productStatus">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Page header */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+        .page-header h2 { font-size: 22px; color: var(--text-primary); }
+
+        /* ── Markets grid ───────────────────────────────────────────── */
+        .markets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 22px;
+            margin-bottom: 40px;
+        }
+
+        .market-card {
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 2px 10px rgba(17, 24, 39, 0.04);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .market-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #FF9700 0%, #FE5722 100%);
+        }
+        .market-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 34px rgba(254, 87, 34, 0.14);
+        }
+
+        /* Header: logo + title + status */
+        .market-card-head {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .market-logo {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, #FF9700 0%, #FE5722 100%);
+            box-shadow: 0 4px 12px rgba(254, 87, 34, 0.3);
+        }
+        .market-title { flex: 1; min-width: 0; }
+        .market-title h3 {
+            font-size: 17px;
+            color: var(--text-primary);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .market-desc {
+            margin: 2px 0 0;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .market-card-head .badge-status { flex-shrink: 0; align-self: flex-start; }
+
+        /* Stats: 2x2 tiles */
+        .market-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .mm-item {
+            background: var(--light-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+        .mm-item span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .mm-item span i { color: var(--primary-color); font-size: 11px; width: 12px; text-align: center; }
+        .mm-item strong { font-size: 16px; color: var(--text-primary); }
+
+        /* Actions row */
+        .market-card-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+        .market-card-actions .btn { flex: 1; justify-content: center; }
+        .market-card-actions .btn-danger { flex: 0 0 auto; }
+
+        /* ── Products grid ──────────────────────────────────────────── */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 32px 0 20px;
+        }
+        .section-header h3 { font-size: 18px; color: var(--text-primary); }
+
+        .loading-card {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 48px;
+            background: #fff;
+            border: 1px dashed var(--border-color);
+            border-radius: 16px;
+            color: var(--text-secondary);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+        }
+    </style>
+
+    <script src="../js/config.js"></script>
+    <script src="js/admin-common.js"></script>
+    <script src="js/markets.js"></script>
+</body>
+</html>

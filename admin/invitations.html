@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation Management - Jishora Admin</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="../css/page-loader.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .invitations-container {
+            padding: 20px;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .page-header h2 {
+            margin: 0;
+            color: #111827;
+            font-size: 24px;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        .stat-icon.purple {
+            background: linear-gradient(135deg, #FF9700 0%, #FE5722 100%);
+        }
+        .stat-icon.green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #FF9700 0%, #FE5722 100%);
+        }
+        .stat-icon.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .stat-info {
+            flex: 1;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #111827;
+        }
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box input {
+            padding: 8px 12px 8px 36px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 250px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            text-align: left;
+            padding: 16px 20px;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .data-table td {
+            padding: 16px 20px;
+            border-top: 1px solid #f3f4f6;
+            color: #374151;
+            font-size: 14px;
+        }
+        .data-table tr:hover {
+            background: #f9fafb;
+        }
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF9700 0%, #FE5722 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .user-info {
+            flex: 1;
+        }
+        .user-name {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+        .user-email {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .btn-view {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .btn-view:hover {
+            background: #bfdbfe;
+        }
+        .btn-primary {
+            background: #FE5722;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            background: #e64a1f;
+        }
+        .referral-card {
+            background: linear-gradient(135deg, #FF9700 0%, #FE5722 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .referral-card h3 {
+            margin: 0 0 16px 0;
+            font-size: 20px;
+        }
+        .referral-settings {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .setting-item i {
+            font-size: 24px;
+            opacity: 0.9;
+        }
+        .setting-details {
+            flex: 1;
+        }
+        .setting-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+        .setting-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .btn-edit-settings {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.3s;
+        }
+        .btn-edit-settings:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .pagination {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .pagination-info {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-page {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-page:hover:not(:disabled) {
+            background: #f3f4f6;
+        }
+        .btn-page:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-page.active {
+            background: #FE5722;
+            color: white;
+            border-color: #FE5722;
+        }
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            .filters {
+                width: 100%;
+            }
+            .search-box input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Jishora Admin</span>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="markets.html" class="nav-item">
+                    <i class="fas fa-store"></i>
+                    <span>Markets</span>
+                </a>
+                <a href="tasks.html" class="nav-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>Tasks</span>
+                </a>
+                <a href="transactions.html" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </a>
+                <a href="deposits.html" class="nav-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Deposits</span>
+                    <span class="badge" id="pendingDeposits">0</span>
+                </a>
+                <a href="withdrawals.html" class="nav-item">
+                    <i class="fas fa-minus-circle"></i>
+                    <span>Withdrawals</span>
+                    <span class="badge" id="pendingWithdrawals">0</span>
+                </a>
+                <a href="messages.html" class="nav-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>Messages</span>
+                </a>
+                <a href="combo-offers.html" class="nav-item">
+                    <i class="fas fa-gift"></i>
+                    <span>Combo Offers</span>
+                </a>
+                <a href="proxy-accounts.html" class="nav-item">
+                    <i class="fas fa-user-secret"></i>
+                    <span>Proxy Accounts</span>
+                </a>
+                <a href="invitations.html" class="nav-item active">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Invitations</span>
+                </a>
+                <a href="notifications.html" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="withdrawal-restrictions.html" class="nav-item">
+                    <i class="fas fa-hand"></i>
+                    <span>Withdrawal Restrictions</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-menu" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Invitation Management</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <div class="admin-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Invitations Content -->
+            <div class="content invitations-container">
+                <!-- Referral Settings Card -->
+                <div class="referral-card">
+                    <h3><i class="fas fa-gift"></i> Referral Program Configuration</h3>
+                    <div class="referral-settings">
+                        <div class="setting-item">
+                            <i class="fas fa-percentage"></i>
+                            <div class="setting-details">
+                                <div class="setting-label">Referral Bonus</div>
+                                <div class="setting-value" id="referralBonus">5%</div>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <i class="fas fa-dollar-sign"></i>
+                            <div class="setting-details">
+                                <div class="setting-label">Sign-up Bonus</div>
+                                <div class="setting-value" id="signupBonus">$2</div>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <i class="fas fa-users"></i>
+                            <div class="setting-details">
+                                <div class="setting-label">Max Referrals</div>
+                                <div class="setting-value" id="maxReferrals">Unlimited</div>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <i class="fas fa-clock"></i>
+                            <div class="setting-details">
+                                <div class="setting-label">Link Validity</div>
+                                <div class="setting-value" id="linkValidity">Forever</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-edit-settings" onclick="editReferralSettings()">
+                        <i class="fas fa-edit"></i> Edit Settings
+                    </button>
+                </div>
+
+                <!-- Invite Codes (single-use registration codes) -->
+                <div class="referral-card" style="background:#fff;color:#1f2937;">
+                    <h3 style="color:#1f2937;"><i class="fas fa-ticket" style="color:#FE5722;"></i> Registration Invite Codes</h3>
+                    <p style="color:#6b7280;font-size:13px;margin:6px 0 16px;">
+                        A referral code is required to register. Generate single-use codes here and give one to each new customer.
+                        (Existing users' own referral codes also work for registration.)
+                    </p>
+
+                    <div class="invite-gen-row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px;">
+                        <div style="display:flex;flex-direction:column;">
+                            <label style="font-size:12px;color:#6b7280;margin-bottom:4px;">How many codes</label>
+                            <input type="number" id="inviteCount" min="1" max="100" value="1" style="width:120px;padding:9px 11px;border:2px solid #e5e7eb;border-radius:8px;">
+                        </div>
+                        <div style="display:flex;flex-direction:column;flex:1;min-width:180px;">
+                            <label style="font-size:12px;color:#6b7280;margin-bottom:4px;">Note (optional)</label>
+                            <input type="text" id="inviteNote" placeholder="e.g. for WhatsApp group" style="width:100%;padding:9px 11px;border:2px solid #e5e7eb;border-radius:8px;">
+                        </div>
+                        <button class="btn btn-primary" onclick="generateInviteCodes()" style="padding:10px 18px;border:none;border-radius:8px;background:#FE5722;color:#fff;font-weight:600;cursor:pointer;">
+                            <i class="fas fa-plus"></i> Generate
+                        </button>
+                    </div>
+
+                    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+                        <span class="badge-status approved" id="icActive">Active: 0</span>
+                        <span class="badge-status pending" id="icUsed">Used: 0</span>
+                        <span class="badge-status cancelled" id="icDisabled">Disabled: 0</span>
+                    </div>
+
+                    <div class="table-container" style="overflow-x:auto;">
+                        <table class="data-table" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Status</th>
+                                    <th>Used By</th>
+                                    <th>Note</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inviteCodesBody">
+                                <tr><td colspan="6" style="text-align:center;padding:16px;color:#9ca3af;">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="totalReferrals">0</div>
+                            <div class="stat-label">Total Referrals</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="completedReferrals">0</div>
+                            <div class="stat-label">Completed Referrals</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="totalRewards">$0</div>
+                            <div class="stat-label">Total Rewards Paid</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="conversionRate">0%</div>
+                            <div class="stat-label">Conversion Rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Referrals Table -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>All Referrals</h3>
+                        <div class="filters">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchReferrals" placeholder="Search by name or email...">
+                            </div>
+                            <select class="filter-select" id="filterStatus">
+                                <option value="">All Status</option>
+                                <option value="completed">Completed</option>
+                                <option value="pending">Pending</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                            <button class="btn-primary" onclick="exportReferrals()">
+                                <i class="fas fa-download"></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Referrer</th>
+                                    <th>Referred User</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Reward</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="referralsTable">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">
+                                        Loading referrals...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRecords">0</span> referrals
+                        </div>
+                        <div class="pagination-controls" id="paginationControls">
+                            <!-- Pagination buttons will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/page-loader.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="js/admin-common.js"></script>
+    <script src="js/invitations.js"></script>
+</body>
+</html>

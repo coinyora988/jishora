@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/profile.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════
+       TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+    <!-- Logo -->
+    <a href="index.html" class="topbar-logo">
+      <img src="images/logo/logo.png" alt="Jishora Logo" />
+    </a>
+
+    <!-- Right side -->
+    <div class="topbar-right">
+
+      <!-- Notification -->
+      <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+      </a>
+
+      <!-- Language Selector -->
+      <div class="lang-selector" id="langSelector">
+        <button type="button" class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Select language">
+          <img class="lang-flag" id="langFlag" src="https://flagcdn.com/w40/us.png" alt="US flag" />
+          <span id="langLabel">English</span>
+          <i class="fa-solid fa-chevron-down lang-chevron"></i>
+        </button>
+        <div class="lang-dropdown" role="listbox" id="langDropdown">
+          <button type="button" class="lang-option active" data-lang="en" data-flag="https://flagcdn.com/w40/us.png" data-flag-alt="US flag" data-label="English" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/us.png" alt="US flag" /> English
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="ar" data-flag="https://flagcdn.com/w40/sa.png" data-flag-alt="Saudi Arabia flag" data-label="العربية" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/sa.png" alt="Saudi Arabia flag" /> العربية
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="fr" data-flag="https://flagcdn.com/w40/fr.png" data-flag-alt="France flag" data-label="Français" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/fr.png" alt="France flag" /> Français
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="es" data-flag="https://flagcdn.com/w40/es.png" data-flag-alt="Spain flag" data-label="Español" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/es.png" alt="Spain flag" /> Español
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="de" data-flag="https://flagcdn.com/w40/de.png" data-flag-alt="Germany flag" data-label="Deutsch" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/de.png" alt="Germany flag" /> Deutsch
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="tr" data-flag="https://flagcdn.com/w40/tr.png" data-flag-alt="Turkey flag" data-label="Türkçe" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/tr.png" alt="Turkey flag" /> Türkçe
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    </div><!-- /.topbar-inner -->
+  </header>
+
+  <div class="container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-top-row">
+        <div class="profile-avatar">
+          <div class="avatar-circle" id="avatarInitial"></div>
+          <button class="avatar-edit-btn" id="avatarEditBtn">
+            <i class="ri-camera-line"></i>
+          </button>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">
+            <span data-live="username">--</span>
+            <div class="profile-badges">
+              <span class="badge premium" data-live="vipLevel">--</span>
+            </div>
+          </div>
+          <div class="profile-email">
+            Invitation code: <span data-live="referralCode">--</span>
+          </div>
+        </div>
+        <a href="notifications.html" class="profile-chat-btn" aria-label="Notifications">
+          <i class="ri-message-3-line"></i>
+          <span class="chat-badge js-notif-badge" style="display:none;"></span>
+        </a>
+      </div>
+
+      <div class="account-stats">
+        <div class="stat-box">
+          <div class="stat-label" data-i18n="home.balance">My Account Balance</div>
+          <div class="stat-value">USDT <span data-live="balance">--</span></div>
+        </div>
+        <div class="header-actions">
+          <a href="deposit.html" class="action-btn-header">
+            <i class="ri-download-2-line"></i>
+            <span data-i18n="common.deposit">Recharge</span>
+          </a>
+          <a href="withdraw.html" class="action-btn-header">
+            <i class="ri-upload-2-line"></i>
+            <span data-i18n="common.withdraw">Withdrawal</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <a href="transactions.html" class="action-item">
+        <div class="action-icon-circle blue">
+          <i class="ri-file-list-3-line"></i>
+        </div>
+        <span class="action-name" data-i18n="transactions.allRecords">Record</span>
+      </a>
+      <a href="wallet-setup.html" class="action-item">
+        <div class="action-icon-circle orange">
+          <i class="ri-wallet-3-line"></i>
+        </div>
+        <span class="action-name" data-i18n="profile.wallet">Wallet</span>
+      </a>
+      <a href="invitation.html" class="action-item">
+        <div class="action-icon-circle purple">
+          <i class="ri-user-add-line"></i>
+        </div>
+        <span class="action-name" data-i18n="invite.title">Invitation</span>
+      </a>
+    </div>
+
+    <!-- Settings Sections -->
+    <div class="settings-section">
+      
+      <a href="profile-edit.html" class="setting-item">
+        <div class="setting-icon">
+          <i class="ri-user-3-line"></i>
+        </div>
+        <div class="setting-info">
+          <div class="setting-name" data-i18n="profile.editProfile">Profile</div>
+        </div>
+        <div class="setting-arrow">
+          <i class="ri-arrow-right-s-line"></i>
+        </div>
+      </a>
+
+      <a href="transactions.html?filter=deposit" class="setting-item">
+        <div class="setting-icon">
+          <i class="ri-inbox-line"></i>
+        </div>
+        <div class="setting-info">
+          <div class="setting-name" data-i18n="profile.depositRecords">Deposit records</div>
+        </div>
+        <div class="setting-arrow">
+          <i class="ri-arrow-right-s-line"></i>
+        </div>
+      </a>
+
+      <a href="transactions.html?filter=withdraw" class="setting-item">
+        <div class="setting-icon">
+          <i class="ri-file-list-line"></i>
+        </div>
+        <div class="setting-info">
+          <div class="setting-name" data-i18n="profile.withdrawalRecords">Withdrawal records</div>
+        </div>
+        <div class="setting-arrow">
+          <i class="ri-arrow-right-s-line"></i>
+        </div>
+      </a>
+
+      <!-- href kept as a fallback for no-JS, but the handler clears the session
+           first; otherwise login.html bounces straight back to the dashboard. -->
+      <a href="login.html" class="setting-item" data-logout>
+        <div class="setting-icon">
+          <i class="ri-logout-box-r-line"></i>
+        </div>
+        <div class="setting-info">
+          <div class="setting-name" data-i18n="profile.logout">Log Out</div>
+        </div>
+        <div class="setting-arrow">
+          <i class="ri-arrow-right-s-line"></i>
+        </div>
+      </a>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="danger-section">
+      <a href="login.html" class="danger-btn" data-logout>
+        <i class="ri-logout-box-r-line"></i>
+        <span data-i18n="profile.logout">Logout</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+    <a href="index.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="support.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+        <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+        <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+        <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+      </svg>
+      <span>Services</span>
+    </a>
+    <a href="markets.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
+      </svg>
+      <span>Menu</span>
+    </a>
+    <a href="transactions.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <line x1="10" y1="9" x2="8" y2="9"></line>
+      </svg>
+      <span>History</span>
+    </a>
+    <a href="profile.html" class="nav-item active">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>Profile</span>
+    </a>
+    </div>
+  </nav>
+
+  <script>
+    const selector = document.getElementById('langSelector');
+    const btn      = document.getElementById('langBtn');
+    const dropdown = document.getElementById('langDropdown');
+    const flagEl   = document.getElementById('langFlag');
+    const labelEl  = document.getElementById('langLabel');
+    if (btn && dropdown) {
+      const saved = localStorage.getItem('jishora_lang');
+      if (saved) { const savedOpt = dropdown.querySelector(`[data-lang="${saved}"]`); if (savedOpt) applyLang(savedOpt); }
+      btn.addEventListener('click', e => { e.stopPropagation(); const open = selector.classList.toggle('open'); btn.setAttribute('aria-expanded', open); });
+      dropdown.querySelectorAll('.lang-option').forEach(opt => { opt.addEventListener('click', () => { applyLang(opt); selector.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }); });
+      document.addEventListener('click', () => { selector.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') selector.classList.remove('open'); });
+    }
+    function applyLang(opt) { dropdown.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active')); opt.classList.add('active'); if (flagEl) { flagEl.src = opt.dataset.flag; flagEl.alt = opt.dataset.flagAlt || ''; } if (labelEl) labelEl.textContent = opt.dataset.label; const lang = opt.dataset.lang; localStorage.setItem('jishora_lang', lang); document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; document.documentElement.lang = lang; if (typeof translatePage === 'function') { translatePage(); } }
+
+    // Username, VIP level, invitation code and balance are all bound by
+    // js/live-data.js from GET /api/auth/me. Only the avatar needs extra work:
+    // the initial is derived from the real username, and a locally chosen
+    // profile picture (not yet stored server-side) can override it.
+    document.addEventListener('jishora:data-loaded', (event) => {
+      const user = event.detail.user || {};
+      const avatarCircle = document.getElementById('avatarInitial');
+      if (!avatarCircle) return;
+
+      // Read the avatar straight from the event payload (the raw /auth/me
+      // response), where user.avatarUrl is the relative path saved on upload.
+      // Prefix the API origin so the browser loads it from the API host.
+      const rawAvatar = user.avatarUrl || '';
+      const apiOrigin = API_BASE_URL.replace(/\/api\/?$/, '');
+      const fullAvatar = rawAvatar
+        ? (/^https?:\/\//i.test(rawAvatar) ? rawAvatar : apiOrigin + rawAvatar)
+        : '';
+
+      if (fullAvatar) {
+        const img = document.createElement('img');
+        img.src = fullAvatar + (fullAvatar.indexOf('?') === -1 ? '?t=' + Date.now() : '');
+        img.alt = 'Profile picture';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '50%';
+        img.onerror = function () {
+          avatarCircle.textContent = (user.username || '?').charAt(0).toUpperCase();
+        };
+        avatarCircle.replaceChildren(img);
+      } else {
+        avatarCircle.textContent = (user.username || '?').charAt(0).toUpperCase();
+      }
+    });
+
+    // Avatar edit button - redirect to profile-edit page
+    const avatarEditBtn = document.getElementById('avatarEditBtn');
+    if (avatarEditBtn) {
+      avatarEditBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.location.href = 'profile-edit.html';
+      });
+    }
+  </script>
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <!-- Live data: api.js must load before live-data.js -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live-data.js"></script>
+  <script src="js/toast-notifications.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#ffffff"/>
+  <!-- Lamp base -->
+  <ellipse cx="100" cy="160" rx="35" ry="8" fill="#374151"/>
+  <!-- Lamp stand -->
+  <rect x="95" y="130" width="10" height="30" fill="#4b5563"/>
+  <!-- Lamp arm -->
+  <rect x="95" y="60" width="8" height="75" rx="4" fill="#6b7280"/>
+  <!-- Lamp head -->
+  <path d="M 85 50 L 115 50 L 110 65 L 90 65 Z" fill="#f3f4f6"/>
+  <!-- LED panel -->
+  <rect x="90" y="52" width="20" height="10" rx="2" fill="#fef3c7"/>
+  <!-- Light glow -->
+  <ellipse cx="100" cy="70" rx="25" ry="10" fill="#fde047" opacity="0.3"/>
+  <!-- USB port -->
+  <rect x="97" y="140" width="6" height="4" rx="1" fill="#1f2937"/>
+</svg>

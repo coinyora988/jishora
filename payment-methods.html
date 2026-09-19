@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Methods - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/info-page.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+     TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <!-- Back Button -->
+      <a href="index.html" class="topbar-back">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+
+      <!-- Title -->
+      <div class="topbar-title">Payment Methods</div>
+
+      <!-- Right side -->
+      <div class="topbar-right">
+        <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <div class="info-container">
+    
+    <!-- Hero Section -->
+    <div class="info-hero">
+      <div class="info-hero-icon">
+        <i class="ri-secure-payment-line"></i>
+      </div>
+      <h1 class="info-hero-title">Payment Methods</h1>
+      <p class="info-hero-subtitle">Digital Currency Support</p>
+    </div>
+
+    <!-- Content Section -->
+    <div class="info-content">
+      
+      <!-- Supported Payment Methods -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-coin-line"></i>
+          Supported Payment Methods
+        </h2>
+        <p class="info-text" style="margin-bottom: 20px;">
+          Jishora exclusively supports USDT (Tether) deposits and withdrawals to ensure stability and fast transactions.
+        </p>
+        
+        <div class="info-benefits">
+          <div class="info-benefit">
+            <div class="info-benefit-icon success">
+              <i class="ri-copper-coin-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">USDT (TRC20)</h4>
+              <p class="info-benefit-text">Tron network - Fast transactions with minimal fees (≈1 USDT)</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon warning">
+              <i class="ri-copper-coin-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">USDT (BEP20)</h4>
+              <p class="info-benefit-text">BNB Chain - Fast transactions with low fees (≈1 USDT)</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon info">
+              <i class="ri-copper-coin-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">USDT (Aptos)</h4>
+              <p class="info-benefit-text">Aptos network - Fast transactions with low fees (≈1 USDT)</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon primary">
+              <i class="ri-copper-diamond-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">USDT (ERC20)</h4>
+              <p class="info-benefit-text">Ethereum network - Widely supported but higher gas fees</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deposit Information -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-download-cloud-line"></i>
+          Deposit Information
+        </h2>
+        
+        <div class="info-steps">
+          <div class="info-step">
+            <div class="info-step-number">1</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Minimum Deposit: 10 USDT</h3>
+              <p class="info-step-text">The minimum amount you can deposit is 10 USDT. There is no maximum limit.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">2</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Instant Credit</h3>
+              <p class="info-step-text">Deposits are credited to your account immediately after blockchain confirmation.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">3</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Blockchain Confirmations</h3>
+              <p class="info-step-text">TRC20 and BEP20 confirm in ~1 min, Aptos in ~1 min, and ERC20 in ~3 mins after network confirmations.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">4</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">No Deposit Fees</h3>
+              <p class="info-step-text">Jishora does not charge any fees for deposits. You only pay network fees.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Withdrawal Information -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-upload-cloud-line"></i>
+          Withdrawal Information
+        </h2>
+        
+        <div class="info-table">
+          <div class="info-table-row info-table-header">
+            <div class="info-table-cell">Detail</div>
+            <div class="info-table-cell">TRC20</div>
+            <div class="info-table-cell">ERC20</div>
+          </div>
+          <div class="info-table-row">
+            <div class="info-table-cell">Minimum</div>
+            <div class="info-table-cell">10 USDT</div>
+            <div class="info-table-cell">10 USDT</div>
+          </div>
+          <div class="info-table-row">
+            <div class="info-table-cell">Fee</div>
+            <div class="info-table-cell"><span class="text-success">1 USDT</span></div>
+            <div class="info-table-cell"><span class="text-warning">5-20 USDT</span></div>
+          </div>
+          <div class="info-table-row">
+            <div class="info-table-cell">Processing</div>
+            <div class="info-table-cell">Instant - 24hrs</div>
+            <div class="info-table-cell">Instant - 24hrs</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <p class="info-text">
+            <strong>Recommended:</strong> We recommend using TRC20 for withdrawals due to significantly lower fees and faster confirmation times.
+          </p>
+        </div>
+      </div>
+
+      <!-- Security -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-shield-check-line"></i>
+          Security Features
+        </h2>
+        
+        <div class="info-benefits">
+          <div class="info-benefit">
+            <div class="info-benefit-icon success">
+              <i class="ri-lock-2-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Encrypted Transactions</h4>
+              <p class="info-benefit-text">All transactions are encrypted and secured with industry-standard protocols</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon primary">
+              <i class="ri-shield-keyhole-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Wallet Verification</h4>
+              <p class="info-benefit-text">Double-check your wallet address before confirming withdrawals</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon warning">
+              <i class="ri-eye-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">Transaction History</h4>
+              <p class="info-benefit-text">View complete history of all deposits and withdrawals in your account</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon secondary">
+              <i class="ri-customer-service-2-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title">24/7 Support</h4>
+              <p class="info-benefit-text">Contact support anytime if you face any payment-related issues</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How to Deposit -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-guide-line"></i>
+          How to Deposit
+        </h2>
+        
+        <div class="info-steps">
+          <div class="info-step">
+            <div class="info-step-number">1</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Go to Deposit Page</h3>
+              <p class="info-step-text">Click "Deposit" from the home page or navigation menu.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">2</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Select Network</h3>
+              <p class="info-step-text">Choose TRC20 (Tron), BEP20 (BNB Chain), Aptos, or ERC20 (Ethereum) network.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">3</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Copy Wallet Address</h3>
+              <p class="info-step-text">Copy the displayed wallet address or scan the QR code.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">4</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title">Send USDT</h3>
+              <p class="info-step-text">Send USDT from your wallet to the provided address. Wait for confirmation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Get Started -->
+      <div class="info-cta">
+        <div class="info-cta-content">
+          <h3 class="info-cta-title">Ready to Make a Deposit?</h3>
+          <p class="info-cta-text">Add USDT to your account and start earning commission</p>
+        </div>
+        <a href="deposit.html" class="info-cta-button">
+          <span>Deposit Now</span>
+          <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAVIGATION
+  ══════════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="index.html" class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="support.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+          <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+          <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+          <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+        </svg>
+        <span>Services</span>
+      </a>
+      <a href="markets.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>Menu</span>
+      </a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+        <span>History</span>
+      </a>
+      <a href="profile.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
+

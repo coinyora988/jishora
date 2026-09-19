@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Permissions - Jishora Admin</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Jishora Admin</span>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="markets.html" class="nav-item">
+                    <i class="fas fa-store"></i>
+                    <span>Markets</span>
+                </a>
+                <a href="tasks.html" class="nav-item active">
+                    <i class="fas fa-tasks"></i>
+                    <span>Tasks</span>
+                </a>
+                <a href="transactions.html" class="nav-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </a>
+                <a href="deposits.html" class="nav-item">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Deposits</span>
+                    <span class="badge" id="pendingDeposits">0</span>
+                </a>
+                <a href="withdrawals.html" class="nav-item">
+                    <i class="fas fa-minus-circle"></i>
+                    <span>Withdrawals</span>
+                    <span class="badge" id="pendingWithdrawals">0</span>
+                </a>
+                <a href="messages.html" class="nav-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>Messages</span>
+                </a>
+                <a href="combo-offers.html" class="nav-item">
+                    <i class="fas fa-gift"></i>
+                    <span>Combo Offers</span>
+                </a>
+                <a href="proxy-accounts.html" class="nav-item">
+                    <i class="fas fa-user-secret"></i>
+                    <span>Proxy Accounts</span>
+                </a>
+                <a href="invitations.html" class="nav-item">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Invitations</span>
+                </a>
+                <a href="notifications.html" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="withdrawal-restrictions.html" class="nav-item">
+                    <i class="fas fa-hand"></i>
+                    <span>Withdrawal Restrictions</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="btn-menu" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Task Permissions</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="admin-info">
+                        <span class="admin-name" id="adminName">Admin</span>
+                        <div class="admin-avatar">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Info banner explaining the rule -->
+                <div class="info-banner">
+                    <i class="fas fa-circle-info"></i>
+                    <div>
+                        <strong>Permission is required for every task.</strong>
+                        A customer cannot start (grab) a task until you grant permission here.
+                        Each grant lets them start exactly <strong>one</strong> task — once used, they need a new grant for the next one.
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="page-header">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search by account ID, email or phone..." onkeyup="searchPermissions()">
+                    </div>
+                    <div class="filters">
+                        <button class="btn btn-secondary" onclick="loadPermissions(currentPage)">
+                            <i class="fas fa-rotate"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Permissions Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-check"></i> Customer Permission Status</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="permissionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Account ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Balance</th>
+                                    <th>Available Permissions</th>
+                                    <th>Times Requested</th>
+                                    <th>Last Granted</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="permissionsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="historyTitle">Permission History</h3>
+                <button class="modal-close" onclick="closeHistory()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Status</th>
+                                <th>Granted By</th>
+                                <th>Task ID</th>
+                                <th>Granted At</th>
+                                <th>Used At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Confirmation Modal -->
+    <div class="modal" id="approveModal">
+        <div class="modal-content" style="max-width:420px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-circle-check" style="color:var(--success-color);margin-right:8px;"></i>Approve to Work</h3>
+                <button class="modal-close" onclick="closeApproveModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="approveUserId">
+                <p id="approveForUser" style="margin:0 0 16px;color:var(--text-secondary);font-size:14px;"></p>
+
+                <div class="combo-field" style="margin-bottom:8px;">
+                    <label for="approveBatchSize">Number of tasks to approve</label>
+                    <input type="number" id="approveBatchSize" min="1" step="1" value="25">
+                    <small>One approval lets the customer complete this many tasks, then they need a new approval.</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeApproveModal()">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="confirmApprove()">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combo Setup Modal -->
+    <div class="modal" id="comboModal">
+        <div class="modal-content" style="max-width:460px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-gift" style="color:var(--primary-color);margin-right:8px;"></i>Set Combo Offer</h3>
+                <button class="modal-close" onclick="closeComboModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="comboForUser" style="margin:0 0 8px;color:var(--text-secondary);font-size:14px;"></p>
+                <input type="hidden" id="comboUserId">
+                <p style="margin:0 0 14px;color:var(--text-secondary);font-size:12px;">
+                    Set one or more combos. Each combo appears at its own order number.
+                </p>
+
+                <!-- Combo rows get added here -->
+                <div id="comboRows"></div>
+
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addComboRow()" style="margin-top:4px;">
+                    <i class="fas fa-plus"></i> Add another combo
+                </button>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeComboModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCombo()">
+                        <i class="fas fa-check"></i> Save Combo(s)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Standalone field (used in the Approve modal). */
+        .combo-field { display: flex; flex-direction: column; margin-bottom: 18px; }
+        .combo-field > label { font-weight: 600; margin-bottom: 6px; color: var(--text-primary); font-size: 14px; }
+        .combo-field > input {
+            padding: 11px 13px; border: 2px solid var(--border-color);
+            border-radius: 8px; font-size: 15px;
+        }
+        .combo-field > small { margin-top: 6px; color: var(--text-secondary); font-size: 12px; }
+
+        .combo-row {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr auto;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 12px;
+        }
+        .combo-row .combo-field { margin-bottom: 0; display: flex; flex-direction: column; }
+        .combo-row label { font-weight: 600; margin-bottom: 6px; color: var(--text-primary); font-size: 13px; }
+        .combo-row input {
+            padding: 10px 12px; border: 2px solid var(--border-color);
+            border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box;
+        }
+        .combo-row .combo-remove {
+            background: var(--danger-color); color: #fff; border: none; border-radius: 8px;
+            width: 40px; height: 42px; cursor: pointer; font-size: 15px;
+        }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 18px; }
+        @media (max-width: 520px) {
+            .combo-row { grid-template-columns: 1fr 1fr auto; }
+        }
+        .info-banner {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            background: #fff4ee;
+            border: 1px solid #ffd9c7;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .info-banner i {
+            color: var(--primary-color);
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 12px 12px 44px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e64a1f;
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        /* Shown once a customer has an active (approved) batch. */
+        .btn-confirm {
+            background: linear-gradient(135deg, #FE5722, #FF9700);
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            filter: brightness(0.95);
+        }
+
+        .btn-confirm[disabled] {
+            opacity: 0.85;
+            cursor: default;
+        }
+
+        /* Combo grant — distinct violet accent so it stands apart from
+           Approve (green) and Reject (red). */
+        .btn-combo {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .btn-combo:hover {
+            background: #5c34a4;
+        }
+
+        .btn-combo[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .batch-progress {
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .perm-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .perm-count.has {
+            background: #e8f7ee;
+            color: #1e9e5a;
+        }
+
+        .perm-count.none {
+            background: #f1f2f4;
+            color: #8a94a6;
+        }
+
+        .pagination {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .pagination button {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .pagination button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-danger {
+            color: var(--danger-color);
+        }
+    </style>
+
+    <script src="../js/config.js"></script>
+    <script src="js/admin-common.js"></script>
+    <script src="js/tasks.js"></script>
+</body>
+</html>

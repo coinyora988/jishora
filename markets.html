@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markets - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png" />
+  
+  <!-- Remix Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/home.css" />
+  <link rel="stylesheet" href="css/markets.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+    <!-- Logo -->
+    <a href="index.html" class="topbar-logo">
+      <img src="images/logo/logo.png" alt="Jishora Logo" />
+    </a>
+
+    <!-- Right side -->
+    <div class="topbar-right">
+
+      <!-- Notification -->
+      <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+      </a>
+
+      <!-- Language Selector -->
+      <div class="lang-selector" id="langSelector">
+        <button type="button" class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Select language">
+          <img class="lang-flag" id="langFlag" src="https://flagcdn.com/w40/us.png" alt="US flag" />
+          <span id="langLabel">English</span>
+          <i class="fa-solid fa-chevron-down lang-chevron"></i>
+        </button>
+        <div class="lang-dropdown" role="listbox" id="langDropdown">
+          <button type="button" class="lang-option active" data-lang="en" data-flag="https://flagcdn.com/w40/us.png" data-flag-alt="US flag" data-label="English" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/us.png" alt="US flag" /> English
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="ar" data-flag="https://flagcdn.com/w40/sa.png" data-flag-alt="Saudi Arabia flag" data-label="العربية" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/sa.png" alt="Saudi Arabia flag" /> العربية
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="fr" data-flag="https://flagcdn.com/w40/fr.png" data-flag-alt="France flag" data-label="Français" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/fr.png" alt="France flag" /> Français
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="es" data-flag="https://flagcdn.com/w40/es.png" data-flag-alt="Spain flag" data-label="Español" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/es.png" alt="Spain flag" /> Español
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="de" data-flag="https://flagcdn.com/w40/de.png" data-flag-alt="Germany flag" data-label="Deutsch" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/de.png" alt="Germany flag" /> Deutsch
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="tr" data-flag="https://flagcdn.com/w40/tr.png" data-flag-alt="Turkey flag" data-label="Türkçe" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/tr.png" alt="Turkey flag" /> Türkçe
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    </div><!-- /.topbar-inner -->
+  </header>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- Page Title -->
+    <div class="page-header">
+      <h1 class="page-title" data-i18n="markets.title">Markets</h1>
+      <p class="page-subtitle" data-i18n="markets.subtitle">Select a market level to start working</p>
+    </div>
+
+    <!-- VIP Level Tabs -->
+    <div class="vip-tabs">
+        <button class="vip-tab active" data-level="all" data-i18n="markets.all">All</button>
+        <button class="vip-tab" data-level="vip1">VIP 1</button>
+        <button class="vip-tab" data-level="vip2">VIP 2</button>
+        <button class="vip-tab" data-level="vip3">VIP 3</button>
+      </div>
+
+      <!-- Markets List -->
+      <div class="markets-list">
+        
+        <!-- JD.com -->
+        <a href="task.html?market=jd" class="market-card" data-vip="vip1" data-slug="jd" data-market-name="JD.com">
+          <div class="market-info">
+            <div class="market-logo jd">
+              <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect width='200' height='100' fill='%23E3101E'/%3E%3Ctext x='100' y='60' text-anchor='middle' font-family='Arial, sans-serif' font-size='40' font-weight='bold' fill='white'%3EJD%3C/text%3E%3C/svg%3E" alt="JD.com" />
+            </div>
+            <div class="market-details">
+              <h3 class="market-name">JD.com</h3>
+              <p class="market-balance"><span data-i18n="markets.availableBalance">Available balance</span>: <span>20 USDT - 498 USDT</span></p>
+              <p class="market-commission"><span data-i18n="markets.commissionRate">Commission rate</span>: <span class="rate-success">6%</span></p>
+            </div>
+          </div>
+          <div class="market-meta">
+            <span class="vip-badge vip1">VIP 1</span>
+            <i class="ri-arrow-right-s-line"></i>
+          </div>
+        </a>
+
+        <!-- Shopee (now Rakuten) -->
+        <a href="task.html?market=shopee" class="market-card" data-vip="vip2" data-slug="shopee" data-market-name="Rakuten">
+          <div class="market-info">
+            <div class="market-logo shopee">
+              <img src="images/markets/rakuten-logo.svg" alt="Rakuten" />
+            </div>
+            <div class="market-details">
+              <h3 class="market-name">Rakuten</h3>
+              <p class="market-balance"><span data-i18n="markets.availableBalance">Available balance</span>: <span>499 USDT - 898 USDT</span></p>
+              <p class="market-commission"><span data-i18n="markets.commissionRate">Commission rate</span>: <span class="rate-warning">12%</span></p>
+            </div>
+          </div>
+          <div class="market-meta">
+            <span class="vip-badge vip2">VIP 2</span>
+            <i class="ri-arrow-right-s-line"></i>
+          </div>
+        </a>
+
+        <!-- Temu -->
+        <a href="task.html?market=temu" class="market-card" data-vip="vip3" data-slug="temu" data-market-name="Temu">
+          <div class="market-info">
+            <div class="market-logo temu">
+              <img src="images/markets/temu-logo.svg" alt="Temu" />
+            </div>
+            <div class="market-details">
+              <h3 class="market-name">Temu</h3>
+              <p class="market-balance"><span data-i18n="markets.availableBalance">Available balance</span>: <span>899 USDT - Unlimited</span></p>
+              <p class="market-commission"><span data-i18n="markets.commissionRate">Commission rate</span>: <span class="rate-danger">18%</span></p>
+            </div>
+          </div>
+          <div class="market-meta">
+            <span class="vip-badge vip3">VIP 3</span>
+            <i class="ri-arrow-right-s-line"></i>
+          </div>
+        </a>
+
+      </div>
+
+  </main>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAVIGATION
+  ══════════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+    <a href="index.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="support.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+        <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+        <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+        <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+      </svg>
+      <span>Services</span>
+    </a>
+    <a href="markets.html" class="nav-item active">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
+      </svg>
+      <span>Menu</span>
+    </a>
+    <a href="transactions.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <line x1="10" y1="9" x2="8" y2="9"></line>
+      </svg>
+      <span>History</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>Profile</span>
+    </a>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════
+       SCRIPTS
+  ══════════════════════════════════════ -->
+  <script>
+    /* ── Language Selector ── */
+    const selector = document.getElementById('langSelector');
+    const btn      = document.getElementById('langBtn');
+    const dropdown = document.getElementById('langDropdown');
+    const flagEl   = document.getElementById('langFlag');
+    const labelEl  = document.getElementById('langLabel');
+
+    if (btn && dropdown) {
+      // Restore saved
+      const saved = localStorage.getItem('jishora_lang');
+      if (saved) {
+        const savedOpt = dropdown.querySelector(`[data-lang="${saved}"]`);
+        if (savedOpt) applyLang(savedOpt);
+      }
+
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const open = selector.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+      });
+
+      dropdown.querySelectorAll('.lang-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          applyLang(opt);
+          selector.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      document.addEventListener('click', () => {
+        selector.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') selector.classList.remove('open');
+      });
+    }
+
+    function applyLang(opt) {
+      dropdown.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      if (flagEl)  { flagEl.src = opt.dataset.flag; flagEl.alt = opt.dataset.flagAlt || ''; }
+      if (labelEl) labelEl.textContent = opt.dataset.label;
+      const lang = opt.dataset.lang;
+      localStorage.setItem('jishora_lang', lang);
+      document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+      
+      // Trigger translation
+      if (typeof translatePage === 'function') {
+        translatePage();
+      }
+    }
+
+    // VIP Tab Switching
+    const tabs = document.querySelectorAll('.vip-tab');
+    const cards = document.querySelectorAll('.market-card');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active from all tabs
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const level = tab.dataset.level;
+
+        // Filter cards
+        cards.forEach(card => {
+          if (level === 'all') {
+            card.style.display = 'flex';
+          } else {
+            if (card.dataset.vip === level) {
+              card.style.display = 'flex';
+            } else {
+              card.style.display = 'none';
+            }
+          }
+        });
+      });
+    });
+  </script>
+
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <script src="js/toast-notifications.js"></script>
+
+  <!-- API + live data so we can gate market entry on the real balance -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live-data.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script>
+    /* ── Market entry gate ──────────────────────────────────────────────
+       A customer can only enter a market when their balance meets that
+       market's minimum. Minimums come from the API (GET /api/markets) so they
+       stay in sync with what the admin configures; the hardcoded fallbacks
+       match the current seed (JD 20, Rakuten/shopee 499, Temu 899).
+    */
+    (function () {
+      var FALLBACK_MIN = { jd: 20, shopee: 499, temu: 899 };
+      var marketMins = Object.assign({}, FALLBACK_MIN);
+      var currentBalance = 0;
+      var loaded = false;
+
+      // Pull real market minimums.
+      function loadMarkets() {
+        if (typeof API === 'undefined' || !API.getMarkets) return Promise.resolve();
+        return API.getMarkets().then(function (res) {
+          if (res && res.success && Array.isArray(res.data)) {
+            res.data.forEach(function (m) {
+              if (m.slug != null && m.min_balance != null) {
+                marketMins[m.slug] = parseFloat(m.min_balance);
+              }
+            });
+          }
+        }).catch(function () {});
+      }
+
+      // Pull the real wallet balance.
+      function loadBalance() {
+        if (typeof LiveData === 'undefined' || !LiveData.load) return Promise.resolve();
+        return LiveData.load({ silent: true }).then(function () {
+          var d = LiveData.get();
+          if (d && d.wallet) currentBalance = Number(d.wallet.balance) || 0;
+          loaded = true;
+        }).catch(function () {});
+      }
+
+      // Inject toast styles once. A fixed, top-centered stack: each click adds
+      // a new toast below the previous one. Fully responsive.
+      (function injectToastStyles() {
+        if (document.getElementById('marketGateToastStyle')) return;
+        var st = document.createElement('style');
+        st.id = 'marketGateToastStyle';
+        st.textContent =
+          '#marketGateToastStack{position:fixed;top:16px;left:50%;transform:translateX(-50%);' +
+          'z-index:2147483647;display:flex;flex-direction:column;gap:10px;align-items:center;' +
+          'width:max-content;max-width:calc(100vw - 24px);pointer-events:none;}' +
+          '.mg-toast{width:100%;box-sizing:border-box;background:#fff;color:#1f2937;border-radius:12px;' +
+          'box-shadow:0 10px 30px rgba(0,0,0,0.18);padding:13px 18px;display:flex;align-items:center;' +
+          'gap:10px;font-size:14px;font-weight:500;line-height:1.35;' +
+          'opacity:0;transform:translateY(-14px);transition:opacity .22s ease,transform .22s ease;}' +
+          '.mg-toast.show{opacity:1;transform:translateY(0);}' +
+          '.mg-toast i{color:#ef4444;font-size:18px;flex:0 0 auto;}' +
+          '.mg-toast span{flex:1 1 auto;}' +
+          '@media (max-width:480px){#marketGateToastStack{max-width:calc(100vw - 20px);}' +
+          '.mg-toast{font-size:13px;padding:11px 14px;}}';
+        document.head.appendChild(st);
+      })();
+
+      // Add a new toast to the top-centered stack on each click. Older toasts
+      // remain visible below until they auto-dismiss, matching the requested UX.
+      function toast(msg) {
+        var stack = document.getElementById('marketGateToastStack');
+        if (!stack) {
+          stack = document.createElement('div');
+          stack.id = 'marketGateToastStack';
+          document.body.appendChild(stack);
+        }
+        var t = document.createElement('div');
+        t.className = 'mg-toast';
+        t.innerHTML = '<i class="fa-solid fa-circle-xmark"></i><span></span>';
+        t.querySelector('span').textContent = msg;
+        stack.appendChild(t);
+        // animate in
+        requestAnimationFrame(function () { t.classList.add('show'); });
+        // auto-dismiss after 3s, then remove from the DOM
+        setTimeout(function () {
+          t.classList.remove('show');
+          setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 250);
+        }, 3000);
+        // Safety cap: never keep more than 6 stacked at once.
+        while (stack.children.length > 6) stack.removeChild(stack.firstChild);
+      }
+
+      // Intercept clicks on every market card.
+      document.querySelectorAll('.market-card').forEach(function (card) {
+        card.addEventListener('click', function (e) {
+          var slug = card.getAttribute('data-slug');
+          var name = card.getAttribute('data-market-name') || 'this market';
+          var min = marketMins[slug];
+          if (min == null) return; // unknown market -> allow
+
+          // If data hasn't loaded yet, let it through rather than blocking.
+          if (loaded && currentBalance < min) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            toast('Minimum ' + min + ' USDT required to enter ' + name + '.');
+          }
+        }, true);
+      });
+
+      // Load both in parallel on page ready.
+      Promise.all([loadMarkets(), loadBalance()]);
+    })();
+  </script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Introduction - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/info-page.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+     TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <!-- Back Button -->
+      <a href="index.html" class="topbar-back">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+
+      <!-- Title -->
+      <div class="topbar-title" data-i18n="intro.title">Introduction</div>
+
+      <!-- Right side -->
+      <div class="topbar-right">
+        <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <div class="info-container">
+    
+    <!-- Hero Section -->
+    <div class="info-hero">
+      <div class="info-hero-icon">
+        <i class="ri-information-line"></i>
+      </div>
+      <h1 class="info-hero-title" data-i18n="intro.platformTitle">Platform Introduction</h1>
+      <p class="info-hero-subtitle" data-i18n="intro.subtitle">Grab Orders. Complete Tasks. Earn Commissions.</p>
+    </div>
+
+    <!-- Content Section -->
+    <div class="info-content">
+      
+      <!-- Welcome -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-hand-heart-line"></i>
+          <span data-i18n="intro.welcome">Welcome to Jishora</span>
+        </h2>
+        <p class="info-text" data-i18n="intro.welcomeText">
+          Jishora platform connects users with available orders and task-based opportunities. Simply browse and grab an available order, follow the required steps, and submit the completed task through the platform. Eligible completed orders can generate commission rewards according to the applicable terms and conditions.
+        </p>
+      </div>
+
+      <!-- How It Works -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-lightbulb-line"></i>
+          <span data-i18n="intro.howItWorks">How It Works</span>
+        </h2>
+        
+        <div class="info-steps">
+          <div class="info-step">
+            <div class="info-step-number">1</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title" data-i18n="intro.step1Title">Deposit Funds</h3>
+              <p class="info-step-text" data-i18n="intro.step1Text">Add USDT (TRC20, BEP20, Aptos, or ERC20) to your account balance to unlock tasks.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">2</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title" data-i18n="intro.step2Title">Select Market Level</h3>
+              <p class="info-step-text" data-i18n="intro.step2Text">Choose from VIP 1, 2, or 3 markets based on your account balance.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">3</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title" data-i18n="intro.step3Title">Complete Tasks</h3>
+              <p class="info-step-text" data-i18n="intro.step3Text">Grab orders, complete product promotion tasks, and submit confirmations.</p>
+            </div>
+          </div>
+
+          <div class="info-step">
+            <div class="info-step-number">4</div>
+            <div class="info-step-content">
+              <h3 class="info-step-title" data-i18n="intro.step4Title">Earn Commission</h3>
+              <p class="info-step-text" data-i18n="intro.step4Text">Receive your commission (6-18%) instantly in USDT to your account.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIP Levels -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-vip-crown-line"></i>
+          <span data-i18n="intro.vipLevels">VIP Levels & Commission</span>
+        </h2>
+        
+        <div class="info-table">
+          <div class="info-table-row info-table-header">
+            <div class="info-table-cell" data-i18n="intro.level">Level</div>
+            <div class="info-table-cell" data-i18n="intro.balanceRequired">Balance Required</div>
+            <div class="info-table-cell" data-i18n="intro.commission">Commission</div>
+          </div>
+          <div class="info-table-row">
+            <div class="info-table-cell"><span class="badge badge-blue">VIP 1</span></div>
+            <div class="info-table-cell">20 - 498 USDT</div>
+            <div class="info-table-cell"><span class="text-success">6%</span></div>
+          </div>
+          <div class="info-table-row">
+            <div class="info-table-cell"><span class="badge badge-orange">VIP 2</span></div>
+            <div class="info-table-cell">499 - 898 USDT</div>
+            <div class="info-table-cell"><span class="text-warning">12%</span></div>
+          </div>
+          <div class="info-table-row">
+            <div class="info-table-cell"><span class="badge badge-red">VIP 3</span></div>
+            <div class="info-table-cell">899+ USDT</div>
+            <div class="info-table-cell"><span class="text-danger">18%</span></div>
+          </div>
+        </div>
+      </div>
+
+        <!-- Benefits -->
+      <div class="info-section">
+        <h2 class="info-section-title">
+          <i class="ri-gift-line"></i>
+          <span data-i18n="intro.benefits">Key Benefits</span>
+        </h2>
+        
+        <div class="info-benefits">
+          <div class="info-benefit">
+            <div class="info-benefit-icon success">
+              <i class="ri-money-dollar-circle-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title" data-i18n="intro.benefit1Title">Instant Payments</h4>
+              <p class="info-benefit-text" data-i18n="intro.benefit1Text">Receive commission immediately after task completion</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon primary">
+              <i class="ri-shield-check-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title" data-i18n="intro.benefit2Title">Secure & Transparent</h4>
+              <p class="info-benefit-text" data-i18n="intro.benefit2Text">All transactions verified on blockchain</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon warning">
+              <i class="ri-24-hours-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title" data-i18n="intro.benefit3Title">24/7 Availability</h4>
+              <p class="info-benefit-text" data-i18n="intro.benefit3Text">Work anytime, anywhere at your own pace</p>
+            </div>
+          </div>
+
+          <div class="info-benefit">
+            <div class="info-benefit-icon secondary">
+              <i class="ri-team-line"></i>
+            </div>
+            <div class="info-benefit-content">
+              <h4 class="info-benefit-title" data-i18n="intro.benefit4Title">Referral Program</h4>
+              <p class="info-benefit-text" data-i18n="intro.benefit4Text">Earn additional income by inviting friends</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Get Started -->
+      <div class="info-cta">
+        <div class="info-cta-content">
+          <h3 class="info-cta-title" data-i18n="intro.ctaTitle">Ready to Start Earning?</h3>
+          <p class="info-cta-text" data-i18n="intro.ctaText">Join thousands of users already making money with Jishora</p>
+        </div>
+        <a href="deposit.html" class="info-cta-button">
+          <span data-i18n="common.getStarted">Get Started</span>
+          <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAVIGATION
+  ══════════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="index.html" class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span data-i18n="nav.home">Home</span>
+      </a>
+      <a href="support.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+          <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+          <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+          <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+        </svg>
+        <span data-i18n="nav.services">Services</span>
+      </a>
+      <a href="markets.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span data-i18n="nav.menu">Menu</span>
+      </a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+        <span data-i18n="nav.history">History</span>
+      </a>
+      <a href="profile.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span data-i18n="nav.profile">Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
+

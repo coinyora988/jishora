@@ -1,0 +1,13 @@
+{
+  "name": "jishora-frontend",
+  "version": "1.0.0",
+  "description": "Jishora static frontend (customer site + admin panel) served by a tiny zero-dependency Node server.",
+  "private": true,
+  "main": "serve.js",
+  "scripts": {
+    "start": "node serve.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,0 +1,704 @@
+/* ============================================
+   DEPOSIT PAGE — JISHORA TWO-COLOR DESIGN
+   Colors: #FE5722 (buttons), #FF9700 (text/accents)
+   Light theme matching Jishora design system
+   ============================================ */
+
+:root {
+  --c-primary: #FE5722;
+  --c-secondary: #FF9700;
+  --c-primary-pale: #fff4f0;
+  --c-secondary-pale: #fff8e6;
+  --t-dark: #1a1a1a;
+  --t-main: #2d2d2d;
+  --t-sub: #6b6b6b;
+  --t-muted: #9e9e9e;
+  --bg: #ecf1f5;
+  --surface: #ffffff;
+  --border: rgba(0,0,0,0.06);
+  --border2: rgba(0,0,0,0.03);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 6px rgba(0,0,0,0.05);
+  --shadow-primary: 0 4px 16px rgba(254,87,34,0.25);
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: var(--bg);
+  color: var(--t-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+
+
+
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+
+
+.deposit-container-full {
+  background: var(--bg);
+}
+
+
+
+.deposit-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--t-dark);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+}
+
+.back-btn:hover {
+  background: var(--c-primary-pale);
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+  transform: translateX(-2px);
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--t-dark);
+  letter-spacing: -0.3px;
+}
+
+.deposit-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+
+
+
+
+/* ═══════════════════════════════════════════
+   BALANCE CARD
+═══════════════════════════════════════════ */
+.balance-card {
+  margin: 20px 20px 24px;
+  padding: 24px 20px;
+  background: linear-gradient(135deg, var(--c-secondary) 0%, var(--c-primary) 100%);
+  border-radius: 16px;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  box-shadow: var(--shadow-primary);
+}
+
+.balance-label {
+  font-size: .625rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.balance-amount {
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.balance-amount i {
+  font-size: 1.5rem;
+}
+
+.deposit-icon-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+}
+
+.deposit-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* ═══════════════════════════════════════════
+   SECTION TITLE
+═══════════════════════════════════════════ */
+.section-title {
+  font-size: .6875rem;
+  font-weight: 600;
+  color: var(--t-muted);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 0 20px;
+  margin-bottom: 12px;
+}
+
+/* ═══════════════════════════════════════════
+   NETWORK SELECTION
+═══════════════════════════════════════════ */
+.network-selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.network-card {
+  background: var(--surface);
+  border: 2px solid var(--border2);
+  border-radius: 14px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+.network-card input[type="radio"] {
+  display: none;
+}
+
+.network-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(254, 87, 34, 0.2);
+}
+
+.network-card.active {
+  background: var(--c-primary-pale);
+  border-color: var(--c-primary);
+  box-shadow: var(--shadow-primary);
+}
+
+.network-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.network-icon.trc {
+  background: linear-gradient(135deg, #e63946 0%, #f77f00 100%);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(230, 57, 70, 0.2);
+}
+
+.network-icon.erc {
+  background: linear-gradient(135deg, #627eea 0%, #8a9cff 100%);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(98, 126, 234, 0.2);
+}
+
+.network-icon.bnb {
+  background: linear-gradient(135deg, #f3ba2f 0%, #f0b90b 100%);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(240, 185, 11, 0.25);
+}
+
+.network-icon.aptos {
+  background: linear-gradient(135deg, #2d2d2d 0%, #000000 100%);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+}
+
+.network-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.network-name {
+  font-size: .9375rem;
+  font-weight: 700;
+  color: var(--t-dark);
+}
+
+.network-fee {
+  font-size: .75rem;
+  color: var(--t-sub);
+  font-weight: 500;
+}
+
+.network-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 1.25rem;
+  color: var(--c-primary);
+  opacity: 0;
+  transition: opacity .2s var(--ease);
+}
+
+.network-card.active .network-check {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════
+   ADDRESS SECTION
+═══════════════════════════════════════════ */
+.address-section {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 24px 20px;
+  margin: 0 20px 24px;
+  border: 1px solid var(--border2);
+  box-shadow: var(--shadow-sm);
+}
+
+.address-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--t-dark);
+  margin-bottom: 20px;
+}
+
+.qr-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.qr-code {
+  width: 180px;
+  height: 180px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+
+.qr-code svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.address-label {
+  font-size: .625rem;
+  font-weight: 600;
+  color: var(--t-muted);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.address-display {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.address-display::-webkit-scrollbar {
+  display: none;
+}
+
+.address-text {
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--t-dark);
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+}
+
+.copy-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--c-primary-pale);
+  border: 2px solid var(--c-primary);
+  border-radius: 12px;
+  color: var(--c-primary);
+  font-size: .875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+}
+
+.copy-btn:hover {
+  background: var(--c-primary);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-primary);
+}
+
+.copy-btn i {
+  font-size: 1rem;
+}
+
+.instructions {
+  margin-top: 20px;
+}
+
+.instruction-text {
+  font-size: .8125rem;
+  color: var(--t-sub);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.warning-box {
+  background: #fff8e6;
+  border: 1px solid #ffd666;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.warning-box i {
+  font-size: 1.125rem;
+  color: var(--c-secondary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warning-text {
+  font-size: .75rem;
+  color: var(--t-main);
+  line-height: 1.5;
+}
+
+.warning-text strong {
+  color: var(--c-secondary);
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════
+   TRANSFER SECTION
+═══════════════════════════════════════════ */
+.transfer-section {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 24px 20px;
+  margin: 0 20px 24px;
+  border: 1px solid var(--border2);
+  box-shadow: var(--shadow-sm);
+}
+
+.transfer-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--t-dark);
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--c-secondary);
+  display: block;
+  margin-bottom: 10px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  color: var(--t-dark);
+  font-size: .875rem;
+  font-weight: 500;
+  transition: all .2s var(--ease);
+}
+
+.form-input::placeholder {
+  color: var(--t-muted);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--c-primary-pale);
+}
+
+.upload-box {
+  background: var(--bg);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+}
+
+.upload-box:hover {
+  border-color: var(--c-primary);
+  background: var(--c-primary-pale);
+}
+
+.upload-icon {
+  font-size: 2.5rem;
+  color: var(--c-primary);
+  margin-bottom: 12px;
+}
+
+.upload-text {
+  font-size: .9375rem;
+  font-weight: 600;
+  color: var(--t-dark);
+  margin-bottom: 6px;
+}
+
+.upload-hint {
+  font-size: .75rem;
+  color: var(--t-sub);
+}
+
+/* ═══════════════════════════════════════════
+   CONFIRM BUTTON
+═══════════════════════════════════════════ */
+.confirm-btn {
+  width: calc(100% - 40px);
+  margin: 0 20px 40px;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--c-secondary) 0%, var(--c-primary) 100%);
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: var(--shadow-primary);
+  transition: all .2s var(--ease);
+}
+
+.confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(254, 87, 34, 0.35);
+}
+
+.confirm-btn:active {
+  transform: translateY(0);
+}
+
+.confirm-btn i {
+  font-size: 1.125rem;
+}
+
+/* ═══════════════════════════════════════════
+   BOTTOM NAVIGATION
+═══════════════════════════════════════════ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+  z-index: 200;
+}
+
+.bottom-nav-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 60px;
+  padding: 0 8px;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  color: #919186;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s var(--ease);
+  border-radius: 8px;
+  min-width: 64px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-item svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
+  transition: transform 0.2s var(--ease);
+}
+
+.nav-item:hover {
+  color: var(--c-secondary);
+  background: var(--c-primary-pale);
+}
+
+.nav-item:hover svg {
+  transform: translateY(-2px);
+}
+
+.nav-item.active {
+  color: var(--c-secondary);
+}
+
+.nav-item.active svg {
+  stroke: var(--c-secondary);
+}
+
+/* Add padding to container for bottom nav */
+.deposit-container {
+  padding-bottom: 60px;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+/* Tablet tier: keep the network grid to 2 columns so cards aren't cramped. */
+@media (max-width: 768px) {
+  .network-selection {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .deposit-header {
+    padding: 14px 16px;
+  }
+
+  .balance-card {
+    margin: 16px 16px 20px;
+    padding: 20px 18px;
+  }
+
+  .balance-amount {
+    font-size: 1.625rem;
+  }
+
+  .section-title {
+    padding: 0 16px;
+  }
+
+  .network-selection {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 16px;
+    gap: 10px;
+  }
+
+  .network-card {
+    padding: 16px 14px;
+  }
+
+  .network-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.375rem;
+  }
+
+  .address-section,
+  .transfer-section {
+    margin: 0 16px 20px;
+    padding: 20px 16px;
+  }
+
+  .qr-code {
+    width: 160px;
+    height: 160px;
+  }
+
+  .confirm-btn {
+    width: calc(100% - 32px);
+    margin: 0 16px 40px;
+    padding: 14px;
+  }
+
+  .bottom-nav-inner {
+    padding: 0 0px;
+  }
+
+  .nav-item {
+    padding: 8px 8px;
+    min-width: 56px;
+    font-size: 0.625rem;
+  }
+
+  .nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+}

@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasks - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/task.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <style>
+    /* Combo order: multiple product line-items in the order modal. */
+    #comboItems { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+    .combo-item {
+      display: flex; align-items: center; gap: 12px;
+      background: #f8fafc; border: 1px solid #eef1f5; border-radius: 12px; padding: 10px 12px;
+    }
+    .combo-item img {
+      width: 46px; height: 46px; border-radius: 10px; object-fit: cover; flex: 0 0 auto; background: #eef1f5;
+    }
+    .combo-item .ci-info { flex: 1; min-width: 0; }
+    .combo-item .ci-name {
+      font-size: 14px; font-weight: 600; color: #1f2937; margin: 0 0 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .combo-item .ci-price { font-size: 14px; font-weight: 700; color: #111827; }
+    .combo-item .ci-qty { font-size: 13px; color: #9ca3af; flex: 0 0 auto; }
+  </style>
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+     TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <!-- Back Button -->
+      <a href="markets.html" class="topbar-back">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+
+      <!-- Title -->
+      <div class="topbar-title" id="marketName">JD.com</div>
+
+      <!-- Right side -->
+      <div class="topbar-right">
+        <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <div class="task-container">
+    
+    <!-- Balance Card -->
+    <div class="task-balance-card">
+      <div class="balance-label balance-label-one" data-i18n="task.accountBalance">Actual Account Balance</div>
+      <div class="balance-amount">
+        <span class="balance-number" id="accountBalance">--</span>
+        <span class="balance-currency">USDT</span>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="task-stats-grid">
+      <div class="task-stat-card">
+        <div class="task-stat-label">Today's Times</div>
+        <div class="task-stat-value" id="todayTimes">1/25</div>
+      </div>
+
+      <div class="task-stat-card">
+        <div class="task-stat-label">Today's commission</div>
+        <div class="task-stat-value" id="todayCommission">7.675 USDT</div>
+      </div>
+
+      <div class="task-stat-card">
+        <div class="task-stat-label">Cash gap between tasks</div>
+        <div class="task-stat-value" id="cashGap">0.00 USDT</div>
+      </div>
+
+      <div class="task-stat-card">
+        <div class="task-stat-label">Yesterday's buy commission</div>
+        <div class="task-stat-value" id="yesterdayCommission">0.00 USDT</div>
+      </div>
+
+      <div class="task-stat-card">
+        <div class="task-stat-label">Yesterday's team commission</div>
+        <div class="task-stat-value" id="teamCommission">0.00 USDT</div>
+      </div>
+
+      <div class="task-stat-card">
+        <div class="task-stat-label">Money frozen in accounts</div>
+        <div class="task-stat-value" id="frozenMoney">0.00 USDT</div>
+      </div>
+    </div>
+
+    <!-- Grab Order Button -->
+    <button class="task-grab-btn" id="grabOrderBtn">
+      <span class="btn-content">
+        <i class="ri-shopping-cart-line"></i>
+        <span>Grab the order immediately</span>
+      </span>
+      <span class="btn-loader">
+        <span class="loader-spinner"></span>
+        <span>Loading...</span>
+      </span>
+    </button>
+
+    <!-- Rules Section -->
+    <div class="task-rules-section">
+      <div class="task-rules-header">
+        <i class="ri-information-line"></i>
+        <span>Rules & Description</span>
+      </div>
+      <div class="task-rules-content">
+        <ol class="task-rules-list">
+          <li>Commission logic runtime execution details mapping. Each order yields <strong id="commissionRate">6%</strong> commission.</li>
+          <li>System algorithmic structural automated random matching process criteria alerts instruction manual text alignment. Do not close app while processing.</li>
+          <li>Complete all grabbed orders within 24 hours.</li>
+          <li>Ensure sufficient balance in your account before grabbing orders. Insufficient balance will result in order failure.</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ORDER MODAL
+  ══════════════════════════════════════ -->
+  <div class="order-modal" id="orderModal">
+    <div class="order-modal-overlay" id="modalOverlay"></div>
+    <div class="order-modal-content">
+      <div class="order-modal-header">
+        <h3 class="order-modal-title">Successful Order</h3>
+        <button class="order-modal-close" id="closeModal">
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+
+      <div class="order-modal-body">
+        <!-- Order Number -->
+        <div class="order-number">
+          <span>Order Nos: </span>
+          <span id="orderNumber">439642606377617</span>
+        </div>
+
+        <!-- Product Card (single, normal order) -->
+        <div class="order-product-card" id="singleProductCard">
+          <div class="order-product-image">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Cpath d='M60 80h80v80h-80z' fill='%23d1d5db'/%3E%3Crect x='70' y='90' width='60' height='10' fill='%239ca3af'/%3E%3Crect x='70' y='110' width='60' height='10' fill='%239ca3af'/%3E%3Crect x='70' y='130' width='40' height='10' fill='%239ca3af'/%3E%3C/svg%3E" alt="Product" id="productImage">
+          </div>
+          <div class="order-product-info">
+            <h4 class="order-product-name" id="productName">Deep Tissue Massage Gun</h4>
+            <div class="order-product-details">
+              <span class="order-product-price" id="productPrice">$42.99</span>
+              <span class="order-product-qty" id="productQty">x4</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combo items (multiple products, shown only for combo orders) -->
+        <div id="comboItems" style="display:none;"></div>
+
+        <!-- Order Details -->
+        <div class="order-details-grid">
+          <div class="order-detail-row">
+            <span class="order-detail-label">Transaction time</span>
+            <span class="order-detail-value" id="transactionTime">9/11/2026, 4:51:25 AM</span>
+          </div>
+          <div class="order-detail-row">
+            <span class="order-detail-label">Order amount</span>
+            <span class="order-detail-value" id="orderAmount">171.96 USDT</span>
+          </div>
+          <div class="order-detail-row">
+            <span class="order-detail-label">Commissions (<span id="modalCommissionRate">6%</span>)</span>
+            <span class="order-detail-value success" id="commissionAmount">+6.8784 USDT</span>
+          </div>
+        </div>
+
+        <!-- Expected Income -->
+        <div class="order-expected-income">
+          <span class="order-income-label">Expected income</span>
+          <span class="order-income-value" id="expectedIncome">178.8384 USDT</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button class="order-submit-btn" id="submitOrderBtn">
+          <span class="btn-content">Submit order</span>
+          <span class="btn-loader">
+            <span class="loader-spinner"></span>
+            <span>Processing...</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       COMBO RECHARGE MODAL
+  ══════════════════════════════════════ -->
+  <div class="combo-modal" id="comboModal">
+    <div class="combo-modal-overlay" id="comboOverlay"></div>
+    <div class="combo-modal-content">
+      <div class="combo-icon">
+        <i class="ri-gift-line"></i>
+      </div>
+      <h3 class="combo-title">🎁 COMBO TASK AVAILABLE!</h3>
+      <p class="combo-subtitle">Higher Commission - Bigger Rewards!</p>
+      <p class="combo-message">
+        A special combo task is available with <strong>higher commission rates</strong>! Complete this task to earn more profit.
+      </p>
+      <div class="combo-details">
+        <div class="combo-detail-item">
+          <i class="ri-shopping-cart-line"></i>
+          <div>
+            <div class="combo-detail-label">Product</div>
+            <div class="combo-detail-value" id="comboProductName">Wireless Headphones</div>
+          </div>
+        </div>
+        <div class="combo-detail-item">
+          <i class="ri-money-dollar-circle-line"></i>
+          <div>
+            <div class="combo-detail-label">Order Amount</div>
+            <div class="combo-detail-value" id="comboOrderAmount">450 USDT</div>
+          </div>
+        </div>
+        <div class="combo-detail-item">
+          <i class="ri-percent-line"></i>
+          <div>
+            <div class="combo-detail-label">Expected Commission</div>
+            <div class="combo-detail-value success" id="comboCommission">+54 USDT</div>
+          </div>
+        </div>
+      </div>
+      <div class="combo-balance-check">
+        <div class="balance-check-row">
+          <span>Your Balance:</span>
+          <span id="comboCurrentBalance">364.03 USDT</span>
+        </div>
+        <div class="balance-check-row required">
+          <span>Required Balance:</span>
+          <span id="comboRequiredBalance">450 USDT</span>
+        </div>
+        <div class="balance-check-row deficit">
+          <i class="ri-arrow-up-line"></i>
+          <span>Need to Recharge:</span>
+          <span id="comboDeficit">85.97 USDT</span>
+        </div>
+      </div>
+      <p class="combo-note">
+        <i class="ri-information-line"></i>
+        Recharge now to unlock this combo task and earn higher profits!
+      </p>
+      <div class="combo-actions">
+        <button class="btn-combo-recharge" id="goToComboDeposit">
+          <i class="ri-wallet-3-line"></i>
+          <span>Recharge Now</span>
+        </button>
+        <button class="btn-combo-skip" id="skipCombo">Skip This Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       INSUFFICIENT BALANCE MODAL
+  ══════════════════════════════════════ -->
+  <div class="insufficient-modal" id="insufficientModal">
+    <div class="insufficient-modal-overlay" id="insufficientOverlay"></div>
+    <div class="insufficient-modal-content">
+      <div class="insufficient-icon">
+        <i class="ri-error-warning-line"></i>
+      </div>
+      <h3 class="insufficient-title">Insufficient Balance</h3>
+      <p class="insufficient-message" id="insufficientMessage">
+        You need at least 499 USDT to start Rakuten tasks. Please recharge your account.
+      </p>
+      <div class="insufficient-balance-info">
+        <div class="balance-info-item">
+          <span class="balance-label">Current Balance</span>
+          <span class="balance-value" id="currentBalanceDisplay">364.03 USDT</span>
+        </div>
+        <div class="balance-info-item">
+          <span class="balance-label">Required Balance</span>
+          <span class="balance-value required" id="requiredBalanceDisplay">499 USDT</span>
+        </div>
+      </div>
+      <div class="insufficient-actions">
+        <button class="btn-recharge" id="goToDeposit">
+          <i class="ri-wallet-3-line"></i>
+          <span>Recharge Now</span>
+        </button>
+        <button class="btn-cancel" id="cancelInsufficient">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       BOTTOM NAVIGATION
+  ══════════════════════════════════════ -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="index.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span data-i18n="nav.home">Home</span>
+      </a>
+      <a href="support.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+          <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+          <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+          <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+        </svg>
+        <span data-i18n="nav.services">Services</span>
+      </a>
+      <a href="markets.html" class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span data-i18n="nav.menu">Menu</span>
+      </a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+        <span data-i18n="nav.history">History</span>
+      </a>
+      <a href="profile.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span data-i18n="nav.profile">Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Live data + API client must load before the inline task script uses them -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live-data.js"></script>
+  <script src="js/notif-badge.js"></script>
+
+  <script>
+    // Get market info from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const market = urlParams.get('market') || 'jd';
+    
+    // Live market config + product list loaded from the API for this market
+    // slug. Populated by loadMarket(); no more hardcoded market data.
+    let currentMarket = null;      // { id, name, commissionRate, minBalance, maxBalance }
+    let marketProducts = [];       // real products from GET /api/markets/:id
+    let currentOrder = null;       // the order returned by a real grab
+    let allMarkets = [];           // all markets (for "go to next market" guidance)
+
+    // Task data. Balance/frozen/today counts come from the API (see
+    // applyLiveWalletData); nothing here is trusted as real until then.
+    let taskData = {
+      balance: 0,
+      todayTasks: 0,
+      maxTasks: 25,
+      todayCommission: 0.00,
+      yesterdayCommission: 0.00,
+      teamCommission: 0.00,
+      frozenMoney: 0,
+      cashGap: 0.00
+    };
+
+    // Overwrite the locally cached figures with the authoritative wallet and
+    // task stats from GET /api/auth/me.
+    document.addEventListener('jishora:data-loaded', () => {
+      // applyLiveWalletData reads the freshly loaded payload from LiveData.get()
+      // and refreshes the grid. Defined further below; guarded in case this
+      // event arrives before that definition is reached.
+      if (typeof applyLiveWalletData === 'function') {
+        applyLiveWalletData();
+      }
+    });
+
+    /**
+     * Load the real market (by slug from the URL) and its products from the API.
+     * Sets currentMarket, marketProducts, and fills the market name/commission
+     * labels. Returns true on success.
+     */
+    async function loadMarket() {
+      // Map the ?market=slug to a market id via GET /markets.
+      const list = await API.getMarkets();
+      if (!list || !list.success) return false;
+
+      // Keep all markets, sorted by minimum balance (JD -> Rakuten -> Temu), so
+      // we can point a customer to the NEXT market when their balance is too big.
+      allMarkets = (list.data || []).slice().sort(
+        (a, b) => (parseFloat(a.min_balance) || 0) - (parseFloat(b.min_balance) || 0)
+      );
+
+      const found = (list.data || []).find((m) => m.slug === market) || (list.data || [])[0];
+      if (!found) return false;
+
+      const detail = await API.getMarket(found.id);
+      if (!detail || !detail.success) return false;
+
+      const m = detail.data.market;
+      currentMarket = {
+        id: m.id,
+        name: m.name,
+        commissionRate: parseFloat(m.commission_rate) || 0,
+        minBalance: parseFloat(m.min_balance) || 0,
+        maxBalance: m.max_balance == null ? null : parseFloat(m.max_balance)
+      };
+      marketProducts = detail.data.products || [];
+
+      const pct = `${(currentMarket.commissionRate * 100).toFixed(0)}%`;
+      const nameEl = document.getElementById('marketName');
+      const rateEl = document.getElementById('commissionRate');
+      const modalRateEl = document.getElementById('modalCommissionRate');
+      if (nameEl) nameEl.textContent = currentMarket.name;
+      if (rateEl) rateEl.textContent = pct;
+      if (modalRateEl) modalRateEl.textContent = pct;
+
+      return true;
+    }
+
+    // Update UI with current data
+    function updateUI() {
+      document.getElementById('accountBalance').textContent = taskData.balance.toFixed(2);
+      // "Today's Times" shows how many tasks the customer has done today. The
+      // denominator grows in steps of the batch size (25) so it never shows an
+      // impossible value like 26/25 after the admin approves a new round — it
+      // reads 26/50, 51/75, etc. There is no hard daily cap; the admin's
+      // approvals control how much they can work.
+      const step = taskData.maxTasks || 25;
+      const done = taskData.todayTasks || 0;
+      const cap = Math.max(step, Math.ceil((done + 1) / step) * step);
+      document.getElementById('todayTimes').textContent = `${done}/${cap}`;
+      document.getElementById('todayCommission').textContent = `${taskData.todayCommission.toFixed(2)} USDT`;
+      document.getElementById('cashGap').textContent = `${taskData.cashGap.toFixed(2)} USDT`;
+      document.getElementById('yesterdayCommission').textContent = `${taskData.yesterdayCommission.toFixed(2)} USDT`;
+      document.getElementById('teamCommission').textContent = `${taskData.teamCommission.toFixed(2)} USDT`;
+      // "Money frozen in accounts" is intentionally shown as a fixed 0.00 USDT
+      // (static, not the live frozen balance) per requirement.
+      document.getElementById('frozenMoney').textContent = '0.00 USDT';
+    }
+
+    // Pull live wallet figures into taskData and refresh the grid. Kept as a
+    // named function so it can run both from the data-loaded event and on init
+    // (in case the event already fired before this script attached its listener).
+    function applyLiveWalletData() {
+      const data = (typeof LiveData !== 'undefined' && LiveData.get()) || null;
+      if (!data) return;
+      const wallet = data.wallet || {};
+
+      taskData.balance = Number(wallet.balance) || 0;
+      taskData.frozenMoney = Number(wallet.frozenBalance) || 0;
+
+      updateUI();
+
+      // Task counts and TODAY's commission come from /api/tasks/stats, which
+      // exposes today_tasks and today_commission. The /auth/me stats only carry
+      // the all-time total_commission, which is why "Today's commission"
+      // previously showed the lifetime sum instead of today's.
+      loadTaskStats();
+    }
+
+    async function loadTaskStats() {
+      const response = await API.getTaskStats();
+      if (!response || !response.success) return;
+      const s = response.data || {};
+      taskData.todayTasks = Number(s.today_tasks) || 0;
+      taskData.todayCommission = Number(s.today_commission) || 0;
+      updateUI();
+    }
+
+    // Initialize: paint zeros, pull live wallet/stats, then load the market
+    // (products + commission) so grabbing can create real orders.
+    updateUI();
+    applyLiveWalletData();
+    loadMarket().then((ok) => {
+      if (!ok) showToast('Could not load market data', 'error');
+    });
+
+    // Modal elements
+    const modal = document.getElementById('orderModal');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const closeModalBtn = document.getElementById('closeModal');
+    const grabOrderBtn = document.getElementById('grabOrderBtn');
+    const submitOrderBtn = document.getElementById('submitOrderBtn');
+
+    // Pick which product to display for the next grab. The order AMOUNT is based
+    // on the customer's balance (recharge), not the product price, so every
+    // product is eligible — the product just provides a name/image for the
+    // order card. Cycles through the market's products so orders still vary.
+    function pickProduct() {
+      if (!marketProducts.length) return null;
+      const index = (taskData.todayTasks || 0) % marketProducts.length;
+      return marketProducts[index];
+    }
+
+    // The amount a user needs to start here is the market's minimum balance.
+    function cheapestProductPrice() {
+      return currentMarket ? currentMarket.minBalance : 0;
+    }
+
+    // Build 2-3 product line-items whose (unitPrice x qty) sum EXACTLY to the
+    // combo total, for the multi-product combo display. Uses real products from
+    // the market for names/images/prices; the last item's unit price is
+    // adjusted so the grand total matches the combo amount to the cent.
+    function buildComboItems(total) {
+      total = Math.round((Number(total) || 0) * 100) / 100;
+      const pool = (marketProducts && marketProducts.length) ? marketProducts.slice() : [];
+      const fallbackImg = 'images/logo/logo.png';
+
+      // Choose 2-3 distinct products (or fewer if the market has fewer).
+      const count = Math.min(3, Math.max(1, pool.length || 3));
+      // Shuffle a copy so combos vary.
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      const chosen = [];
+      for (let i = 0; i < count; i++) {
+        chosen.push(pool[i] || { name: 'Product ' + (i + 1), image_url: fallbackImg, price: 0 });
+      }
+
+      // Split the total across the items, then set each item's unit price =
+      // (its share / its quantity) so price*qty is exact. Quantities are small
+      // random-ish integers to look like the screenshot.
+      const items = [];
+      let remaining = total;
+      for (let i = 0; i < chosen.length; i++) {
+        const isLast = i === chosen.length - 1;
+        // Give this item a share of the remaining amount.
+        let share = isLast ? remaining : Math.round((remaining / (chosen.length - i)) * 100) / 100;
+        if (share < 0.01) share = 0.01;
+        remaining = Math.round((remaining - share) * 100) / 100;
+
+        // A plausible quantity, then derive the unit price so qty*price = share.
+        const qty = [3, 5, 7, 10, 11, 14, 20, 27][Math.floor(Math.random() * 8)];
+        const unit = Math.round((share / qty) * 100) / 100;
+        // Recompute share from rounded unit*qty and carry any rounding drift.
+        const lineTotal = Math.round(unit * qty * 100) / 100;
+        const drift = Math.round((share - lineTotal) * 100) / 100;
+        if (drift !== 0) remaining = Math.round((remaining + drift) * 100) / 100;
+
+        items.push({
+          name: chosen[i].name || 'Product',
+          image: chosen[i].image_url || fallbackImg,
+          price: unit,
+          qty: qty
+        });
+      }
+      // Any leftover cents from rounding go onto the first item's unit price.
+      if (remaining !== 0 && items[0]) {
+        items[0].price = Math.round((items[0].price + remaining / items[0].qty) * 100) / 100;
+      }
+
+      return items.map(function (it) {
+        return (
+          '<div class="combo-item">' +
+            '<img src="' + (it.image || fallbackImg) + '" alt="" onerror="this.src=\'' + fallbackImg + '\'">' +
+            '<div class="ci-info">' +
+              '<div class="ci-name">' + escapeHtmlLite(it.name) + '</div>' +
+              '<div class="ci-price">' + it.price.toFixed(2) + ' USDT</div>' +
+            '</div>' +
+            '<div class="ci-qty">x' + it.qty + '</div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+
+    // Minimal HTML escaper for product names.
+    function escapeHtmlLite(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    /**
+     * Grab a real order: POST /tasks/grab creates a pending task and freezes the
+     * order amount server-side. The returned order is shown in the modal.
+     */
+    async function openOrderModal() {
+      if (!currentMarket) {
+        showToast('Market is still loading, please wait a moment', 'info');
+        return;
+      }
+
+      // No fixed daily cap: how much a customer can work is governed by the
+      // admin's approval (the permission batch). The backend permission gate is
+      // the source of truth — if the current batch is exhausted it returns
+      // PERMISSION_REQUIRED and we show the "waiting for approval" modal. Once
+      // the admin approves again, the customer can keep working.
+
+      // Above the market's maximum band -> not eligible here. Point the
+      // customer to the NEXT market (the one whose minimum is just above this
+      // market's maximum), e.g. JD.com -> Rakuten -> Temu.
+      if (currentMarket.maxBalance != null && taskData.balance > currentMarket.maxBalance) {
+        // Find the next market by ascending minimum balance.
+        var nextMarket = null;
+        for (var i = 0; i < allMarkets.length; i++) {
+          var mm = allMarkets[i];
+          if ((parseFloat(mm.min_balance) || 0) > currentMarket.maxBalance) { nextMarket = mm; break; }
+        }
+        if (nextMarket) {
+          // Just inform the customer — do NOT auto-redirect. They go to the
+          // next market themselves (via back / menu) when they choose to.
+          showToast(`Your balance exceeds the maximum limit for ${currentMarket.name}. Please go to ${nextMarket.name} and start the process again.`, 'warning');
+        } else {
+          // No higher market exists (e.g. already at the top market).
+          showToast(`Your balance exceeds the maximum for ${currentMarket.name}. You can withdraw to continue.`, 'warning');
+        }
+        return;
+      }
+
+      // Pick a product the customer can actually afford. If none is affordable,
+      // the real amount they need is the cheapest product price (which can be a
+      // little above the market's nominal minimum), so show that.
+      const product = pickProduct();
+      if (!product) {
+        if (!marketProducts.length) {
+          showToast('No products available in this market yet', 'error');
+        } else {
+          showInsufficientBalanceModal(cheapestProductPrice());
+        }
+        return;
+      }
+
+      grabOrderBtn.classList.add('loading');
+      grabOrderBtn.disabled = true;
+
+      const response = await API.grabTask(product.id);
+
+      grabOrderBtn.classList.remove('loading');
+      grabOrderBtn.disabled = false;
+
+      if (!response || !response.success) {
+        const msg = (response && response.message) || 'Could not grab order';
+        // Permission gate -> the admin has not authorised this task start yet.
+        if (response && response.code === 'PERMISSION_REQUIRED') {
+          showPermissionRequiredModal();
+        } else if (/insufficient|requirement/i.test(msg)) {
+          // Insufficient balance -> offer the deposit path.
+          showInsufficientBalanceModal(currentMarket.minBalance);
+        } else {
+          showToast(msg, 'error');
+        }
+        return;
+      }
+
+      const d = response.data;
+      // Remember the real task so submit can complete it.
+      currentOrder = {
+        taskId: d.taskId,
+        productName: d.productName,
+        productImage: d.productImage,
+        orderAmount: Number(d.orderAmount),
+        commission: Number(d.commission),
+        expectedIncome: Number(d.expectedIncome),
+        isCombo: !!d.isCombo
+      };
+
+      // Fill the modal from the real order. The visible "Order Nos" is a long
+      // random number (like a real marketplace order id) — the actual task is
+      // tracked internally by taskId, so this display value can be random.
+      document.getElementById('orderNumber').textContent = generateOrderNo();
+
+      const singleCard = document.getElementById('singleProductCard');
+      const comboBox = document.getElementById('comboItems');
+
+      if (d.isCombo) {
+        // COMBO order: show several product line-items that add up to the combo
+        // amount (matches the multi-product "Successful Order" screenshot).
+        if (singleCard) singleCard.style.display = 'none';
+        if (comboBox) {
+          comboBox.style.display = 'flex';
+          comboBox.innerHTML = buildComboItems(currentOrder.orderAmount);
+        }
+      } else {
+        // Normal order: single product card.
+        if (comboBox) { comboBox.style.display = 'none'; comboBox.innerHTML = ''; }
+        if (singleCard) singleCard.style.display = '';
+        document.getElementById('productName').textContent = currentOrder.productName;
+        document.getElementById('productPrice').textContent = `${currentOrder.orderAmount.toFixed(2)} USDT`;
+        document.getElementById('productQty').textContent = 'x1';
+        const img = document.getElementById('productImage');
+        if (img) {
+          // Fall back to the logo if the product image is missing OR fails to
+          // load (e.g. an external URL the device can't reach), so the card
+          // never shows the broken-image icon.
+          const fallback = 'images/logo/logo.png';
+          img.onerror = function () { this.onerror = null; this.src = fallback; };
+          img.src = currentOrder.productImage || fallback;
+        }
+      }
+
+      document.getElementById('transactionTime').textContent = new Date().toLocaleString();
+      document.getElementById('orderAmount').textContent = `${currentOrder.orderAmount.toFixed(2)} USDT`;
+      document.getElementById('commissionAmount').textContent = `+${currentOrder.commission.toFixed(2)} USDT`;
+      document.getElementById('expectedIncome').textContent = `${currentOrder.expectedIncome.toFixed(2)} USDT`;
+
+      const modalTitle = document.querySelector('.order-modal-title');
+      if (modalTitle) {
+        modalTitle.textContent = d.isCombo ? 'Successful Order' : 'Order Grabbed';
+        modalTitle.style.background = 'none';
+        modalTitle.style.webkitTextFillColor = 'unset';
+      }
+
+      // NOTE: we deliberately do NOT refresh the balance / "Today's Times"
+      // display here. The grab freezes the order amount server-side, but showing
+      // the balance drop to 0 the instant the modal opens looks like the money
+      // vanished and the order was auto-placed. The displayed figures stay as
+      // they were until the customer actually Submits (or the order is
+      // cancelled on close), which then refreshes them.
+
+      // Show the "permission accepted" toast ONLY on the first grab of a fresh
+      // approval batch (backend sets firstOfBatch). For the remaining grabs in
+      // the same batch it stays hidden; it appears again after a new approval.
+      if (d.firstOfBatch) {
+        showToast('Permission accepted — order grabbed. You can start the task now.', 'success');
+      }
+
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Build a long random numeric order number for display (like a real
+    // marketplace order id, e.g. 4871903087257782). 16 digits, first non-zero.
+    function generateOrderNo() {
+      let n = String(Math.floor(Math.random() * 9) + 1); // 1-9 first digit
+      for (let i = 0; i < 15; i++) n += Math.floor(Math.random() * 10);
+      return n;
+    }
+
+    // Small toast helper that prefers the global showNotification, falling back
+    // to alert only if it is unavailable.
+    function showToast(message, type) {
+      if (typeof showNotification === 'function') showNotification(message, type || 'info');
+      else alert(message);
+    }
+
+    // Re-fetch wallet + stats from the server and repaint the grid.
+    function refreshLiveData() {
+      if (typeof LiveData !== 'undefined' && LiveData.load) {
+        LiveData.load({ silent: true }).then(() => applyLiveWalletData());
+      }
+    }
+
+    // Show combo recharge modal
+    function showComboRechargeModal(comboOrder) {
+      const comboModal = document.getElementById('comboModal');
+      const comboProductName = document.getElementById('comboProductName');
+      const comboOrderAmount = document.getElementById('comboOrderAmount');
+      const comboCommission = document.getElementById('comboCommission');
+      const comboCurrentBalance = document.getElementById('comboCurrentBalance');
+      const comboRequiredBalance = document.getElementById('comboRequiredBalance');
+      const comboDeficit = document.getElementById('comboDeficit');
+      
+      const deficit = comboOrder.orderAmount - taskData.balance;
+      
+      comboProductName.textContent = comboOrder.product.name;
+      comboOrderAmount.textContent = `${comboOrder.orderAmount} USDT`;
+      comboCommission.textContent = `+${comboOrder.commission} USDT`;
+      comboCurrentBalance.textContent = `${taskData.balance.toFixed(2)} USDT`;
+      comboRequiredBalance.textContent = `${comboOrder.orderAmount} USDT`;
+      comboDeficit.textContent = `${deficit.toFixed(2)} USDT`;
+      
+      comboModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+      // Store combo order for later
+      localStorage.setItem('pendingComboOrder', JSON.stringify(comboOrder));
+    }
+
+    // Close combo modal
+    function closeComboModal() {
+      const comboModal = document.getElementById('comboModal');
+      comboModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Show insufficient balance modal
+    function showInsufficientBalanceModal(requiredBalance) {
+      const insufficientModal = document.getElementById('insufficientModal');
+      const insufficientMessage = document.getElementById('insufficientMessage');
+      const currentBalanceDisplay = document.getElementById('currentBalanceDisplay');
+      const requiredBalanceDisplay = document.getElementById('requiredBalanceDisplay');
+      
+      const required = Number(requiredBalance) || 0;
+      insufficientMessage.textContent = `You need at least ${required.toFixed(2)} USDT to start ${currentMarket.name} tasks. Please recharge your account.`;
+      currentBalanceDisplay.textContent = `${taskData.balance.toFixed(2)} USDT`;
+      requiredBalanceDisplay.textContent = `${required.toFixed(2)} USDT`;
+      
+      insufficientModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Close insufficient balance modal
+    function closeInsufficientBalanceModal() {
+      const insufficientModal = document.getElementById('insufficientModal');
+      insufficientModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Show the "waiting for admin approval" modal. The admin must grant
+    // permission before the customer can start each task; permission is needed
+    // every time. This modal is built on the fly so no extra markup is required.
+    function showPermissionRequiredModal() {
+      let overlay = document.getElementById('permissionModal');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'permissionModal';
+        overlay.style.cssText =
+          'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+        overlay.innerHTML = `
+          <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:32px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+            <div style="width:76px;height:76px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FE5722,#FF9700);">
+              <i class="fas fa-headset" style="color:#fff;font-size:32px;"></i>
+            </div>
+            <h3 style="margin:0 0 10px;font-size:20px;color:#1f2937;">Contact Customer Service for Approval</h3>
+            <p style="margin:0 0 22px;color:#6b7280;font-size:15px;line-height:1.55;">
+              To start this task you need approval. Please contact customer service to get approved. Once approved, tap “Grab the order immediately” again to begin.
+            </p>
+            <a href="support.html" style="display:block;width:100%;box-sizing:border-box;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;text-decoration:none;background:linear-gradient(135deg,#FE5722,#FF9700);margin-bottom:10px;">
+              <i class="fas fa-headset" style="margin-right:8px;"></i>Contact Customer Service
+            </a>
+            <button onclick="closePermissionModal()" style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:10px;font-size:15px;font-weight:600;color:#6b7280;cursor:pointer;background:#fff;">
+              Got it
+            </button>
+          </div>`;
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) closePermissionModal();
+        });
+        document.body.appendChild(overlay);
+      }
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePermissionModal() {
+      const overlay = document.getElementById('permissionModal');
+      if (overlay) overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    // Combo order needs a bigger balance to submit. Show a prompt telling the
+    // customer exactly how much to recharge, with Recharge / Cancel actions.
+    function showComboRechargePrompt(shortfall) {
+      let overlay = document.getElementById('comboRechargeModal');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'comboRechargeModal';
+        overlay.style.cssText =
+          'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;';
+        overlay.innerHTML = `
+          <div style="background:#1f2430;color:#fff;border-radius:16px;max-width:360px;width:100%;padding:30px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+            <div style="width:64px;height:64px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #FF7A2F;">
+              <i class="fas fa-exclamation" style="color:#FF7A2F;font-size:28px;"></i>
+            </div>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;">
+              Your account balance is not enough, you need to recharge
+              <span id="comboShortfall" style="color:#FF9700;font-weight:700;">0.00 USDT</span>
+              to submit this order.
+            </p>
+            <div style="display:flex;gap:12px;">
+              <button onclick="closeComboRechargeModal()" style="flex:1;padding:12px;border:none;border-radius:10px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;background:#3a4150;">Cancel</button>
+              <a href="deposit.html" style="flex:1;padding:12px;border:none;border-radius:10px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;text-decoration:none;background:linear-gradient(135deg,#FE5722,#FF9700);">Recharge</a>
+            </div>
+          </div>`;
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) closeComboRechargeModal();
+        });
+        document.body.appendChild(overlay);
+      }
+      const sf = overlay.querySelector('#comboShortfall');
+      if (sf) sf.textContent = `${(Number(shortfall) || 0).toFixed(2)} USDT`;
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeComboRechargeModal() {
+      const overlay = document.getElementById('comboRechargeModal');
+      if (overlay) overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    // Close modal
+    // Closing the order modal WITHOUT submitting cancels the pending order so
+    // the frozen funds are returned to the balance. Without this, grabbing then
+    // closing left money frozen (balance stuck at 0) and the task lingering.
+    function closeOrderModal() {
+      const orderToCancel = currentOrder;
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+      currentOrder = null;
+
+      // Only NORMAL (frozen) orders are cancelled on close, to return the
+      // frozen funds. COMBO orders are left pending on purpose: they are
+      // "sticky" — the backend re-shows the same combo on the next grab so it
+      // never vanishes after the customer leaves to recharge. Nothing is frozen
+      // for a combo, so there is nothing to refund.
+      if (orderToCancel && orderToCancel.taskId && !orderToCancel.submitted && !orderToCancel.isCombo) {
+        if (API && API.cancelTask) {
+          API.cancelTask(orderToCancel.taskId).then(function () {
+            refreshLiveData();
+          }).catch(function () {});
+        }
+      }
+    }
+
+    /**
+     * Submit the grabbed order: POST /tasks/:id/complete finalises the real
+     * task, releases the frozen amount and credits commission server-side.
+     */
+    async function submitOrder() {
+      if (!currentOrder || !currentOrder.taskId) return;
+
+      submitOrderBtn.classList.add('loading');
+      submitOrderBtn.disabled = true;
+
+      // Submit and, in parallel, hold the loading animation for a short while so
+      // the "processing" spinner is visible (the server itself responds fast).
+      const MIN_SUBMIT_MS = 1600;
+      const [response] = await Promise.all([
+        API.completeTask(currentOrder.taskId),
+        new Promise((r) => setTimeout(r, MIN_SUBMIT_MS))
+      ]);
+
+      submitOrderBtn.classList.remove('loading');
+      submitOrderBtn.disabled = false;
+
+      if (!response || !response.success) {
+        // Combo order needs more balance to submit -> show the recharge prompt.
+        if (response && response.code === 'COMBO_RECHARGE_REQUIRED') {
+          const shortfall = (response.data && response.data.shortfall) || 0;
+          showComboRechargePrompt(shortfall);
+          return;
+        }
+        showToast((response && response.message) || 'Could not submit order', 'error');
+        return;
+      }
+
+      const earned = Number(response.data.commission) || currentOrder.commission;
+
+      // Mark as submitted so closeOrderModal doesn't try to cancel a task that
+      // is already completed.
+      currentOrder.submitted = true;
+      closeOrderModal();
+      showCompletionNotification(earned.toFixed(2));
+
+      // Pull the authoritative new balance / frozen / stats from the server so
+      // everything persists and matches after a reload.
+      refreshLiveData();
+      currentOrder = null;
+    }
+
+    // Show success notification
+    function showSuccessNotification() {
+      const notification = document.createElement('div');
+      notification.className = 'task-notification success';
+      notification.innerHTML = `
+        <i class="ri-checkbox-circle-fill"></i>
+        <div>
+          <div class="notification-title">Order Submitted!</div>
+          <div class="notification-text">Your order is being processed...</div>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => notification.classList.add('show'), 100);
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Show completion notification
+    function showCompletionNotification(commission) {
+      const notification = document.createElement('div');
+      notification.className = 'task-notification success';
+      notification.innerHTML = `
+        <i class="ri-money-dollar-circle-fill"></i>
+        <div>
+          <div class="notification-title">Order Completed!</div>
+          <div class="notification-text">You earned +${commission} USDT commission</div>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => notification.classList.add('show'), 100);
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 4000);
+    }
+
+    // Event listeners
+    grabOrderBtn.addEventListener('click', openOrderModal);
+    closeModalBtn.addEventListener('click', closeOrderModal);
+    modalOverlay.addEventListener('click', closeOrderModal);
+    submitOrderBtn.addEventListener('click', submitOrder);
+
+    // Combo modal listeners (combo feature retired; guard in case markup remains)
+    const goToComboDepositBtn = document.getElementById('goToComboDeposit');
+    const skipComboBtn = document.getElementById('skipCombo');
+    const comboOverlay = document.getElementById('comboOverlay');
+
+    if (goToComboDepositBtn) {
+      goToComboDepositBtn.addEventListener('click', () => {
+        window.location.href = 'deposit.html';
+      });
+    }
+    if (skipComboBtn) {
+      skipComboBtn.addEventListener('click', closeComboModal);
+    }
+    if (comboOverlay) {
+      comboOverlay.addEventListener('click', closeComboModal);
+    }
+
+    // Insufficient balance modal listeners
+    const goToDepositBtn = document.getElementById('goToDeposit');
+    const cancelInsufficientBtn = document.getElementById('cancelInsufficient');
+    const insufficientOverlay = document.getElementById('insufficientOverlay');
+
+    if (goToDepositBtn) {
+      goToDepositBtn.addEventListener('click', () => {
+        window.location.href = 'deposit.html';
+      });
+    }
+    if (cancelInsufficientBtn) cancelInsufficientBtn.addEventListener('click', closeInsufficientBalanceModal);
+    if (insufficientOverlay) insufficientOverlay.addEventListener('click', closeInsufficientBalanceModal);
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeOrderModal();
+      }
+    });
+  </script>
+
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <!-- api.js + live-data.js already loaded above, before the inline task script -->
+  <script src="js/toast-notifications.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
+

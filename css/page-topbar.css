@@ -1,0 +1,123 @@
+/**
+ * Shared page top bar
+ *
+ * A consistent header used across Deposit, Withdraw and Invitation:
+ *   [ ← back ]        Centered Title        [ 🔔 notifications ]
+ *
+ * Matches the Wallet Setup header. Self-contained (with sensible fallbacks) so
+ * a page only needs to include this one file, regardless of its other CSS.
+ */
+
+/* The full-width header below uses 100vw. On desktops with a visible vertical
+   scrollbar, 100vw is slightly wider than the content area, so guard against a
+   stray horizontal scrollbar. */
+html,
+body {
+  overflow-x: hidden;
+}
+
+.page-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 300;
+  height: 60px;
+  background: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border, #eef0f4);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.06));
+
+  /* The header often sits inside a max-width page container (e.g.
+     .withdraw-container, .deposit-container, .container capped at 1320px).
+     This breaks the white bar out to the full viewport width so the background
+     reaches both screen edges, while .page-topbar-inner keeps the content
+     centered. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.page-topbar-inner {
+  max-width: var(--container, 1320px);
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Back button (left) */
+.page-topbar-back {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface2, #f4f5f7);
+  border: 1px solid var(--border2, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t-dark, #1f2430);
+  font-size: 1.125rem;
+  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.page-topbar-back:hover {
+  background: var(--c-primary-pale, #fff1e9);
+  color: var(--c-primary, #fe5722);
+  border-color: transparent;
+}
+
+/* Title (centered). flex:1 + the negative right margin cancels the back
+   button's width so the text is optically centered across the whole bar. */
+.page-topbar-title {
+  flex: 1;
+  text-align: center;
+  margin: 0 -40px 0 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--t-dark, #1f2430);
+}
+
+/* Right cluster (notification bell) */
+.page-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.page-topbar-notif {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--c-secondary-pale, #fff4e6);
+  color: var(--c-secondary, #ff9700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-topbar-notif:hover {
+  background: var(--c-secondary, #ff9700);
+  color: #fff;
+}
+
+.page-topbar-notif .notif-dot {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 1.5px solid #fff;
+}

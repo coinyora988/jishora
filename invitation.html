@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invitation - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/invitation.css">
+  <link rel="stylesheet" href="css/page-topbar.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- Header: back arrow · centered title · notifications -->
+  <header class="page-topbar">
+    <div class="page-topbar-inner">
+      <button class="page-topbar-back" onclick="history.back()" aria-label="Go back">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div class="page-topbar-title" data-i18n="invite.title">Invitation</div>
+      <div class="page-topbar-right">
+        <a href="notifications.html" class="page-topbar-notif" aria-label="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-dot" id="notifBadge" style="display:none;"></span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Invite Header -->
+    <div class="invite-header">
+      <div class="invite-icon">
+        <i class="ri-medal-line"></i>
+      </div>
+      <h1 class="invite-title">Invite Friends</h1>
+      <p class="invite-subtitle">Share your referral link with friends and earn rewards</p>
+    </div>
+
+    <!-- Invitation Code Card -->
+    <div class="invite-card">
+      <div class="code-label" data-i18n="invite.yourCode">Your Invitation Code</div>
+      <div class="code-value" data-live="referralCode">--</div>
+
+      <div class="link-section">
+        <div class="link-label" data-i18n="invite.referralLink">Referral Link</div>
+        <div class="link-input-wrapper">
+          <input type="text" class="link-input" readonly id="referralLink" data-live="referralLink">
+          <button class="copy-btn" onclick="copyLink()">
+            <i class="ri-file-copy-line"></i>
+          </button>
+        </div>
+      </div>
+
+      <button class="share-btn">
+        <i class="ri-share-line"></i>
+        <span data-i18n="invite.shareLink">Share Invite Link</span>
+      </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="directMembers">--</div>
+        <div class="stat-label" data-i18n="invite.directMembers">Direct Members (L1)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalCommissionEarned">--</div>
+        <div class="stat-label">Commission Earned (USDT)</div>
+      </div>
+    </div>
+
+    <!-- Team Section -->
+    <div class="team-section" id="teamSection">
+      <div class="team-header" onclick="toggleTeam()">
+        <div class="team-title">
+          <i class="ri-group-line"></i>
+          <span data-i18n="invite.myTeam">My Direct Team (L1)</span>
+        </div>
+        <button class="team-toggle">
+          <i class="ri-arrow-down-s-line"></i>
+        </button>
+      </div>
+      <div class="team-content" id="teamContent">
+        <div class="team-list" id="teamList">
+          <!-- Populated by loadReferrals() from GET /api/user/referrals -->
+          <div class="team-empty">
+            <i class="ri-loader-4-line"></i>
+            <p>Loading your team...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Benefits Section -->
+    <div class="benefits-section">
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="ri-information-line"></i>
+        </div>
+        <div class="benefit-text">
+          <strong>Help your friends and family discover a genuine product promotion opportunity.</strong>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="ri-information-line"></i>
+        </div>
+        <div class="benefit-text">
+          <strong>Give others the chance to start working and earn through product promotion tasks.</strong>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="ri-information-line"></i>
+        </div>
+        <div class="benefit-text">
+          <strong>Share your referral code with trusted people and help them begin their journey.</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+    <a href="index.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="support.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+        <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+        <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+        <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+      </svg>
+      <span>Services</span>
+    </a>
+    <a href="markets.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
+      </svg>
+      <span>Menu</span>
+    </a>
+    <a href="transactions.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <line x1="10" y1="9" x2="8" y2="9"></line>
+      </svg>
+      <span>History</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>Profile</span>
+    </a>
+    </div>
+  </nav>
+
+  <script>
+    const selector = document.getElementById('langSelector');
+    const btn      = document.getElementById('langBtn');
+    const dropdown = document.getElementById('langDropdown');
+    const flagEl   = document.getElementById('langFlag');
+    const labelEl  = document.getElementById('langLabel');
+    if (btn && dropdown) {
+      const saved = localStorage.getItem('jishora_lang');
+      if (saved) { const savedOpt = dropdown.querySelector(`[data-lang="${saved}"]`); if (savedOpt) applyLang(savedOpt); }
+      btn.addEventListener('click', e => { e.stopPropagation(); const open = selector.classList.toggle('open'); btn.setAttribute('aria-expanded', open); });
+      dropdown.querySelectorAll('.lang-option').forEach(opt => { opt.addEventListener('click', () => { applyLang(opt); selector.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }); });
+      document.addEventListener('click', () => { selector.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') selector.classList.remove('open'); });
+    }
+    function applyLang(opt) { dropdown.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active')); opt.classList.add('active'); if (flagEl) { flagEl.src = opt.dataset.flag; flagEl.alt = opt.dataset.flagAlt || ''; } if (labelEl) labelEl.textContent = opt.dataset.label; const lang = opt.dataset.lang; localStorage.setItem('jishora_lang', lang); document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; document.documentElement.lang = lang; if (typeof translatePage === 'function') { translatePage(); } }
+
+    function copyLink() {
+      const input = document.getElementById('referralLink');
+      input.select();
+      input.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(input.value);
+      
+      const btn = event.currentTarget;
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="ri-check-line"></i>';
+      btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.style.background = '';
+      }, 2000);
+    }
+
+    // Toggle Team List
+    function toggleTeam() {
+      const teamSection = document.getElementById('teamSection');
+      const teamContent = document.getElementById('teamContent');
+      
+      teamSection.classList.toggle('open');
+      
+      if (teamSection.classList.contains('open')) {
+        teamContent.style.maxHeight = teamContent.scrollHeight + 'px';
+      } else {
+        teamContent.style.maxHeight = '0';
+      }
+    }
+
+    // Escape user-controlled text before it reaches innerHTML. Usernames are
+    // chosen by users, so they cannot be trusted as markup.
+    function escapeHtml(value) {
+      const div = document.createElement('div');
+      div.textContent = value == null ? '' : String(value);
+      return div.innerHTML;
+    }
+
+    /**
+     * Load the real referral list and stats from GET /api/user/referrals.
+     * The invitation code and link themselves are bound by js/live-data.js.
+     */
+    async function loadReferrals() {
+      const listEl = document.getElementById('teamList');
+      const directEl = document.getElementById('directMembers');
+      const commissionEl = document.getElementById('totalCommissionEarned');
+
+      const response = await API.getReferrals();
+
+      if (!response || !response.success) {
+        listEl.innerHTML = `
+          <div class="team-empty">
+            <i class="ri-error-warning-line"></i>
+            <p>Could not load your team</p>
+            <span>Please refresh the page to try again</span>
+          </div>`;
+        directEl.textContent = '0';
+        commissionEl.textContent = '0.00';
+        return;
+      }
+
+      const referrals = response.data.referrals || [];
+      const stats = response.data.stats || {};
+
+      directEl.textContent = String(referrals.length);
+      commissionEl.textContent = formatUSDT(stats.total_commission);
+
+      if (referrals.length === 0) {
+        listEl.innerHTML = `
+          <div class="team-empty">
+            <i class="ri-user-add-line"></i>
+            <p>No referrals yet</p>
+            <span>Share your referral link to invite friends</span>
+          </div>`;
+        return;
+      }
+
+      listEl.innerHTML = referrals
+        .map((r) => `
+          <div class="team-member">
+            <div class="member-avatar">${escapeHtml((r.username || '?').charAt(0).toUpperCase())}</div>
+            <div class="member-info">
+              <div class="member-name">${escapeHtml(r.username)}</div>
+              <div class="member-date">Joined ${formatDate(r.joined_date || r.created_at)}</div>
+            </div>
+            <div class="member-earnings">${formatUSDT(r.commission_earned)} USDT</div>
+          </div>`)
+        .join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (isAuthenticated()) {
+        loadReferrals();
+      }
+    });
+  </script>
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <!-- Live data: api.js must load before live-data.js -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live-data.js"></script>
+  <script src="js/toast-notifications.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
+

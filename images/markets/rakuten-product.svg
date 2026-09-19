@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- White background -->
+  <rect width="200" height="200" fill="#ffffff"/>
+  
+  <!-- Power Bank product -->
+  <rect x="40" y="60" width="120" height="80" rx="12" fill="#ef4444"/>
+  <rect x="45" y="65" width="110" height="70" rx="8" fill="#dc2626"/>
+  
+  <!-- USB port -->
+  <rect x="150" y="90" width="8" height="20" rx="2" fill="#7f1d1d"/>
+  
+  <!-- LED indicators -->
+  <circle cx="70" cy="100" r="4" fill="#fef3c7"/>
+  <circle cx="85" cy="100" r="4" fill="#fef3c7"/>
+  <circle cx="100" cy="100" r="4" fill="#fef3c7"/>
+  <circle cx="115" cy="100" r="4" fill="#fef3c7"/>
+  
+  <!-- Brand text -->
+  <text x="100" y="125" font-family="Arial" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">20000mAh</text>
+</svg>

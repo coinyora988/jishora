@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Admin User - Jishora</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .result h3 {
+            margin-bottom: 10px;
+        }
+
+        .credentials {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .credentials p {
+            margin: 5px 0;
+            font-family: monospace;
+        }
+
+        .credentials strong {
+            color: #667eea;
+        }
+
+        .login-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .login-link:hover {
+            background: #5568d3;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info p {
+            color: #004085;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>🚀 Jishora Setup</h1>
+            <p>Create Admin User</p>
+        </div>
+
+        <div class="info">
+            <p><strong>📌 This is a one-time setup</strong></p>
+            <p>Click the button below to create the admin user for your Jishora platform.</p>
+        </div>
+
+        <button class="button" id="createBtn" onclick="createAdmin()">
+            Create Admin User
+        </button>
+
+        <div class="spinner" id="spinner"></div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        // Resolved centrally in js/config.js; falls back to local dev if absent.
+        const API_BASE = window.API_BASE_URL
+            || (window.location.protocol + '//' + window.location.hostname + ':5000/api');
+
+        async function createAdmin() {
+            const btn = document.getElementById('createBtn');
+            const spinner = document.getElementById('spinner');
+            const result = document.getElementById('result');
+
+            // Disable button and show spinner
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            spinner.style.display = 'block';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/setup/create-admin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                spinner.style.display = 'none';
+
+                if (data.success) {
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p>Admin user has been created successfully!</p>
+                        <div class="credentials">
+                            <p><strong>Email:</strong> ${data.data.email}</p>
+                            <p><strong>Password:</strong> ${data.data.password}</p>
+                        </div>
+                        <a href="/admin/login.html" class="login-link">
+                            Go to Admin Login →
+                        </a>
+                    `;
+                    btn.textContent = '✓ Admin Created';
+                    btn.style.background = '#28a745';
+                } else {
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <h3>⚠️ Notice</h3>
+                        <p>${data.message}</p>
+                        <p style="margin-top: 10px;">If admin already exists, you can login with:</p>
+                        <div class="credentials">
+                            <p><strong>Email:</strong> admin@jishora.com</p>
+                            <p><strong>Password:</strong> admin123</p>
+                        </div>
+                        <a href="/admin/login.html" class="login-link">
+                            Go to Admin Login →
+                        </a>
+                    `;
+                    btn.textContent = 'Try Again';
+                    btn.disabled = false;
+                }
+
+                result.style.display = 'block';
+
+            } catch (error) {
+                spinner.style.display = 'none';
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>Could not create admin user.</p>
+                    <p style="margin-top: 10px;"><strong>Error:</strong> ${error.message}</p>
+                    <p style="margin-top: 10px;">Please make sure:</p>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Backend server is running on port 5000</li>
+                        <li>Database is configured correctly</li>
+                        <li>Database exists (jishora_db)</li>
+                    </ul>
+                `;
+                result.style.display = 'block';
+                btn.textContent = 'Try Again';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

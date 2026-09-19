@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Prevent the browser caching a stale copy of the page. The stats are
+       loaded live from the API, so an old cached HTML must never be shown. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Home – Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png" />
+  <link rel="stylesheet" href="css/home.css" />
+  <link rel="stylesheet" href="css/page-loader.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Remix Icons - modern clean icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+    <!-- Logo -->
+    <a href="index.html" class="topbar-logo">
+      <img src="images/logo/logo.png" alt="Jishora Logo" />
+    </a>
+
+    <!-- Right side -->
+    <div class="topbar-right">
+
+      <!-- Notification -->
+      <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+      </a>
+
+      <!-- Language Selector -->
+      <div class="lang-selector" id="langSelector">
+        <button type="button" class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Select language">
+          <img class="lang-flag" id="langFlag" src="https://flagcdn.com/w40/us.png" alt="US flag" />
+          <span id="langLabel">English</span>
+          <i class="fa-solid fa-chevron-down lang-chevron"></i>
+        </button>
+        <div class="lang-dropdown" role="listbox" id="langDropdown">
+          <button type="button" class="lang-option active" data-lang="en" data-flag="https://flagcdn.com/w40/us.png" data-flag-alt="US flag" data-label="English" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/us.png" alt="US flag" /> English
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="ar" data-flag="https://flagcdn.com/w40/sa.png" data-flag-alt="Saudi Arabia flag" data-label="العربية" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/sa.png" alt="Saudi Arabia flag" /> العربية
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="fr" data-flag="https://flagcdn.com/w40/fr.png" data-flag-alt="France flag" data-label="Français" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/fr.png" alt="France flag" /> Français
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="es" data-flag="https://flagcdn.com/w40/es.png" data-flag-alt="Spain flag" data-label="Español" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/es.png" alt="Spain flag" /> Español
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="de" data-flag="https://flagcdn.com/w40/de.png" data-flag-alt="Germany flag" data-label="Deutsch" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/de.png" alt="Germany flag" /> Deutsch
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="tr" data-flag="https://flagcdn.com/w40/tr.png" data-flag-alt="Turkey flag" data-label="Türkçe" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/tr.png" alt="Turkey flag" /> Türkçe
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    </div><!-- /.topbar-inner -->
+  </header>
+
+  <!-- ══════════════════════════════════════
+       PAGE LAYOUT
+  ══════════════════════════════════════ -->
+  <div class="page-layout">
+
+<!-- ── MAIN CONTENT ── -->
+    <main class="main-content">
+
+      <!-- ── 1. Balance Card ── -->
+      <section class="balance-card" aria-label="Account balance">
+        <div class="balance-top">
+          <div class="balance-label-wrap">
+            <span class="balance-label-icon"><i class="ri-wallet-3-fill"></i></span>
+            <span class="balance-label" data-i18n="home.balance">My Account Balance</span>
+          </div>
+          <span class="balance-currency-badge"><i class="ri-exchange-dollar-line"></i> USDT (TRC20)</span>
+        </div>
+        <div class="balance-amount">
+          <span class="balance-number" id="balanceAmount">--</span>
+          <span class="balance-unit">USDT</span>
+        </div>
+        <div class="balance-footer">
+          <div class="balance-sub">
+            <span class="balance-change" id="frozenBalanceNote"></span>
+            <span class="balance-dot" id="frozenBalanceDot" style="display:none;">·</span>
+            <span class="balance-updated"><i class="ri-time-line"></i> <span id="balanceUpdatedText" data-i18n="home.updated">Updated just now</span></span>
+          </div>
+          <div class="balance-eye" title="Hide balance"><i class="ri-eye-line"></i></div>
+        </div>
+        <!-- decorative circles -->
+        <div class="bc-circle bc-c1"></div>
+        <div class="bc-circle bc-c2"></div>
+        <div class="bc-circle bc-c3"></div>
+      </section>
+
+      <!-- ── 2. Action Buttons ── -->
+      <section class="action-row" aria-label="Quick actions">
+        <a href="deposit.html" class="action-btn" aria-label="Recharge">
+          <div class="action-icon green"><i class="ri-download-2-line"></i></div>
+          <span class="action-label" data-i18n="common.deposit">Deposit</span>
+        </a>
+        <div class="action-divider" aria-hidden="true"></div>
+        <a href="withdraw.html" class="action-btn" aria-label="Withdrawal">
+          <div class="action-icon orange"><i class="ri-upload-2-line"></i></div>
+          <span class="action-label" data-i18n="common.withdraw">Withdraw</span>
+        </a>
+        <div class="action-divider" aria-hidden="true"></div>
+        <a href="transactions.html" class="action-btn" aria-label="Transactions">
+          <div class="action-icon purple"><i class="ri-file-list-3-line"></i></div>
+          <span class="action-label" data-i18n="nav.history">History</span>
+        </a>
+        <div class="action-divider" aria-hidden="true"></div>
+        <a href="markets.html" class="action-btn" aria-label="Order">
+          <div class="action-icon teal"><i class="ri-shopping-cart-2-line"></i></div>
+          <span class="action-label" data-i18n="common.order">Order</span>
+        </a>
+      </section>
+
+      <!-- ── 3. Marquee Announcement ── -->
+      <div class="marquee-card reveal reveal-delay-2" aria-label="Live activity feed">
+        <div class="marquee-icon"><i class="ri-notification-3-fill"></i></div>
+        <div class="marquee-dot"></div>
+        <div class="marquee-wrap">
+          <!-- Both spans are filled with the same randomly generated entries by
+               buildMarquee(); the duplicate keeps the scroll loop seamless. -->
+          <span class="marquee-text" id="marqueeText1"></span>
+          <span class="marquee-text" id="marqueeText2" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <!-- ── 4. Stats Row ── -->
+      <section class="stats-row reveal" aria-label="Platform statistics">
+        <div class="stat-card">
+          <div class="stat-icon-wrap teal">
+            <i class="ri-group-fill"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="statActiveMembers">128K+</div>
+            <div class="stat-label" data-i18n="home.activeMembers">Active Members</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap gold">
+            <i class="ri-money-dollar-circle-fill"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="statTotalPaidOut">$4.2M</div>
+            <div class="stat-label" data-i18n="home.totalPaidOut">Total Paid Out</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap green">
+            <i class="ri-shield-check-fill"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value" id="statSuccessRate">99.8%</div>
+            <div class="stat-label" data-i18n="home.successRate">Success Rate</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 5. Platform Introduction ── -->
+      <div class="section-header reveal">
+        <div class="section-title">
+          <i class="ri-rocket-2-fill"></i>
+          <span data-i18n="home.platformIntro">Platform Introduction</span>
+        </div>
+        <a href="introduction.html" class="section-link"><span data-i18n="common.viewAll">View All</span> <i class="ri-arrow-right-s-line"></i></a>
+      </div>
+
+      <div class="platform-grid reveal reveal-delay-1">
+
+        <!-- Card 1: Introduction -->
+        <a href="introduction.html" class="platform-card" role="button" tabindex="0" aria-label="Introduction">
+          <div class="platform-card-img card-bg-intro">
+            <svg width="100%" height="100%" viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Background shapes -->
+              <circle cx="320" cy="30" r="60" fill="rgba(255,255,255,0.12)"/>
+              <circle cx="60"  cy="160" r="40" fill="rgba(255,255,255,0.08)"/>
+              <!-- People group -->
+              <ellipse cx="140" cy="148" rx="90" ry="12" fill="rgba(180,120,0,0.2)"/>
+              <!-- Person left -->
+              <circle cx="95" cy="96" r="18" fill="#e8a020" opacity="0.85"/>
+              <path d="M73 148 Q73 120 95 120 Q117 120 117 148" fill="#e8a020" opacity="0.75"/>
+              <!-- Person center (taller) -->
+              <circle cx="145" cy="88" r="22" fill="#d4910a" opacity="0.9"/>
+              <path d="M118 148 Q118 116 145 116 Q172 116 172 148" fill="#d4910a" opacity="0.8"/>
+              <!-- Person right -->
+              <circle cx="198" cy="96" r="18" fill="#e8a020" opacity="0.85"/>
+              <path d="M176 148 Q176 120 198 120 Q220 120 220 148" fill="#e8a020" opacity="0.75"/>
+              <!-- Celebration sparks -->
+              <line x1="145" y1="55" x2="155" y2="28" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="145" y1="55" x2="128" y2="26" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+              <line x1="145" y1="55" x2="168" y2="36" stroke="#f97316" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="155" cy="24" r="4" fill="#fbbf24"/>
+              <circle cx="126" cy="23" r="3" fill="#fbbf24" opacity="0.8"/>
+              <circle cx="171" cy="33" r="3.5" fill="#f97316" opacity="0.9"/>
+              <!-- Stars -->
+              <text x="255" y="60"  font-size="22" fill="#fbbf24" opacity="0.5">✦</text>
+              <text x="280" y="110" font-size="14" fill="#fbbf24" opacity="0.4">✦</text>
+              <text x="310" y="75"  font-size="10" fill="#fbbf24" opacity="0.35">✦</text>
+            </svg>
+            <div class="card-badge"><i class="ri-information-line"></i></div>
+          </div>
+          <div class="platform-card-body">
+            <div class="platform-card-title" data-i18n="intro.title">Introduction</div>
+            <div class="platform-card-desc" data-i18n="intro.subtitle">Grab Orders. Complete Tasks. Earn Commissions.</div>
+            <div class="platform-card-footer">
+              <span class="platform-card-tag"><i class="ri-star-fill"></i> <span data-i18n="home.popular">Popular</span></span>
+              <div class="platform-card-arrow"><i class="ri-arrow-right-line"></i></div>
+            </div>
+          </div>
+        </a>
+
+        <!-- Card 2: Affiliates Marketing -->
+        <a href="affiliates.html" class="platform-card" role="button" tabindex="0" aria-label="Affiliates Marketing">
+          <div class="platform-card-img card-bg-affiliate">
+            <svg width="100%" height="100%" viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="340" cy="20" r="70" fill="rgba(255,255,255,0.08)"/>
+              <circle cx="30"  cy="150" r="50" fill="rgba(255,255,255,0.06)"/>
+              <!-- Network lines -->
+              <line x1="200" y1="90" x2="100" y2="50"  stroke="#c084fc" stroke-width="1.5" opacity="0.6"/>
+              <line x1="200" y1="90" x2="305" y2="48"  stroke="#c084fc" stroke-width="1.5" opacity="0.6"/>
+              <line x1="200" y1="90" x2="90"  y2="138" stroke="#a855f7" stroke-width="1.5" opacity="0.5"/>
+              <line x1="200" y1="90" x2="318" y2="135" stroke="#a855f7" stroke-width="1.5" opacity="0.5"/>
+              <line x1="200" y1="90" x2="175" y2="155" stroke="#9333ea" stroke-width="1.5" opacity="0.4"/>
+              <!-- Center node -->
+              <circle cx="200" cy="90" r="28" fill="#7c3aed" opacity="0.85"/>
+              <text x="188" y="97" font-size="18" fill="white" font-weight="bold">$</text>
+              <!-- Outer nodes -->
+              <circle cx="100" cy="50"  r="18" fill="#9333ea" opacity="0.75"/>
+              <text x="93"  y="56" font-size="13" fill="white" font-weight="bold">%</text>
+              <circle cx="305" cy="48"  r="16" fill="#a855f7" opacity="0.7"/>
+              <text x="298" y="54" font-size="13" fill="white" font-weight="bold">$</text>
+              <circle cx="90"  cy="138" r="14" fill="#7c3aed" opacity="0.65"/>
+              <text x="84"  y="144" font-size="11" fill="white" font-weight="bold">✓</text>
+              <circle cx="318" cy="135" r="14" fill="#9333ea" opacity="0.65"/>
+              <text x="312" y="141" font-size="11" fill="white" font-weight="bold">★</text>
+              <circle cx="175" cy="155" r="12" fill="#a855f7" opacity="0.6"/>
+              <text x="169" y="161" font-size="11" fill="white" font-weight="bold">+</text>
+              <!-- Stars -->
+              <text x="240" y="35"  font-size="18" fill="#fbbf24" opacity="0.55">★</text>
+              <text x="130" y="165" font-size="13" fill="#fbbf24" opacity="0.45">★</text>
+            </svg>
+            <div class="card-badge"><i class="ri-information-line"></i></div>
+          </div>
+          <div class="platform-card-body">
+            <div class="platform-card-title" data-i18n="affiliates.title">Affiliates Marketing</div>
+            <div class="platform-card-desc" data-i18n="affiliates.subtitle">Turn Your Network Into Opportunity.</div>
+            <div class="platform-card-footer">
+              <span class="platform-card-tag"><i class="ri-money-dollar-circle-fill"></i> <span data-i18n="home.earnMore">Earn More</span></span>
+              <div class="platform-card-arrow"><i class="ri-arrow-right-line"></i></div>
+            </div>
+          </div>
+        </a>
+
+        <!-- Card 3: Platform Rules -->
+        <a href="rules.html" class="platform-card" role="button" tabindex="0" aria-label="Platform Rules">
+          <div class="platform-card-img card-bg-rules">
+            <svg width="100%" height="100%" viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="330" cy="20"  r="80" fill="rgba(255,255,255,0.1)"/>
+              <circle cx="50"  cy="155" r="45" fill="rgba(255,255,255,0.07)"/>
+              <!-- Document -->
+              <rect x="100" y="18" width="110" height="140" rx="12" fill="white" opacity="0.35"/>
+              <rect x="112" y="38" width="55" height="6" rx="3" fill="#3b82f6" opacity="0.7"/>
+              <rect x="112" y="54" width="75" height="5" rx="2.5" fill="#3b82f6" opacity="0.55"/>
+              <rect x="112" y="68" width="60" height="5" rx="2.5" fill="#3b82f6" opacity="0.5"/>
+              <rect x="112" y="82" width="70" height="5" rx="2.5" fill="#3b82f6" opacity="0.55"/>
+              <rect x="112" y="96" width="50" height="5" rx="2.5" fill="#3b82f6" opacity="0.45"/>
+              <rect x="112" y="110" width="65" height="5" rx="2.5" fill="#3b82f6" opacity="0.5"/>
+              <!-- Check bullets -->
+              <circle cx="107" cy="41" r="5" fill="#22c55e" opacity="0.8"/>
+              <circle cx="107" cy="57" r="5" fill="#22c55e" opacity="0.7"/>
+              <circle cx="107" cy="71" r="5" fill="#f59e0b" opacity="0.7"/>
+              <circle cx="107" cy="85" r="5" fill="#22c55e" opacity="0.7"/>
+              <circle cx="107" cy="99" r="5" fill="#22c55e" opacity="0.65"/>
+              <circle cx="107" cy="113" r="5" fill="#f59e0b" opacity="0.6"/>
+              <!-- Magnify glass -->
+              <circle cx="280" cy="90" r="38" fill="none" stroke="#93c5fd" stroke-width="5" opacity="0.6"/>
+              <circle cx="280" cy="90" r="24" fill="rgba(147,197,253,0.25)"/>
+              <line x1="308" y1="118" x2="330" y2="145" stroke="#93c5fd" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+            </svg>
+            <div class="card-badge"><i class="ri-information-line"></i></div>
+          </div>
+          <div class="platform-card-body">
+            <div class="platform-card-title">Platform Rules</div>
+            <div class="platform-card-desc">Platform Rules & User Guidelines</div>
+            <div class="platform-card-footer">
+              <span class="platform-card-tag"><i class="ri-shield-check-fill"></i> Guidelines</span>
+              <div class="platform-card-arrow"><i class="ri-arrow-right-line"></i></div>
+            </div>
+          </div>
+        </a>
+
+        <!-- Card 4: Payment Methods -->
+        <a href="payment-methods.html" class="platform-card" role="button" tabindex="0" aria-label="Payment Methods">
+          <div class="platform-card-img card-bg-payment">
+            <svg width="100%" height="100%" viewBox="0 0 400 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="340" cy="160" r="90" fill="rgba(255,255,255,0.06)"/>
+              <circle cx="30"  cy="20"  r="55" fill="rgba(255,255,255,0.07)"/>
+              <!-- Credit card -->
+              <rect x="30" y="35" width="200" height="122" rx="14" fill="white" opacity="0.18"/>
+              <rect x="30" y="35" width="200" height="122" rx="14" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+              <!-- Card stripe -->
+              <rect x="30" y="65" width="200" height="24" fill="rgba(255,255,255,0.12)"/>
+              <!-- Chip -->
+              <rect x="52" y="46" width="32" height="24" rx="5" fill="#fbbf24" opacity="0.7"/>
+              <line x1="52" y1="56" x2="84" y2="56" stroke="#f59e0b" stroke-width="1.2" opacity="0.5"/>
+              <line x1="68" y1="46" x2="68" y2="70" stroke="#f59e0b" stroke-width="1.2" opacity="0.5"/>
+              <!-- PIN dots -->
+              <circle cx="60"  cy="118" r="8" fill="white" opacity="0.35"/>
+              <circle cx="88"  cy="118" r="8" fill="white" opacity="0.35"/>
+              <circle cx="116" cy="118" r="8" fill="white" opacity="0.35"/>
+              <circle cx="144" cy="118" r="8" fill="white" opacity="0.35"/>
+              <!-- Card number hint -->
+              <rect x="52"  cy="100" x="52" y="98" width="20" height="4" rx="2" fill="rgba(255,255,255,0.4)"/>
+              <rect x="82"  y="98" width="20" height="4" rx="2" fill="rgba(255,255,255,0.4)"/>
+              <rect x="112" y="98" width="20" height="4" rx="2" fill="rgba(255,255,255,0.4)"/>
+              <rect x="142" y="98" width="20" height="4" rx="2" fill="rgba(255,255,255,0.4)"/>
+              <!-- Lock -->
+              <rect x="268" y="55" width="82" height="78" rx="14" fill="rgba(255,255,255,0.14)"/>
+              <rect x="283" y="82" width="52" height="36" rx="8" fill="rgba(255,255,255,0.5)"/>
+              <path d="M291 82 V72 a18 18 0 0 1 36 0 V82" stroke="rgba(255,255,255,0.8)" stroke-width="5" fill="none" stroke-linecap="round"/>
+              <circle cx="309" cy="97" r="6" fill="#fbbf24" opacity="0.9"/>
+              <rect x="307" y="97" width="4" height="10" rx="2" fill="#f59e0b" opacity="0.8"/>
+            </svg>
+            <div class="card-badge"><i class="ri-information-line"></i></div>
+          </div>
+          <div class="platform-card-body">
+            <div class="platform-card-title">Payment Methods</div>
+            <div class="platform-card-desc">Digital Currency Support</div>
+            <div class="platform-card-footer">
+              <span class="platform-card-tag"><i class="ri-secure-payment-fill"></i> Secure</span>
+              <div class="platform-card-arrow"><i class="ri-arrow-right-line"></i></div>
+            </div>
+          </div>
+        </a>
+
+      </div><!-- /.platform-grid -->
+
+      <!-- ── 6. Recent Transactions ── -->
+      <section class="transactions-card reveal" aria-labelledby="txTitle">
+        <div class="card-header-row">
+          <h3 id="txTitle"><i class="ri-history-line"></i> <span data-i18n="home.recentTransactions">Recent Transactions</span></h3>
+          <a href="transactions.html" class="see-all-link"><span data-i18n="home.seeAll">See All</span> <i class="ri-arrow-right-s-line"></i></a>
+        </div>
+        <!-- Filled by loadRecentTransactions() from GET /api/transactions -->
+        <div class="tx-list" id="recentTxList">
+          <div class="tx-empty" style="padding:20px;text-align:center;color:#9ca3af;">Loading...</div>
+        </div>
+      </section>
+
+    </main><!-- /.main-content -->
+  </div><!-- /.page-layout -->
+
+  <!-- ══════════════════════════════════════
+       MOBILE BOTTOM NAV
+  ══════════════════════════════════════ -->
+ <!-- Bottom Navigation -->
+ <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <a href="index.html" class="nav-item active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span data-i18n="nav.home">Home</span>
+      </a>
+      <a href="support.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+          <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+          <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+          <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+        </svg>
+        <span data-i18n="nav.services">Services</span>
+      </a>
+      <a href="markets.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span data-i18n="nav.menu">Menu</span>
+      </a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+        <span data-i18n="nav.history">History</span>
+      </a>
+      <a href="profile.html" class="nav-item">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span data-i18n="nav.profile">Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════
+       SCRIPTS
+  ══════════════════════════════════════ -->
+  <script src="js/page-loader.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live-data.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  
+  <script>
+  (function () {
+    'use strict';
+
+    /* ── Language Selector ── */
+    const selector = document.getElementById('langSelector');
+    const btn      = document.getElementById('langBtn');
+    const dropdown = document.getElementById('langDropdown');
+    const flagEl   = document.getElementById('langFlag');
+    const labelEl  = document.getElementById('langLabel');
+
+    if (btn && dropdown) {
+      // Restore saved
+      const saved = localStorage.getItem('jishora_lang');
+      if (saved) {
+        const savedOpt = dropdown.querySelector(`[data-lang="${saved}"]`);
+        if (savedOpt) applyLang(savedOpt);
+      }
+
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const open = selector.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open);
+      });
+
+      dropdown.querySelectorAll('.lang-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          applyLang(opt);
+          selector.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      document.addEventListener('click', () => {
+        selector.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') selector.classList.remove('open');
+      });
+    }
+
+    function applyLang(opt) {
+      dropdown.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      if (flagEl)  { flagEl.src = opt.dataset.flag; flagEl.alt = opt.dataset.flagAlt || ''; }
+      if (labelEl) labelEl.textContent = opt.dataset.label;
+      const lang = opt.dataset.lang;
+      localStorage.setItem('jishora_lang', lang);
+      document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = lang;
+      
+      // Trigger translation
+      if (typeof translatePage === 'function') {
+        translatePage();
+      }
+    }
+
+    /* ── Scroll Reveal ── */
+    const revealEls = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    revealEls.forEach(el => revealObserver.observe(el));
+
+    /* ── Live activity marquee (randomised social-proof ticker) ── */
+    (function initMarquee() {
+      const el1 = document.getElementById('marqueeText1');
+      const el2 = document.getElementById('marqueeText2');
+      if (!el1 || !el2) return;
+
+      // Random masked username like "S****9" / "Jo***4".
+      function randomUser() {
+        const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        const first = letters[Math.floor(Math.random() * letters.length)];
+        const stars = '*'.repeat(3 + Math.floor(Math.random() * 2)); // 3 or 4 stars
+        const last = Math.floor(Math.random() * 10);
+        return `${first}${stars}${last}`;
+      }
+
+      // Random amount, weighted toward smaller sums for realism.
+      function randomAmount() {
+        const value = 30 + Math.random() * Math.random() * 970; // 30 .. ~1000
+        return value.toFixed(2);
+      }
+
+      // Build one line: mostly withdrawals, occasionally a deposit.
+      function randomEntry() {
+        const action = Math.random() < 0.75 ? 'withdrawal' : 'deposit';
+        return `🎉 User <span class="user-id">${randomUser()}</span> ${action} <span class="amount">${randomAmount()} USDT</span> successful`;
+      }
+
+      function buildMarquee() {
+        const entries = [];
+        const count = 5;
+        for (let i = 0; i < count; i += 1) entries.push(randomEntry());
+        const html = entries.join('&nbsp;&nbsp;·&nbsp;&nbsp;');
+        el1.innerHTML = html;
+        el2.innerHTML = html;
+      }
+
+      buildMarquee();
+      // Regenerate periodically so the feed keeps changing.
+      setInterval(buildMarquee, 12000);
+    })();
+
+    /* ── Recent transactions (real data from the API) ── */
+    (async function loadRecentTransactions() {
+      const listEl = document.getElementById('recentTxList');
+      if (!listEl) return;
+
+      // This card only makes sense for a logged-in user.
+      if (typeof isAuthenticated !== 'function' || !isAuthenticated()) {
+        listEl.innerHTML =
+          '<div class="tx-empty" style="padding:20px;text-align:center;color:#9ca3af;">Sign in to see your transactions</div>';
+        return;
+      }
+
+      const response = await API.getTransactions();
+      if (!response || !response.success) {
+        listEl.innerHTML =
+          '<div class="tx-empty" style="padding:20px;text-align:center;color:#9ca3af;">Could not load transactions</div>';
+        return;
+      }
+
+      // The API returns the array directly in data.
+      const transactions = (response.data.transactions || response.data || []).slice(0, 6);
+
+      if (transactions.length === 0) {
+        listEl.innerHTML =
+          '<div class="tx-empty" style="padding:24px;text-align:center;color:#9ca3af;">No transactions yet</div>';
+        return;
+      }
+
+      // Money in vs money out, for the row style, icon and +/- sign.
+      const CREDIT = ['deposit', 'commission', 'referral', 'bonus'];
+      const TITLES = {
+        deposit: 'Deposit Received',
+        withdraw: 'Withdrawal',
+        commission: 'Commission Earned',
+        referral: 'Referral Commission',
+        bonus: 'Bonus',
+        penalty: 'Penalty'
+      };
+
+      const esc = (v) => {
+        const d = document.createElement('div');
+        d.textContent = v == null ? '' : String(v);
+        return d.innerHTML;
+      };
+
+      listEl.innerHTML = transactions.map((tx) => {
+        const isCredit = CREDIT.includes(tx.type);
+        const amount = Number(tx.amount) || 0;
+        const kind = isCredit ? (tx.type === 'deposit' ? 'deposit' : 'commission') : 'withdrawal';
+        const icon = isCredit
+          ? (tx.type === 'deposit' ? 'ri-arrow-down-line' : 'ri-percent-line')
+          : 'ri-arrow-up-line';
+        const date = new Date(tx.created_at);
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          + ' · ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        // Flag anything not yet settled so a pending row isn't read as final.
+        const pending = tx.status !== 'completed'
+          ? ` <span style="font-size:11px;opacity:.7;">(${esc(tx.status)})</span>`
+          : '';
+
+        return `
+          <div class="tx-item ${kind}">
+            <div class="tx-avatar ${kind}"><i class="${icon}"></i></div>
+            <div class="tx-info">
+              <div class="tx-title">${esc(TITLES[tx.type] || tx.type)}${pending}</div>
+              <div class="tx-date"><i class="ri-time-line"></i> ${dateStr}</div>
+            </div>
+            <div class="tx-amount ${isCredit ? 'positive' : 'negative'}">
+              ${isCredit ? '+' : '-'}${formatUSDT(amount)} <span>USDT</span>
+            </div>
+          </div>`;
+      }).join('');
+    })();
+
+    /* ── Public platform totals (real aggregates, no auth needed) ── */
+    (async function loadPlatformStats() {
+      const membersEl = document.getElementById('statActiveMembers');
+      const paidOutEl = document.getElementById('statTotalPaidOut');
+      const rateEl = document.getElementById('statSuccessRate');
+      if (!membersEl) return;
+
+      const response = await API.getPlatformStats();
+      if (!response || !response.success) {
+        // Keep the values already in the HTML rather than blanking them.
+        return;
+      }
+
+      const s = response.data;
+      const display = s.display || {};
+
+      // Prefer the admin-configured display figures (e.g. "128K+"). Only fall
+      // back to the raw live count if an admin left a field blank.
+      const compact = (n) => new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        maximumFractionDigits: 1
+      }).format(Number(n) || 0);
+
+      membersEl.textContent = display.members || compact(s.activeMembers);
+      paidOutEl.textContent = display.paidOut || `${compact(s.totalPaidOut)} USDT`;
+      rateEl.textContent = display.successRate
+        || (s.successRate === null ? 'n/a' : `${s.successRate}%`);
+    })();
+
+    /* ── Balance: real value from the API, counted up for effect ── */
+    const balanceEl = document.getElementById('balanceAmount');
+    let actualBalance = 0; // Set once the API responds; never a placeholder number
+
+    /**
+     * Turn the last deposit timestamp into a friendly "updated" label.
+     *  - no deposits yet        -> "No deposits yet"
+     *  - within the last minute -> "Updated just now"
+     *  - same day               -> "Updated Xh ago" / "Updated Xm ago"
+     *  - a day or more ago      -> "Last deposit: 13 Sep 2026"
+     */
+    function formatLastUpdated(iso) {
+      if (!iso) return 'No deposits yet';
+
+      const then = new Date(iso);
+      if (isNaN(then.getTime())) return 'Updated just now';
+
+      const diffMs = Date.now() - then.getTime();
+      const minutes = Math.floor(diffMs / 60000);
+      const hours = Math.floor(diffMs / 3600000);
+      const days = Math.floor(diffMs / 86400000);
+
+      if (minutes < 1) return 'Updated just now';
+      if (minutes < 60) return `Updated ${minutes}m ago`;
+      if (days < 1) return `Updated ${hours}h ago`;
+
+      // A day or more: show the actual deposit date.
+      const date = then.toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      });
+      return `Last deposit: ${date}`;
+    }
+
+    // js/live-data.js fetches GET /api/auth/me and fires this event.
+    document.addEventListener('jishora:data-loaded', (event) => {
+      const wallet = event.detail.wallet || {};
+      actualBalance = Number(wallet.balance) || 0;
+
+      // Show funds held for pending withdrawals with a dollar icon (no lock,
+      // no "frozen" wording). Hidden entirely when there is nothing held.
+      const frozen = Number(wallet.frozenBalance) || 0;
+      const frozenNote = document.getElementById('frozenBalanceNote');
+      const frozenDot = document.getElementById('frozenBalanceDot');
+      if (frozenNote) {
+        if (frozen > 0) {
+          frozenNote.innerHTML = `<i class="ri-money-dollar-circle-line"></i> ${formatUSDT(frozen)} USDT`;
+          if (frozenDot) frozenDot.style.display = '';
+        } else {
+          frozenNote.innerHTML = '';
+          if (frozenDot) frozenDot.style.display = 'none';
+        }
+      }
+
+      // "Updated" text: "just now" right after a deposit, otherwise the last
+      // deposit's relative time / date. No deposit yet -> no timestamp shown.
+      const updatedEl = document.getElementById('balanceUpdatedText');
+      if (updatedEl) {
+        updatedEl.removeAttribute('data-i18n'); // stop the translator overwriting it
+        updatedEl.textContent = formatLastUpdated(wallet.lastDepositAt);
+      }
+
+      if (!balanceEl) return;
+
+      // Animate from 0 up to the real balance.
+      const target = actualBalance;
+      if (target === 0) {
+        balanceEl.textContent = '0.00';
+        return;
+      }
+
+      let current = 0;
+      const step = target / 60;
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        balanceEl.textContent = current.toFixed(2);
+      }, 16);
+    });
+
+    /* ── Balance visibility toggle ── */
+    const balanceEye = document.querySelector('.balance-eye');
+    const balanceNumber = document.querySelector('.balance-number');
+    const balanceUnit = document.querySelector('.balance-unit');
+    let balanceVisible = true;
+    
+    if (balanceEye && balanceNumber && balanceUnit) {
+      balanceEye.addEventListener('click', function() {
+        balanceVisible = !balanceVisible;
+        const eyeIcon = this.querySelector('i');
+        
+        if (balanceVisible) {
+          // Show balance
+          balanceNumber.textContent = actualBalance.toFixed(2);
+          balanceUnit.style.display = 'inline';
+          eyeIcon.className = 'ri-eye-line';
+          this.title = 'Hide balance';
+        } else {
+          // Hide balance
+          balanceNumber.textContent = '****';
+          balanceUnit.style.display = 'none';
+          eyeIcon.className = 'ri-eye-off-line';
+          this.title = 'Show balance';
+        }
+      });
+    }
+
+    /* ── Action button ripple ── */
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        const icon = this.querySelector('.action-icon');
+        icon.style.transform = 'scale(0.88)';
+        setTimeout(() => icon.style.transform = '', 180);
+      });
+    });
+
+    /* ── Platform card keyboard support ── */
+    document.querySelectorAll('.platform-card').forEach(card => {
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+      });
+    });
+
+    /* ── Mobile nav active state ── */
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function () {
+        // Deactivate all
+        document.querySelectorAll('.nav-item').forEach(el => {
+          el.classList.remove('active');
+          const icon = el.querySelector('i');
+          if (icon && el.dataset.iconLine) {
+            icon.className = el.dataset.iconLine;
+          }
+        });
+        // Activate clicked
+        this.classList.add('active');
+        const icon = this.querySelector('i');
+        if (icon && this.dataset.iconFill) {
+          icon.className = this.dataset.iconFill;
+        }
+      });
+    });
+
+  })();
+  </script>
+
+  <script src="js/lang-init.js"></script>
+  <script src="js/toast-notifications.js"></script>
+</body>
+</html>

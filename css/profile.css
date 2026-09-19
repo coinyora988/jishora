@@ -1,0 +1,652 @@
+/* ============================================
+   PROFILE PAGE — TWO-COLOR MINIMALIST DESIGN
+   Colors: #FE5722 (buttons), #FF9700 (text/accents)
+   ============================================ */
+
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 20px;
+  padding-bottom: calc(var(--nav-h) + 0px);
+  background: var(--bg);
+}
+
+/* ═══════════════════════════════════════════
+   PROFILE HEADER — GRADIENT DESIGN
+═══════════════════════════════════════════ */
+.profile-header {
+  background: linear-gradient(135deg, var(--c-secondary) 0%, var(--c-primary) 100%);
+  padding: 24px 0;
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-radius: 0 0 24px 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-primary);
+}
+
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 240px;
+  height: 240px;
+  background: rgba(255, 255, 255, .08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.profile-header::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -60px;
+  width: 200px;
+  height: 200px;
+  background: rgba(0, 0, 0, .04);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Top Row: Avatar + Username + Chat Icon */
+.profile-top-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.avatar-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--c-primary);
+  border: 3px solid rgba(255, 255, 255, .4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+  font-size: 1.875rem;
+  font-weight: 900;
+  transition: transform .2s var(--ease);
+  overflow: hidden;
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  box-shadow: 0 2px 8px rgba(254, 87, 34, .3);
+  z-index: 2;
+}
+
+.avatar-edit-btn i {
+  color: #fff;
+  font-size: .75rem;
+}
+
+.avatar-edit-btn:hover {
+  transform: scale(1.1);
+  background: var(--c-secondary);
+}
+
+.avatar-edit-btn:active {
+  transform: scale(0.95);
+}
+
+.profile-avatar:hover .avatar-circle {
+  transform: scale(1.05);
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 5px;
+  letter-spacing: -.3px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.profile-email {
+  font-size: .875rem;
+  color: rgba(255, 255, 255, .88);
+  font-weight: 500;
+}
+
+.profile-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: .6875rem;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+
+.badge.premium {
+  background: rgba(255, 255, 255, .92);
+  color: var(--c-primary);
+}
+
+.profile-chat-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .18);
+  border: 1px solid rgba(255, 255, 255, .25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  flex-shrink: 0;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Unread count badge on the profile card message icon */
+.chat-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #ef4444;
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #f97316;
+  box-sizing: border-box;
+}
+
+.profile-chat-btn:hover {
+  background: rgba(255, 255, 255, .28);
+  transform: scale(1.05);
+}
+
+.profile-chat-btn:active {
+  transform: scale(.98);
+}
+
+/* Balance Section */
+.account-stats {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 18px;
+}
+
+.stat-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: .875rem;
+  color: rgba(255, 255, 255, .82);
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -1.2px;
+  line-height: 1;
+  word-break: break-all;
+}
+
+/* Action Buttons */
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn-header {
+  flex: 1;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, .92);
+  border: none;
+  border-radius: 14px;
+  color: var(--c-primary);
+  font-weight: 700;
+  font-size: .875rem;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.action-btn-header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, .12);
+  background: #fff;
+}
+
+.action-btn-header:active {
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════
+   QUICK ACTIONS — 3 EQUAL CARDS
+═══════════════════════════════════════════ */
+.quick-actions {
+  padding: 24px 0px 20px;
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 14px;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border2);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  text-decoration: none;
+  min-height: 120px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.action-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(254,87,34,.15);
+}
+
+.action-item:active {
+  transform: translateY(-1px);
+}
+
+.action-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.625rem;
+  transition: transform .2s var(--ease);
+}
+
+.action-item:hover .action-icon-circle {
+  transform: scale(1.08);
+}
+
+.action-icon-circle.blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #2563eb;
+}
+
+.action-icon-circle.orange {
+  background: linear-gradient(135deg, var(--c-secondary-pale) 0%, var(--c-primary-pale) 100%);
+  color: var(--c-primary);
+}
+
+.action-icon-circle.purple {
+  background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);
+  color: #9333ea;
+}
+
+.action-name {
+  font-size: .875rem;
+  font-weight: 700;
+  color: var(--t-main);
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════
+   SETTINGS LIST — CLEAN CARDS
+═══════════════════════════════════════════ */
+.settings-section {
+  padding: 0 0 16px;
+  background: var(--bg);
+}
+
+.section-title {
+  display: none;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.setting-item:hover {
+  transform: translateX(3px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(254,87,34,.15);
+}
+
+.setting-item:active {
+  transform: translateX(1px);
+}
+
+.setting-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  transition: transform .2s var(--ease);
+}
+
+/* Icon Colors */
+.setting-item:nth-child(1) .setting-icon {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #2563eb;
+}
+
+.setting-item:nth-child(2) .setting-icon {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #059669;
+}
+
+.setting-item:nth-child(3) .setting-icon {
+  background: linear-gradient(135deg, var(--c-secondary-pale) 0%, var(--c-primary-pale) 100%);
+  color: var(--c-primary);
+}
+
+.setting-item:nth-child(4) .setting-icon,
+.setting-item:last-child .setting-icon {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
+}
+
+.setting-item:hover .setting-icon {
+  transform: scale(1.06);
+}
+
+.setting-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-name {
+  font-size: .9375rem;
+  font-weight: 700;
+  color: var(--t-main);
+}
+
+.setting-arrow {
+  color: var(--t-muted);
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  transition: all .2s var(--ease);
+}
+
+.setting-item:hover .setting-arrow {
+  color: var(--c-primary);
+  transform: translateX(3px);
+}
+
+/* ═══════════════════════════════════════════
+   DANGER ZONE — HIDDEN
+═══════════════════════════════════════════ */
+.danger-section {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px 80px;
+  }
+
+  .profile-header {
+    margin: 0 -16px;
+    padding: 20px 16px;
+  }
+
+  .profile-name {
+    font-size: 1.125rem;
+  }
+
+  .account-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .stat-box {
+    width: 100%;
+  }
+
+  .stat-value {
+    font-size: 1.875rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .action-btn-header {
+    padding: 11px 16px;
+    font-size: .8125rem;
+  }
+
+  .quick-actions {
+    padding: 20px 0 18px;
+    gap: 14px;
+  }
+
+  .action-icon-circle {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+
+  .settings-section {
+    padding: 0 0 14px;
+  }
+
+  .setting-item {
+    padding: 14px 16px;
+    margin-bottom: 9px;
+  }
+
+  .setting-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 14px 80px;
+  }
+
+  .profile-header {
+    margin: 0 -14px;
+    padding: 18px 14px;
+  }
+
+  .profile-top-row {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .profile-avatar {
+    width: 56px;
+    height: 56px;
+  }
+
+  .avatar-circle {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+    border-width: 2px;
+  }
+
+  .profile-name {
+    font-size: 1rem;
+  }
+
+  .profile-email {
+    font-size: .8125rem;
+  }
+
+  .profile-chat-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1.05rem;
+  }
+
+  .account-stats {
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .stat-label {
+    font-size: .8125rem;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    letter-spacing: -0.8px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .action-btn-header {
+    font-size: .75rem;
+    padding: 10px 12px;
+    gap: 5px;
+  }
+
+  .action-btn-header i {
+    font-size: .9rem;
+  }
+
+  .quick-actions {
+    gap: 10px;
+    padding: 18px 0 16px;
+  }
+
+  .action-item {
+    padding: 16px 10px;
+    min-height: 110px;
+  }
+
+  .action-icon-circle {
+    width: 46px;
+    height: 46px;
+    font-size: 1.3rem;
+  }
+
+  .action-name {
+    font-size: .8125rem;
+  }
+
+  .settings-section {
+    padding: 0 0 12px;
+  }
+
+  .setting-item {
+    padding: 13px 14px;
+    margin-bottom: 8px;
+  }
+
+  .setting-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .setting-name {
+    font-size: .875rem;
+  }
+}

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction History - Jishora</title>
+  <link rel="icon" type="image/png" href="images/logo/favicon.ico.png">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/transactions.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" />
+  <link rel="stylesheet" href="css/toast-notifications.css">
+  <link rel="stylesheet" href="css/page-loader.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       TOP BAR
+  ══════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+    <!-- Logo -->
+    <a href="index.html" class="topbar-logo">
+      <img src="images/logo/logo.png" alt="Jishora Logo" />
+    </a>
+
+    <!-- Right side -->
+    <div class="topbar-right">
+
+      <!-- Notification -->
+      <a href="notifications.html" class="notif-btn" aria-label="Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-badge" id="notifBadge" style="display:none;"></span>
+      </a>
+
+      <!-- Language Selector -->
+      <div class="lang-selector" id="langSelector">
+        <button type="button" class="lang-btn" id="langBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Select language">
+          <img class="lang-flag" id="langFlag" src="https://flagcdn.com/w40/us.png" alt="US flag" />
+          <span id="langLabel">English</span>
+          <i class="fa-solid fa-chevron-down lang-chevron"></i>
+        </button>
+        <div class="lang-dropdown" role="listbox" id="langDropdown">
+          <button type="button" class="lang-option active" data-lang="en" data-flag="https://flagcdn.com/w40/us.png" data-flag-alt="US flag" data-label="English" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/us.png" alt="US flag" /> English
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="ar" data-flag="https://flagcdn.com/w40/sa.png" data-flag-alt="Saudi Arabia flag" data-label="العربية" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/sa.png" alt="Saudi Arabia flag" /> العربية
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="fr" data-flag="https://flagcdn.com/w40/fr.png" data-flag-alt="France flag" data-label="Français" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/fr.png" alt="France flag" /> Français
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="es" data-flag="https://flagcdn.com/w40/es.png" data-flag-alt="Spain flag" data-label="Español" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/es.png" alt="Spain flag" /> Español
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="de" data-flag="https://flagcdn.com/w40/de.png" data-flag-alt="Germany flag" data-label="Deutsch" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/de.png" alt="Germany flag" /> Deutsch
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+          <button type="button" class="lang-option" data-lang="tr" data-flag="https://flagcdn.com/w40/tr.png" data-flag-alt="Turkey flag" data-label="Türkçe" role="option">
+            <img class="opt-flag" src="https://flagcdn.com/w40/tr.png" alt="Turkey flag" /> Türkçe
+            <i class="fa-solid fa-check opt-check"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    </div><!-- /.topbar-inner -->
+  </header>
+
+
+  <div class="container">
+
+    <!-- Stats Overview -->
+    <div class="stats-overview">
+      <div class="stat-card income-card">
+        <div class="stat-icon-wrapper income">
+          <div class="stat-icon income">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="19" x2="12" y2="5"></line>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label" data-i18n="transactions.deposit">Total Income</div>
+          <div class="stat-value income" id="totalIncome">--</div>
+        </div>
+      </div>
+      <div class="stat-card expense-card">
+        <div class="stat-icon-wrapper expense">
+          <div class="stat-icon expense">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <polyline points="19 12 12 19 5 12"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label" data-i18n="transactions.withdrawal">Total Expenses</div>
+          <div class="stat-value expense" id="totalExpenses">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+      <div class="filter-header">
+        <h2 class="filter-title" data-i18n="transactions.title">Transaction History</h2>
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">
+          <span>All</span>
+        </button>
+        <button class="filter-tab" data-filter="deposits">
+          <span data-i18n="transactions.deposit">Deposits</span>
+        </button>
+        <button class="filter-tab" data-filter="withdrawals">
+          <span data-i18n="transactions.withdrawal">Withdrawals</span>
+        </button>
+        <button class="filter-tab" data-filter="earnings">
+          <span>Earnings</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="transactions-container" id="transactionsContainer">
+      <!-- Populated by loadTransactions() from GET /api/transactions -->
+      <div class="tx-empty">Loading your transactions...</div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+    <a href="index.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="support.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 11v3a2 2 0 0 0 2 2h1v-4H3Z"></path>
+        <path d="M21 11v3a2 2 0 0 1-2 2h-1v-4h3Z"></path>
+        <path d="M6 8a6 6 0 0 1 12 0v8a1 1 0 0 1-1 1h-2"></path>
+        <path d="M9 17v2a1 1 0 0 0 1 1h4"></path>
+      </svg>
+      <span>Services</span>
+    </a>
+    <a href="markets.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
+      </svg>
+      <span>Menu</span>
+    </a>
+    <a href="transactions.html" class="nav-item active">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <line x1="10" y1="9" x2="8" y2="9"></line>
+      </svg>
+      <span>History</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>Profile</span>
+    </a>
+    </div>
+  </nav>
+
+  <script>
+    const selector = document.getElementById('langSelector');
+    const btn      = document.getElementById('langBtn');
+    const dropdown = document.getElementById('langDropdown');
+    const flagEl   = document.getElementById('langFlag');
+    const labelEl  = document.getElementById('langLabel');
+    if (btn && dropdown) {
+      const saved = localStorage.getItem('jishora_lang');
+      if (saved) { const savedOpt = dropdown.querySelector(`[data-lang="${saved}"]`); if (savedOpt) applyLang(savedOpt); }
+      btn.addEventListener('click', e => { e.stopPropagation(); const open = selector.classList.toggle('open'); btn.setAttribute('aria-expanded', open); });
+      dropdown.querySelectorAll('.lang-option').forEach(opt => { opt.addEventListener('click', () => { applyLang(opt); selector.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }); });
+      document.addEventListener('click', () => { selector.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') selector.classList.remove('open'); });
+    }
+    function applyLang(opt) { dropdown.querySelectorAll('.lang-option').forEach(o => o.classList.remove('active')); opt.classList.add('active'); if (flagEl) { flagEl.src = opt.dataset.flag; flagEl.alt = opt.dataset.flagAlt || ''; } if (labelEl) labelEl.textContent = opt.dataset.label; const lang = opt.dataset.lang; localStorage.setItem('jishora_lang', lang); document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; document.documentElement.lang = lang; if (typeof translatePage === 'function') { translatePage(); } }
+
+    // ── Real transaction history from GET /api/transactions ──
+
+    const container = document.getElementById('transactionsContainer');
+    const filterTabs = document.querySelectorAll('.filter-tab');
+
+    // Money in vs money out, used for the income/expense totals and the sign.
+    const CREDIT_TYPES = ['deposit', 'commission', 'referral', 'bonus'];
+
+    // Human labels for the transaction types the backend actually emits.
+    const TYPE_LABELS = {
+      deposit: 'Deposit',
+      withdraw: 'Withdrawal',
+      commission: 'Task Commission',
+      referral: 'Referral Commission',
+      bonus: 'Bonus',
+      penalty: 'Penalty'
+    };
+
+    const STATUS_BADGES = {
+      completed: { cls: 'success', icon: 'fa-circle-check', label: 'Completed' },
+      pending: { cls: 'pending', icon: 'fa-clock', label: 'Pending' },
+      processing: { cls: 'pending', icon: 'fa-spinner', label: 'Processing' },
+      rejected: { cls: 'failed', icon: 'fa-circle-xmark', label: 'Rejected' },
+      failed: { cls: 'failed', icon: 'fa-circle-xmark', label: 'Failed' },
+      cancelled: { cls: 'failed', icon: 'fa-ban', label: 'Cancelled' }
+    };
+
+    // Which API type values each tab maps to. Empty means no filter.
+    const TAB_FILTERS = {
+      all: [],
+      deposits: ['deposit'],
+      withdrawals: ['withdraw'],
+      earnings: ['commission', 'referral', 'bonus']
+    };
+
+    let allTransactions = [];
+
+    // Usernames and admin notes are user-supplied, so escape before innerHTML.
+    function escapeHtml(value) {
+      const div = document.createElement('div');
+      div.textContent = value == null ? '' : String(value);
+      return div.innerHTML;
+    }
+
+    // "Today" / "Yesterday" / "January 5, 2026" grouping headers.
+    function dateGroupLabel(date) {
+      const today = new Date();
+      const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const dayDiff = Math.round((startOfToday - startOfDate) / 86400000);
+
+      if (dayDiff === 0) return 'Today';
+      if (dayDiff === 1) return 'Yesterday';
+      return startOfDate.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
+
+    // Safe USDT formatter — falls back to a plain 2dp number if the global
+    // formatUSDT (from api.js) is unavailable for any reason.
+    function fmtUSDT(v) {
+      var n = Number(v) || 0;
+      if (typeof formatUSDT === 'function') { try { return formatUSDT(n); } catch (e) {} }
+      return n.toFixed(2);
+    }
+
+    function renderTransaction(tx) {
+      const isCredit = CREDIT_TYPES.includes(tx.type);
+      const badge = STATUS_BADGES[tx.status] || STATUS_BADGES.pending;
+      const amount = Number(tx.amount) || 0;
+      const created = new Date(tx.created_at);
+
+      const arrow = isCredit
+        ? '<line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline>'
+        : '<line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline>';
+
+      const iconClass = isCredit ? 'deposit' : 'withdraw';
+      const subtitle = tx.payment_method
+        ? `USDT via ${escapeHtml(tx.payment_method)}`
+        : escapeHtml(tx.notes || TYPE_LABELS[tx.type] || tx.type);
+
+      return `
+        <div class="tx-item" data-type="${escapeHtml(tx.type)}">
+          <div class="tx-icon-wrapper ${iconClass}">
+            <div class="tx-icon ${iconClass}">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                ${arrow}
+              </svg>
+            </div>
+          </div>
+          <div class="tx-details">
+            <div class="tx-title">${escapeHtml(TYPE_LABELS[tx.type] || tx.type)}</div>
+            <div class="tx-subtitle">${subtitle}</div>
+            <div class="tx-meta">
+              <span class="tx-time"><i class="fa-regular fa-clock"></i> ${created.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+              <span class="tx-separator">•</span>
+              <span class="tx-id">#${escapeHtml(tx.transaction_number || tx.id)}</span>
+            </div>
+          </div>
+          <div class="tx-right">
+            <div class="tx-amount ${isCredit ? 'positive' : 'negative'}">${isCredit ? '+' : '-'}${fmtUSDT(amount)} USDT</div>
+            <div class="tx-status-badge ${badge.cls}">
+              <i class="fa-solid ${badge.icon}"></i>
+              <span>${badge.label}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderList(transactions) {
+      if (transactions.length === 0) {
+        container.innerHTML = `
+          <div class="tx-empty" style="text-align:center; padding:48px 16px; color:#6b7280;">
+            <i class="fa-regular fa-folder-open" style="font-size:40px; display:block; margin-bottom:12px; opacity:.5;"></i>
+            <p style="margin:0 0 4px; font-weight:600;">No transactions yet</p>
+            <span style="font-size:14px;">Your deposits and withdrawals will appear here</span>
+          </div>`;
+        return;
+      }
+
+      // Group by calendar day, preserving the API's newest-first ordering.
+      const groups = new Map();
+      transactions.forEach((tx) => {
+        const label = dateGroupLabel(new Date(tx.created_at));
+        if (!groups.has(label)) groups.set(label, []);
+        groups.get(label).push(tx);
+      });
+
+      container.innerHTML = Array.from(groups.entries())
+        .map(([label, items]) => `
+          <div class="date-group">
+            <div class="date-header">${escapeHtml(label)}</div>
+            ${items.map(renderTransaction).join('')}
+          </div>`)
+        .join('');
+    }
+
+    function applyFilter(tabKey) {
+      const types = TAB_FILTERS[tabKey] || [];
+      renderList(
+        types.length === 0
+          ? allTransactions
+          : allTransactions.filter((tx) => types.includes(tx.type))
+      );
+    }
+
+    function updateTotals(transactions) {
+      // Only completed movements count toward totals; pending money has not moved.
+      let income = 0;
+      let expenses = 0;
+
+      transactions.forEach((tx) => {
+        if (tx.status !== 'completed') return;
+        const amount = Number(tx.amount) || 0;
+        if (CREDIT_TYPES.includes(tx.type)) income += amount;
+        else expenses += amount;
+      });
+
+      const inEl = document.getElementById('totalIncome');
+      const exEl = document.getElementById('totalExpenses');
+      if (inEl) inEl.textContent = `${fmtUSDT(income)} USDT`;
+      if (exEl) exEl.textContent = `${fmtUSDT(expenses)} USDT`;
+    }
+
+    async function loadTransactions() {
+      const response = await API.getTransactions();
+
+      if (!response || !response.success) {
+        container.innerHTML = `
+          <div class="tx-empty" style="text-align:center; padding:48px 16px; color:#6b7280;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size:40px; display:block; margin-bottom:12px; opacity:.5;"></i>
+            <p style="margin:0 0 4px; font-weight:600;">Could not load transactions</p>
+            <span style="font-size:14px;">Please refresh the page to try again</span>
+          </div>`;
+        document.getElementById('totalIncome').textContent = '0.00 USDT';
+        document.getElementById('totalExpenses').textContent = '0.00 USDT';
+        return;
+      }
+
+      allTransactions = response.data.transactions || response.data || [];
+      updateTotals(allTransactions);
+
+      // Honour ?filter=deposit / ?filter=withdraw links from other pages.
+      const filterParam = new URLSearchParams(window.location.search).get('filter');
+      const initialTab = filterParam === 'deposit' ? 'deposits'
+        : filterParam === 'withdraw' ? 'withdrawals'
+        : 'all';
+
+      filterTabs.forEach((tab) => {
+        tab.classList.toggle('active', tab.getAttribute('data-filter') === initialTab);
+      });
+
+      applyFilter(initialTab);
+    }
+
+    filterTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        filterTabs.forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        // Read the explicit data-filter, not the (possibly translated) label.
+        applyFilter(tab.getAttribute('data-filter') || 'all');
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Wait until api.js has defined API/isAuthenticated (it loads after this
+      // inline script). Retry briefly, then load the transactions.
+      function start(attempt) {
+        if (typeof API === 'undefined' || typeof isAuthenticated === 'undefined') {
+          if (attempt < 20) return setTimeout(() => start(attempt + 1), 50);
+        }
+        if (typeof isAuthenticated === 'function' && !isAuthenticated()) {
+          // Not logged in — the API layer will redirect; show a gentle message.
+          container.innerHTML = '<div class="tx-empty" style="text-align:center;padding:48px 16px;color:#6b7280;">Please log in to see your transactions.</div>';
+          return;
+        }
+        loadTransactions();
+      }
+      start(0);
+    });
+  </script>
+  <!-- Translation System -->
+  <script src="js/translations.js"></script>
+  <script src="js/lang-init.js"></script>
+  <!-- Live data: api.js must load before live-data.js -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/live-data.js"></script>
+  <script src="js/toast-notifications.js"></script>
+  <script src="js/notif-badge.js"></script>
+  <script src="js/page-loader.js"></script>
+</body>
+</html>
+
