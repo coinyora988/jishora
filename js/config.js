@@ -24,10 +24,9 @@
  */
 (function () {
   // ── EDIT THIS in production if the backend is on a different domain ──
-  // Example (Railway with a custom domain):  'https://api.jishora.com/api'
-  // Example (Railway default domain):        'https://jishora-api-production.up.railway.app/api'
-  // Leave as '' to use the automatic rules (local dev, or same-origin /api).
-  var PROD_API_BASE = '';
+  // Railway backend service URL (the "jishora" service), with /api on the end.
+  // When you switch to the custom domain, change this to 'https://api.jishora.com/api'.
+  var PROD_API_BASE = 'https://jishora-production.up.railway.app/api';
 
   var LAN = /^(localhost|127\.0\.0\.1|(?:10|192\.168)\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})$/;
 
