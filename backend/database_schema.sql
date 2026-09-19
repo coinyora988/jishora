@@ -154,7 +154,7 @@ CREATE TABLE notifications (
 
 -- Referrals table
 CREATE TABLE referrals (
-  id INT PRIMARY_KEY AUTO_INCREMENT,
+  id INT PRIMARY KEY AUTO_INCREMENT,
   referrer_id INT NOT NULL,
   referred_id INT NOT NULL,
   commission_earned DECIMAL(15, 4) DEFAULT 0.0000,
