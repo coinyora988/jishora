@@ -69,11 +69,14 @@ function closeProofLightbox() {
     if (lb) lb.classList.remove('active');
 }
 
-// Load deposits
-async function loadDeposits(page = 1) {
+// Load deposits. `silent` (from auto-refresh) updates in place without the
+// "Loading..." flash so the table refreshes smoothly.
+async function loadDeposits(page = 1, silent = false) {
     currentPage = page;
     const tbody = document.getElementById('depositsTableBody');
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
+    if (!silent) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
+    }
 
     const data = await apiRequest(`/admin/transactions?type=deposit&status=${currentFilter}&page=${page}`);
 
@@ -120,7 +123,7 @@ async function loadDeposits(page = 1) {
                 </td>
             </tr>
         `).join('');
-    } else {
+    } else if (!silent) {
         tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load deposits</td></tr>';
     }
 }
@@ -314,6 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Real-time auto-refresh (shared poller pauses while a review modal is open).
     if (typeof registerAutoRefresh === 'function') {
-        registerAutoRefresh(() => loadDeposits(currentPage));
+        registerAutoRefresh(() => loadDeposits(currentPage, true));
     }
 });

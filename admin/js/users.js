@@ -8,11 +8,16 @@ let filters = {
     vipLevel: ''
 };
 
-// Load users
-async function loadUsers(page = 1) {
+// Load users.
+// `silent` = true is passed by the auto-refresh poller: it updates the table
+// in place WITHOUT blanking it to "Loading..." first, so the list refreshes
+// smoothly every few seconds instead of flashing a placeholder each cycle.
+async function loadUsers(page = 1, silent = false) {
     currentPage = page;
     const tbody = document.getElementById('usersTableBody');
-    tbody.innerHTML = '<tr><td colspan="12" class="text-center">Loading...</td></tr>';
+    if (!silent) {
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center">Loading...</td></tr>';
+    }
 
     const queryParams = new URLSearchParams({
         page,
@@ -63,7 +68,9 @@ async function loadUsers(page = 1) {
         `).join('');
 
         renderPagination();
-    } else {
+    } else if (!silent) {
+        // On a silent auto-refresh, keep the last good table rather than
+        // replacing it with an error (e.g. a brief network blip).
         tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Failed to load users</td></tr>';
     }
 }
@@ -168,7 +175,7 @@ function isStrongPassword(pw) {
 // Real-time: refresh the user list (and their balances) automatically.
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof registerAutoRefresh === 'function') {
-        registerAutoRefresh(() => loadUsers(currentPage));
+        registerAutoRefresh(() => loadUsers(currentPage, true));
     }
 });
 

@@ -43,13 +43,15 @@ async function loadNotificationStats() {
     }
 }
 
-// Load recent notifications
-async function loadNotifications() {
+// Load recent notifications. `silent` (auto-refresh) updates in place.
+async function loadNotifications(silent = false) {
     const tbody = document.getElementById('notificationsTableBody');
     const filterType = document.getElementById('filterType').value;
 
     try {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading...</td></tr>';
+        if (!silent) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Loading...</td></tr>';
+        }
 
         const queryParams = new URLSearchParams({
             page: 1,
@@ -92,8 +94,10 @@ async function loadNotifications() {
         `).join('');
     } catch (error) {
         console.error('Error loading notifications:', error);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load notifications</td></tr>';
-        showNotification('Failed to load notifications', 'error');
+        if (!silent) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load notifications</td></tr>';
+            showNotification('Failed to load notifications', 'error');
+        }
     }
 }
 
@@ -295,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Real-time: refresh notification stats + recent list automatically.
     if (typeof registerAutoRefresh === 'function') {
-        registerAutoRefresh(() => { loadNotificationStats(); loadNotifications(); });
+        registerAutoRefresh(() => { loadNotificationStats(); loadNotifications(true); });
     }
 });
 

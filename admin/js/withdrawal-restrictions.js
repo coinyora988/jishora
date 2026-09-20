@@ -97,13 +97,17 @@ async function removeRestrictionById(userId, username) {
 }
 
 // Load and render all currently restricted customers.
-async function loadRestricted() {
+async function loadRestricted(silent = false) {
     const tbody = document.getElementById('restrictedTableBody');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+    if (!silent) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+    }
 
     const data = await apiRequest('/admin/withdrawal-restrictions');
     if (!data || !data.success) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load</td></tr>';
+        if (!silent) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load</td></tr>';
+        }
         return;
     }
 
@@ -139,6 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Real-time: refresh the restricted-customers list automatically.
     if (typeof registerAutoRefresh === 'function') {
-        registerAutoRefresh(loadRestricted);
+        registerAutoRefresh(() => loadRestricted(true));
     }
 });

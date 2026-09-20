@@ -7,11 +7,15 @@ let currentPage = 1;
 let totalPages = 1;
 let searchTerm = '';
 
-// Load the user permission-status list
-async function loadPermissions(page = 1) {
+// Load the user permission-status list.
+// `silent` = true (from the auto-refresh poller) updates the table in place
+// without blanking it to "Loading..." first, so it refreshes smoothly.
+async function loadPermissions(page = 1, silent = false) {
     currentPage = page;
     const tbody = document.getElementById('permissionsTableBody');
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
+    if (!silent) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
+    }
 
     const queryParams = new URLSearchParams({
         page,
@@ -106,7 +110,8 @@ async function loadPermissions(page = 1) {
         }).join('');
 
         renderPagination();
-    } else {
+    } else if (!silent) {
+        // Keep the last good table on a silent auto-refresh failure.
         tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load permissions</td></tr>';
     }
 }
@@ -374,6 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Real-time: keep the permission/combo status current automatically.
     if (typeof registerAutoRefresh === 'function') {
-        registerAutoRefresh(() => loadPermissions(currentPage));
+        registerAutoRefresh(() => loadPermissions(currentPage, true));
     }
 });

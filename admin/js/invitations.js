@@ -37,9 +37,9 @@ async function loadReferralSettings() {
     setText('linkValidity', 'Forever');
 }
 
-async function loadReferrers() {
+async function loadReferrers(silent = false) {
     const tbody = document.getElementById('referralsTable');
-    if (tbody) {
+    if (tbody && !silent) {
         tbody.innerHTML =
             '<tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af;">Loading...</td></tr>';
     }
@@ -160,14 +160,18 @@ function setText(id, value) {
 
 // ── Invite codes ────────────────────────────────────────────────────
 
-async function loadInviteCodes() {
+async function loadInviteCodes(silent = false) {
     const tbody = document.getElementById('inviteCodesBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#9ca3af;">Loading…</td></tr>';
+    if (!silent) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#9ca3af;">Loading…</td></tr>';
+    }
 
     const data = await apiRequest('/admin/invite-codes?limit=50');
     if (!data || !data.success) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#ef4444;">Failed to load codes</td></tr>';
+        if (!silent) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:#ef4444;">Failed to load codes</td></tr>';
+        }
         return;
     }
 
@@ -249,6 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Real-time: refresh stats, referrers and invite codes automatically.
     // (Skip loadReferralSettings so an edited settings form isn't clobbered.)
     if (typeof registerAutoRefresh === 'function') {
-        registerAutoRefresh(() => { loadReferralStats(); loadReferrers(); loadInviteCodes(); });
+        registerAutoRefresh(() => { loadReferralStats(); loadReferrers(true); loadInviteCodes(true); });
     }
 });

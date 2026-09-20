@@ -10,18 +10,22 @@ let currentPage = 1;
 let currentTransactionId = null;
 
 // Load withdrawals
-async function loadWithdrawals(page = 1) {
+async function loadWithdrawals(page = 1, silent = false) {
     currentPage = page;
     const tbody = document.getElementById('withdrawalsTableBody');
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
+    if (!silent) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">Loading...</td></tr>';
+    }
 
     const data = await apiRequest(
         `/admin/transactions?type=withdraw&status=${currentFilter}&page=${page}`
     );
 
     if (!data || !data.success) {
-        tbody.innerHTML =
-            '<tr><td colspan="8" class="text-center text-danger">Failed to load withdrawals</td></tr>';
+        if (!silent) {
+            tbody.innerHTML =
+                '<tr><td colspan="8" class="text-center text-danger">Failed to load withdrawals</td></tr>';
+        }
         return;
     }
 
@@ -249,6 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Real-time auto-refresh (shared poller pauses while a review modal is open).
     if (typeof registerAutoRefresh === 'function') {
-        registerAutoRefresh(() => loadWithdrawals(currentPage));
+        registerAutoRefresh(() => loadWithdrawals(currentPage, true));
     }
 });
