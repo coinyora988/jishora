@@ -504,12 +504,31 @@
 
     // Pick which product to display for the next grab. The order AMOUNT equals
     // this product's PRICE (set server-side), which is separate from the
-    // customer's wallet balance. Cycles through the market's products so the
-    // order value and product shown still vary between grabs.
+    // customer's wallet balance. We only pick from products the customer can
+    // AFFORD (price <= balance), so the grab never fails for cost reasons, and
+    // cycle through those so the order value/product still varies between grabs.
     function pickProduct() {
       if (!marketProducts.length) return null;
-      const index = (taskData.todayTasks || 0) % marketProducts.length;
-      return marketProducts[index];
+      const bal = Number(taskData.balance) || 0;
+      // Products with a valid price the customer can afford.
+      const affordable = marketProducts.filter(function (p) {
+        const price = Number(p.price) || 0;
+        return price > 0 && price <= bal;
+      });
+      if (!affordable.length) return null; // nothing affordable -> caller handles
+      const index = (taskData.todayTasks || 0) % affordable.length;
+      return affordable[index];
+    }
+
+    // The price of the cheapest product in this market (what a customer must be
+    // able to afford to grab any order here).
+    function cheapestAffordablePrice() {
+      var min = null;
+      marketProducts.forEach(function (p) {
+        const price = Number(p.price) || 0;
+        if (price > 0 && (min === null || price < min)) min = price;
+      });
+      return min;
     }
 
     // The amount a user needs to start here is the market's minimum balance.
@@ -635,7 +654,10 @@
         if (!marketProducts.length) {
           showToast('No products available in this market yet', 'error');
         } else {
-          showInsufficientBalanceModal(cheapestProductPrice());
+          // The customer can't afford any product here. The true amount needed
+          // is the cheapest product's price (which can be above the market's
+          // nominal minimum), so show that as the required balance.
+          showInsufficientBalanceModal(cheapestAffordablePrice() || cheapestProductPrice());
         }
         return;
       }
@@ -653,9 +675,13 @@
         // Permission gate -> the admin has not authorised this task start yet.
         if (response && response.code === 'PERMISSION_REQUIRED') {
           showPermissionRequiredModal();
-        } else if (/insufficient|requirement/i.test(msg)) {
-          // Insufficient balance -> offer the deposit path.
-          showInsufficientBalanceModal(currentMarket.minBalance);
+        } else if (/insufficient|requirement|price/i.test(msg)) {
+          // Insufficient balance / price issue -> offer the deposit path. Show
+          // the actual order value we attempted (this product's price) as the
+          // required amount, not the market's nominal minimum, so the figure is
+          // truthful.
+          const needed = Number(product && product.price) || currentMarket.minBalance;
+          showInsufficientBalanceModal(needed);
         } else {
           showToast(msg, 'error');
         }
