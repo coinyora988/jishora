@@ -438,10 +438,14 @@ class Task {
         SUM(CASE WHEN DATE(DATE_ADD(created_at, INTERVAL ? MINUTE)) = DATE(DATE_ADD(NOW(), INTERVAL ? MINUTE))
                   AND status <> 'cancelled' THEN 1 ELSE 0 END) as today_tasks,
         SUM(CASE WHEN DATE(DATE_ADD(completion_time, INTERVAL ? MINUTE)) = DATE(DATE_ADD(NOW(), INTERVAL ? MINUTE))
-                  AND status = 'completed' THEN commission ELSE 0 END) as today_commission
+                  AND status = 'completed' THEN commission ELSE 0 END) as today_commission,
+        -- Yesterday's commission: completed tasks whose LOCAL completion date is
+        -- the day before the customer's local "today" (local now minus 1 day).
+        COALESCE(SUM(CASE WHEN DATE(DATE_ADD(completion_time, INTERVAL ? MINUTE)) = DATE(DATE_ADD(DATE_ADD(NOW(), INTERVAL ? MINUTE), INTERVAL -1 DAY))
+                  AND status = 'completed' THEN commission ELSE 0 END), 0) as yesterday_commission
       FROM tasks
       WHERE user_id = ?
-    `, [localMinutes, localMinutes, localMinutes, localMinutes, userId]);
+    `, [localMinutes, localMinutes, localMinutes, localMinutes, localMinutes, localMinutes, userId]);
 
     // Provide both names so any caller (frontend expects total_commission) works.
     stats.total_earned = stats.total_commission;
