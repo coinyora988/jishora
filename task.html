@@ -501,10 +501,10 @@
     const grabOrderBtn = document.getElementById('grabOrderBtn');
     const submitOrderBtn = document.getElementById('submitOrderBtn');
 
-    // Pick which product to display for the next grab. The order AMOUNT is based
-    // on the customer's balance (recharge), not the product price, so every
-    // product is eligible — the product just provides a name/image for the
-    // order card. Cycles through the market's products so orders still vary.
+    // Pick which product to display for the next grab. The order AMOUNT equals
+    // this product's PRICE (set server-side), which is separate from the
+    // customer's wallet balance. Cycles through the market's products so the
+    // order value and product shown still vary between grabs.
     function pickProduct() {
       if (!marketProducts.length) return null;
       const index = (taskData.todayTasks || 0) % marketProducts.length;

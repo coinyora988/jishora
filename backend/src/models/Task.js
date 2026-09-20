@@ -167,12 +167,16 @@ class Task {
         orderAmount = Math.round(proxyComboAmount * 100) / 100;
         isCombo = 1;
       } else {
-        // Normal order: commission is based on the customer's RECHARGE amount,
-        // i.e. their balance. The whole balance is the order amount and is
-        // frozen for the task, so a bigger recharge yields proportionally
-        // bigger commission (order × market rate).
-        orderAmount = Math.round(userBalance * 100) / 100;
-        if (orderAmount <= 0 || userBalance < orderAmount) {
+        // Normal order: the order amount is the PRODUCT'S PRICE — the value of
+        // this specific order — which is separate from the customer's wallet
+        // balance. Commission = product price × market rate. The customer just
+        // needs enough balance to cover the order (that amount is frozen until
+        // the task completes, then returned along with the commission).
+        orderAmount = Math.round(parseFloat(productData.price) * 100) / 100;
+        if (!(orderAmount > 0)) {
+          throw new Error('Product price is not set');
+        }
+        if (userBalance < orderAmount) {
           throw new Error('Insufficient balance');
         }
       }
