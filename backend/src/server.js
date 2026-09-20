@@ -48,11 +48,34 @@ app.use(helmet({
 // localhost or private-LAN address on the frontend port; anything else is
 // rejected. Set FRONTEND_URL to lock this down to a single origin in prod.
 const LAN_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1|(?:10|192\.168)\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}):\d+$/;
+// Build the set of allowed production origins from FRONTEND_URL. We accept the
+// configured origin AND its www/non-www counterpart, so the site works whether
+// visitors land on https://jishora.com or https://www.jishora.com. You can also
+// list several origins in FRONTEND_URL separated by commas.
+function buildAllowedOrigins() {
+  const raw = process.env.FRONTEND_URL;
+  if (!raw) return null;
+  const set = new Set();
+  raw.split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean).forEach((url) => {
+    set.add(url);
+    // Add the www <-> non-www counterpart automatically.
+    try {
+      const u = new URL(url);
+      if (u.hostname.startsWith('www.')) {
+        set.add(`${u.protocol}//${u.hostname.slice(4)}`);
+      } else {
+        set.add(`${u.protocol}//www.${u.hostname}`);
+      }
+    } catch (_) { /* ignore malformed entries */ }
+  });
+  return set;
+}
+const ALLOWED_ORIGINS = buildAllowedOrigins();
 app.use(cors({
   origin: (origin, callback) => {
     // Allow non-browser clients (curl, mobile apps) that send no Origin header.
     if (!origin) return callback(null, true);
-    if (process.env.FRONTEND_URL) return callback(null, origin === process.env.FRONTEND_URL);
+    if (ALLOWED_ORIGINS) return callback(null, ALLOWED_ORIGINS.has(origin));
     if (LAN_ORIGIN.test(origin)) return callback(null, true);
     return callback(null, false);
   },
