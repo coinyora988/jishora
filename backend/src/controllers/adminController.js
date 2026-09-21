@@ -8,6 +8,7 @@ const Transaction = require('../models/Transaction');
 const Task = require('../models/Task');
 const Market = require('../models/Market');
 const Notification = require('../models/Notification');
+const SequencePlan = require('../models/SequencePlan');
 const { query } = require('../config/database');
 
 /**
@@ -151,6 +152,25 @@ const approveTransaction = async (req, res, next) => {
 
     if (transaction.type === 'deposit') {
       await Transaction.approveDeposit(req.params.id, req.user.id);
+
+      // Auto-start an earnings sequence plan from this deposit IF the customer
+      // has no active plan yet. This gives every funded customer the default
+      // run (e.g. deposit $20 -> 25 orders -> target $40) without the admin
+      // having to set it manually. The admin can still override it afterwards.
+      try {
+        const existing = await SequencePlan.getActive(transaction.user_id);
+        if (!existing) {
+          await SequencePlan.createForUser(
+            transaction.user_id,
+            parseFloat(transaction.amount),
+            null,          // use the default tier / proportional scaling
+            req.user.id
+          );
+        }
+      } catch (e) {
+        // Never fail the deposit approval because of plan creation.
+        console.error('Sequence plan auto-create failed:', e.message);
+      }
     } else if (transaction.type === 'withdraw') {
       await Transaction.approveWithdrawal(req.params.id, req.user.id);
     } else {

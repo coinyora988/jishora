@@ -8,8 +8,10 @@
 
 const TaskPermission = require('../models/TaskPermission');
 const ComboPlan = require('../models/ComboPlan');
+const SequencePlan = require('../models/SequencePlan');
 const Notification = require('../models/Notification');
 const { query } = require('../config/database');
+const seqUtil = require('../utils/sequencePlan');
 
 /**
  * @desc    List users with their available-permission status
@@ -333,6 +335,138 @@ const permissionHistory = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get a user's active sequence plan (earnings run) + a preview of the
+ *          schedule totals. Also returns the default tier so the UI can prefill.
+ * @route   GET /api/admin/task-permissions/:userId/sequence-plan
+ * @access  Admin
+ */
+const getSequencePlan = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Invalid user id' });
+    }
+    const plan = await SequencePlan.getActive(userId);
+    res.json({
+      success: true,
+      data: {
+        plan,
+        defaultTier: seqUtil.DEFAULT_TIERS[0] || null
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Create / override a user's sequence plan (earnings run). Admin sets
+ *          the deposit basis and (optionally) a custom target and combo config;
+ *          the schedule is generated so the whole run lands on the target.
+ * @route   POST /api/admin/task-permissions/:userId/sequence-plan
+ * @access  Admin
+ * body: { deposit, targetTotal?, orders?, comboOrder?, comboAmount?, comboProfit? }
+ */
+const setSequencePlan = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Invalid user id' });
+    }
+
+    const deposit = parseFloat(req.body.deposit);
+    if (!(deposit > 0)) {
+      return res.status(400).json({ success: false, message: 'Deposit must be greater than 0' });
+    }
+
+    // Optional admin override fields. Undefined ones fall back to the tier.
+    const override = {};
+    ['targetTotal', 'orders', 'comboOrder', 'comboAmount', 'comboProfit'].forEach((k) => {
+      if (req.body[k] !== undefined && req.body[k] !== null && req.body[k] !== '') {
+        override[k] = req.body[k];
+      }
+    });
+
+    // Validate the resulting plan is financially coherent before saving:
+    // target must exceed outlay (deposit + combo) so there is profit to spread.
+    const params = seqUtil.resolvePlanParams(deposit, Object.keys(override).length ? override : null);
+    const outlay = seqUtil.r2(params.deposit + params.comboAmount);
+    if (params.targetTotal <= outlay) {
+      return res.status(400).json({
+        success: false,
+        message: `Target total (${params.targetTotal}) must be greater than the outlay (deposit ${params.deposit} + combo ${params.comboAmount} = ${outlay}).`
+      });
+    }
+    if (params.comboProfit < 0 || params.comboProfit > (params.targetTotal - outlay)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Combo profit must be between 0 and the total profit.'
+      });
+    }
+    if (params.comboOrder < 1 || params.comboOrder > params.orders) {
+      return res.status(400).json({ success: false, message: 'Combo order must be within the run length.' });
+    }
+
+    const plan = await SequencePlan.createForUser(
+      userId,
+      deposit,
+      Object.keys(override).length ? override : null,
+      req.user.id
+    );
+
+    try {
+      await Notification.create(
+        userId,
+        'Task Plan Ready',
+        `A ${plan.orders}-order plan has been set up for you.`,
+        'info'
+      );
+    } catch (e) { /* non-fatal */ }
+
+    res.status(201).json({
+      success: true,
+      message: 'Sequence plan set',
+      data: {
+        id: plan.id,
+        deposit: plan.deposit,
+        orders: plan.orders,
+        targetTotal: plan.targetTotal,
+        comboOrder: plan.comboOrder,
+        comboAmount: plan.comboAmount,
+        comboProfit: plan.comboProfit,
+        totalProfit: plan.totalProfit,
+        normalPool: plan.normalPool,
+        totalCommission: seqUtil.sumCommissions(plan.schedule)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Cancel a user's active sequence plan.
+ * @route   POST /api/admin/task-permissions/:userId/sequence-plan/cancel
+ * @access  Admin
+ */
+const cancelSequencePlan = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Invalid user id' });
+    }
+    const cancelled = await SequencePlan.cancelActive(userId);
+    res.json({
+      success: true,
+      message: cancelled > 0 ? 'Sequence plan cancelled' : 'No active plan to cancel',
+      data: { cancelled }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   listPermissions,
   grantPermission,
@@ -341,5 +475,8 @@ module.exports = {
   setComboPlan,
   cancelComboPlan,
   listComboCustomers,
-  permissionHistory
+  permissionHistory,
+  getSequencePlan,
+  setSequencePlan,
+  cancelSequencePlan
 };

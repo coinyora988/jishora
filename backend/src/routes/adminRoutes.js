@@ -73,7 +73,10 @@ const {
   setComboPlan,
   cancelComboPlan,
   listComboCustomers,
-  permissionHistory
+  permissionHistory,
+  getSequencePlan,
+  setSequencePlan,
+  cancelSequencePlan
 } = require('../controllers/adminPermissionController');
 const {
   validateUserUpdate,
@@ -155,6 +158,9 @@ router.post('/task-permissions/:userId/revoke', revokePermission);
 router.post('/task-permissions/:userId/combo', grantCombo);
 router.post('/task-permissions/:userId/combo-plan', setComboPlan);
 router.post('/task-permissions/:userId/combo-plan/cancel', cancelComboPlan);
+router.get('/task-permissions/:userId/sequence-plan', getSequencePlan);
+router.post('/task-permissions/:userId/sequence-plan', setSequencePlan);
+router.post('/task-permissions/:userId/sequence-plan/cancel', cancelSequencePlan);
 router.get('/task-permissions/:userId/history', permissionHistory);
 router.get('/combo-customers', listComboCustomers);
 
@@ -210,6 +216,50 @@ router.delete('/invite-codes/:id', deleteInviteCode);
 
 // Reports
 router.get('/reports', getReports);
+
+/**
+ * @route  POST /api/admin/run-migration/sequence-plans
+ * @desc   One-time, idempotent creation of the sequence_plans table on the live
+ *         DB (Railway) without shell access. Safe to call repeatedly — it only
+ *         creates the table if it does not already exist.
+ * @access Admin
+ */
+router.post('/run-migration/sequence-plans', async (req, res, next) => {
+  try {
+    const { query } = require('../config/database');
+    const exists = await query(
+      `SELECT 1 FROM information_schema.TABLES
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sequence_plans'`
+    );
+    if (exists.length) {
+      return res.json({ success: true, message: 'sequence_plans already exists', created: false });
+    }
+    await query(`
+      CREATE TABLE sequence_plans (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NOT NULL,
+        deposit DECIMAL(15,2) NOT NULL,
+        num_orders INT NOT NULL,
+        target_total DECIMAL(15,2) NOT NULL,
+        combo_order INT NOT NULL,
+        combo_amount DECIMAL(15,2) NOT NULL,
+        combo_profit DECIMAL(15,2) NOT NULL,
+        schedule JSON NOT NULL,
+        start_order INT NOT NULL DEFAULT 0,
+        current_order INT NOT NULL DEFAULT 0,
+        status ENUM('active','completed','cancelled') NOT NULL DEFAULT 'active',
+        created_by INT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP NULL,
+        INDEX idx_user_status (user_id, status),
+        CONSTRAINT fk_seqplan_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    res.json({ success: true, message: 'sequence_plans table created', created: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Chart data
 router.get('/chart/revenue', async (req, res, next) => {

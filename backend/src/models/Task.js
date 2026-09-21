@@ -7,6 +7,7 @@ const { query, transaction } = require('../config/database');
 const TaskPermission = require('./TaskPermission');
 const ComboPlan = require('./ComboPlan');
 const ProxyCombo = require('./ProxyCombo');
+const SequencePlan = require('./SequencePlan');
 
 // tasks.order_number and transactions.transaction_number are NOT NULL UNIQUE.
 function generateNumber(prefix) {
@@ -154,24 +155,56 @@ class Task {
         }
       }
 
+      // SEQUENCE PLAN: the customer's earnings run (default 25 orders). If one
+      // is active it decides THIS order's commission from a precomputed schedule
+      // so the whole run lands on a target total. It also owns its own combo
+      // order (e.g. order 15). An explicit admin combo_plans entry or a proxy
+      // combo still takes precedence over the sequence for that specific order.
+      const sequence = (!combo && proxyComboAmount == null)
+        ? await SequencePlan.getActiveInTransaction(conn, userId)
+        : null;
+      const seqEntry = sequence
+        ? SequencePlan.entryForOrder(sequence, upcomingOrderNumber)
+        : null;
+
       let orderAmount;
       let isCombo = 0;
+      let commissionOverride = null; // when set, use this instead of amount×rate
 
       if (combo) {
-        // COMBO order (per-user): the admin-set amount. Nothing is frozen at
-        // grab; the balance requirement is enforced on completion.
+        // COMBO order (per-user admin combo_plans): the admin-set amount.
+        // Nothing is frozen at grab; balance requirement enforced on completion.
         orderAmount = Math.round(parseFloat(combo.amount) * 100) / 100;
         isCombo = 1;
       } else if (proxyComboAmount != null) {
         // GLOBAL proxy combo: the template amount for this market + order number.
         orderAmount = Math.round(proxyComboAmount * 100) / 100;
         isCombo = 1;
+      } else if (seqEntry && seqEntry.isCombo) {
+        // SEQUENCE COMBO order: the run's combo (e.g. order 15). The customer
+        // must recharge combo_amount to submit it; it pays combo_profit. Uses
+        // the same combo mechanics (not frozen at grab; commission credited on
+        // completion once they have the balance).
+        orderAmount = Math.round(parseFloat(seqEntry.comboAmount) * 100) / 100;
+        commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
+        isCombo = 1;
+      } else if (seqEntry) {
+        // SEQUENCE NORMAL order: order amount is the product price (separate
+        // from the wallet balance), but the COMMISSION comes from the run's
+        // schedule (NOT market rate) so the whole run sums to the target.
+        orderAmount = Math.round(parseFloat(productData.price) * 100) / 100;
+        if (!(orderAmount > 0)) {
+          throw new Error('Product price is not set');
+        }
+        if (userBalance < orderAmount) {
+          throw new Error('Insufficient balance');
+        }
+        commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
       } else {
-        // Normal order: the order amount is the PRODUCT'S PRICE — the value of
-        // this specific order — which is separate from the customer's wallet
-        // balance. Commission = product price × market rate. The customer just
-        // needs enough balance to cover the order (that amount is frozen until
-        // the task completes, then returned along with the commission).
+        // Normal order (no active sequence): order amount is the PRODUCT'S PRICE
+        // and commission = product price × market rate. The customer just needs
+        // enough balance to cover the order (frozen until the task completes,
+        // then returned along with the commission).
         orderAmount = Math.round(parseFloat(productData.price) * 100) / 100;
         if (!(orderAmount > 0)) {
           throw new Error('Product price is not set');
@@ -181,7 +214,9 @@ class Task {
         }
       }
 
-      const commission = Math.round(orderAmount * commissionRate * 100) / 100;
+      const commission = commissionOverride != null
+        ? commissionOverride
+        : Math.round(orderAmount * commissionRate * 100) / 100;
       const expectedIncome = orderAmount + commission;
 
       const [result] = await conn.execute(
@@ -213,6 +248,16 @@ class Task {
         await conn.execute(
           'UPDATE wallets SET balance = balance - ?, frozen_balance = frozen_balance + ? WHERE user_id = ?',
           [orderAmount, orderAmount, userId]
+        );
+      }
+
+      // Advance the sequence-plan cursor to this run-order. When the last order
+      // of the run is grabbed the plan flips to 'completed'. Only when this grab
+      // is actually part of the active sequence (seqEntry set).
+      if (sequence && seqEntry) {
+        const runOrder = SequencePlan.runOrder(sequence, upcomingOrderNumber);
+        await SequencePlan.advanceInTransaction(
+          conn, sequence.id, runOrder, sequence.orders
         );
       }
 
