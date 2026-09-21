@@ -182,10 +182,13 @@ class Task {
         isCombo = 1;
       } else if (seqEntry && seqEntry.isCombo) {
         // SEQUENCE COMBO order: the run's combo (e.g. order 15). The customer
-        // must recharge combo_amount to submit it; it pays combo_profit. Uses
-        // the same combo mechanics (not frozen at grab; commission credited on
-        // completion once they have the balance).
-        orderAmount = Math.round(parseFloat(seqEntry.comboAmount) * 100) / 100;
+        // must ACTUALLY recharge `comboAmount` more than they currently hold to
+        // submit it. So the combo order amount = their current balance +
+        // comboAmount. That guarantees balance < orderAmount at grab time, so
+        // completion demands a real recharge of exactly comboAmount (not just
+        // "already have enough"). It pays combo_profit as commission.
+        const rechargeNeeded = Math.round(parseFloat(seqEntry.comboAmount) * 100) / 100;
+        orderAmount = Math.round((userBalance + rechargeNeeded) * 100) / 100;
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
       } else if (seqEntry) {

@@ -516,9 +516,22 @@
         return price > 0 && price <= bal;
       });
       if (!affordable.length) return null; // nothing affordable -> caller handles
-      const index = (taskData.todayTasks || 0) % affordable.length;
-      return affordable[index];
+
+      // Pick a RANDOM affordable product so each order shows a different product
+      // (different image + different amount). Avoid repeating the immediately
+      // previous product when more than one is affordable, so consecutive orders
+      // don't look identical.
+      var choices = affordable;
+      if (affordable.length > 1 && lastProductId != null) {
+        var filtered = affordable.filter(function (p) { return p.id !== lastProductId; });
+        if (filtered.length) choices = filtered;
+      }
+      var chosen = choices[Math.floor(Math.random() * choices.length)];
+      lastProductId = chosen ? chosen.id : null;
+      return chosen;
     }
+    // Remember the last product shown so we don't repeat it back-to-back.
+    var lastProductId = null;
 
     // The price of the cheapest product in this market (what a customer must be
     // able to afford to grab any order here).
