@@ -192,14 +192,14 @@ class Task {
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
       } else if (seqEntry) {
-        // SEQUENCE NORMAL order: order amount is the product price (separate
-        // from the wallet balance), but the COMMISSION comes from the run's
-        // schedule (NOT market rate) so the whole run sums to the target.
-        orderAmount = Math.round(parseFloat(productData.price) * 100) / 100;
+        // SEQUENCE NORMAL order: the COMMISSION comes from the run's schedule
+        // (NOT the market rate), so the order amount does not need to equal the
+        // product price. We freeze the customer's WHOLE balance for the order
+        // (returned in full on completion) — this lets ANY product be shown for
+        // display variety (different image/price/quantity each order) regardless
+        // of its catalog price, while the earnings still follow the plan.
+        orderAmount = Math.round(userBalance * 100) / 100;
         if (!(orderAmount > 0)) {
-          throw new Error('Product price is not set');
-        }
-        if (userBalance < orderAmount) {
           throw new Error('Insufficient balance');
         }
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;

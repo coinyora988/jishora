@@ -509,21 +509,15 @@
     // cycle through those so the order value/product still varies between grabs.
     function pickProduct() {
       if (!marketProducts.length) return null;
-      const bal = Number(taskData.balance) || 0;
-      // Products with a valid price the customer can afford.
-      const affordable = marketProducts.filter(function (p) {
-        const price = Number(p.price) || 0;
-        return price > 0 && price <= bal;
-      });
-      if (!affordable.length) return null; // nothing affordable -> caller handles
-
-      // Pick a RANDOM affordable product so each order shows a different product
-      // (different image + different amount). Avoid repeating the immediately
-      // previous product when more than one is affordable, so consecutive orders
-      // don't look identical.
-      var choices = affordable;
-      if (affordable.length > 1 && lastProductId != null) {
-        var filtered = affordable.filter(function (p) { return p.id !== lastProductId; });
+      // Pick ANY random product for display variety (different image, name and
+      // price each order). The order AMOUNT is decided server-side from the
+      // customer's balance/plan — NOT the product's catalog price — so every
+      // product is eligible regardless of its price. We only use the product for
+      // the card's name/image/price display. Avoid repeating the immediately
+      // previous product so consecutive orders never look identical.
+      var choices = marketProducts;
+      if (marketProducts.length > 1 && lastProductId != null) {
+        var filtered = marketProducts.filter(function (p) { return p.id !== lastProductId; });
         if (filtered.length) choices = filtered;
       }
       var chosen = choices[Math.floor(Math.random() * choices.length)];
@@ -702,7 +696,9 @@
       }
 
       const d = response.data;
-      // Remember the real task so submit can complete it.
+      // Remember the real task so submit can complete it. `displayPrice` is the
+      // chosen product's own catalog price, used only to render a varied unit
+      // price + quantity on the card (order amount is decided server-side).
       currentOrder = {
         taskId: d.taskId,
         productName: d.productName,
@@ -710,7 +706,8 @@
         orderAmount: Number(d.orderAmount),
         commission: Number(d.commission),
         expectedIncome: Number(d.expectedIncome),
-        isCombo: !!d.isCombo
+        isCombo: !!d.isCombo,
+        displayPrice: Number(product && product.price) || Number(d.orderAmount)
       };
 
       // Fill the modal from the real order. The visible "Order Nos" is a long
@@ -734,8 +731,26 @@
         if (comboBox) { comboBox.style.display = 'none'; comboBox.innerHTML = ''; }
         if (singleCard) singleCard.style.display = '';
         document.getElementById('productName').textContent = currentOrder.productName;
-        document.getElementById('productPrice').textContent = `${currentOrder.orderAmount.toFixed(2)} USDT`;
-        document.getElementById('productQty').textContent = 'x1';
+        // Show a per-order UNIT PRICE + QUANTITY whose product equals the order
+        // amount, so each order looks distinct (different product, price and
+        // count). Unit price = product's catalog price; quantity is chosen so
+        // unit × qty ≈ order amount, with the unit price adjusted to hit the
+        // order amount exactly to the cent.
+        (function () {
+          var amount = currentOrder.orderAmount;
+          var unit = Number(currentOrder.displayPrice) || amount;
+          var qty = 1;
+          if (unit > 0 && amount > 0) {
+            qty = Math.max(1, Math.round(amount / unit));
+          }
+          // Recompute the unit price so unit × qty is EXACTLY the order amount.
+          var exactUnit = Math.round((amount / qty) * 100) / 100;
+          // Fix any rounding drift by nudging the unit price to the cent.
+          var drift = Math.round((amount - exactUnit * qty) * 100) / 100;
+          var shownUnit = Math.round((exactUnit + drift / qty) * 100) / 100;
+          document.getElementById('productPrice').textContent = `${shownUnit.toFixed(2)} USDT`;
+          document.getElementById('productQty').textContent = 'x' + qty;
+        })();
         const img = document.getElementById('productImage');
         if (img) {
           // Fall back to the logo if the product image is missing OR fails to
