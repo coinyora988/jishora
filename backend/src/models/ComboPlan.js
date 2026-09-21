@@ -170,7 +170,18 @@ class ComboPlan {
 
     // Attach the pending combos per user.
     const pending = await this.pendingByUser();
-    const users = rows.map((u) => ({ ...u, combos: pending[u.id] || [] }));
+    // Attach each user's active sequence plan (earnings run) summary, so the
+    // admin table can show it. Loaded lazily to avoid a circular require.
+    let seqByUser = {};
+    try {
+      const SequencePlan = require('./SequencePlan');
+      seqByUser = await SequencePlan.activeByUserIds(rows.map((u) => u.id));
+    } catch (e) { seqByUser = {}; }
+    const users = rows.map((u) => ({
+      ...u,
+      combos: pending[u.id] || [],
+      sequencePlan: seqByUser[u.id] || null
+    }));
 
     const [{ total }] = await query(
       `SELECT COUNT(*) AS total FROM users u ${where}`,

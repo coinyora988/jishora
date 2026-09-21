@@ -143,6 +143,40 @@ class SequencePlan {
   }
 
   /**
+   * Active plans for a set of user ids, keyed by user_id. Used by the admin
+   * customer table to show each customer's plan summary. Returns {} if the
+   * table doesn't exist yet.
+   */
+  static async activeByUserIds(userIds) {
+    if (!Array.isArray(userIds) || userIds.length === 0) return {};
+    try {
+      const placeholders = userIds.map(() => '?').join(',');
+      const rows = await query(
+        `SELECT * FROM sequence_plans
+         WHERE status = 'active' AND user_id IN (${placeholders})`,
+        userIds
+      );
+      const map = {};
+      rows.forEach((r) => {
+        const p = SequencePlan._parse(r);
+        map[p.userId] = {
+          deposit: p.deposit,
+          orders: p.orders,
+          targetTotal: p.targetTotal,
+          comboOrder: p.comboOrder,
+          comboAmount: p.comboAmount,
+          comboProfit: p.comboProfit,
+          currentOrder: p.currentOrder
+        };
+      });
+      return map;
+    } catch (e) {
+      if (e && e.code === 'ER_NO_SUCH_TABLE') return {};
+      throw e;
+    }
+  }
+
+  /**
    * Cancel a user's active plan (e.g. admin reset, or replaced by a new plan).
    */
   static async cancelActive(userId) {

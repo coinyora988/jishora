@@ -468,6 +468,35 @@
             border-radius: 8px; cursor: pointer; flex-shrink: 0;
         }
 
+        /* Set-plan button on the customer row */
+        .btn-mini.plan { background: #6d28d9; color: #fff; }
+        .btn-mini.plan:hover { background: #5b21b6; }
+
+        /* Sequence-plan modal */
+        .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+        .plan-grid .form-group { margin: 0; }
+        .plan-grid label { display:block; font-size:12px; color:#374151; margin-bottom:5px; font-weight:600; }
+        .plan-grid input {
+            width: 100%; box-sizing: border-box; padding: 9px 11px;
+            border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;
+        }
+        .plan-grid input:focus { outline:none; border-color:#FE5722; box-shadow:0 0 0 3px rgba(254,87,34,.1); }
+        .plan-preview {
+            margin-top: 16px; padding: 14px; border-radius: 10px;
+            background: #f8fafc; border: 1px solid #e5e7eb; font-size: 13.5px;
+        }
+        .plan-preview .pp-row { display:flex; justify-content:space-between; padding:3px 0; }
+        .plan-preview .pp-row strong { color:#111827; }
+        .plan-preview .pp-good { color:#059669; font-weight:700; }
+        .plan-preview .pp-bad { color:#dc2626; font-weight:700; }
+        .plan-preview .pp-title { font-weight:700; margin-bottom:6px; color:#374151; }
+
+        /* Plan status chip in the Combos Set column */
+        .plan-chip {
+            display:inline-flex; align-items:center; gap:5px; background:#ede9fe; color:#5b21b6;
+            border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600;
+        }
+
         /* Offers panel wrapper */
         .offers-panel {
             background: #fff;
@@ -729,6 +758,64 @@
                 <button type="button" class="btn-secondary" onclick="closeComboSetModal()">Cancel</button>
                 <button type="button" class="btn-primary" onclick="saveComboSet()">
                     <i class="fas fa-save"></i> Save Combo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sequence Plan Modal (per-customer earnings run) -->
+    <div class="modal" id="planModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="planTitle">Set Order Plan</h3>
+                <button class="btn-close" onclick="closePlanModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="page-subtitle" id="planFor" style="margin-bottom:14px;"></p>
+                <p class="page-subtitle" style="margin-bottom:14px;">
+                    Set the full earnings run for this customer. The customer completes the orders one by one;
+                    a combo appears at the chosen order (extra recharge + fixed profit); the remaining profit is
+                    spread across the other orders as different amounts. After finishing all orders the customer
+                    lands on the target total. Everything below is editable.
+                </p>
+
+                <div class="plan-grid">
+                    <div class="form-group">
+                        <label>Deposit (USDT)</label>
+                        <input type="number" id="planDeposit" min="1" step="0.01" placeholder="e.g. 20">
+                    </div>
+                    <div class="form-group">
+                        <label>Total orders</label>
+                        <input type="number" id="planOrders" min="2" step="1" placeholder="e.g. 25">
+                    </div>
+                    <div class="form-group">
+                        <label>Target total (final balance)</label>
+                        <input type="number" id="planTarget" min="1" step="0.01" placeholder="e.g. 40">
+                    </div>
+                    <div class="form-group">
+                        <label>Combo at order #</label>
+                        <input type="number" id="planComboOrder" min="1" step="1" placeholder="e.g. 15">
+                    </div>
+                    <div class="form-group">
+                        <label>Combo recharge (USDT)</label>
+                        <input type="number" id="planComboAmount" min="0" step="0.01" placeholder="e.g. 8">
+                    </div>
+                    <div class="form-group">
+                        <label>Combo profit / commission (USDT)</label>
+                        <input type="number" id="planComboProfit" min="0" step="0.01" placeholder="e.g. 5">
+                    </div>
+                </div>
+
+                <!-- Live preview of the computed totals -->
+                <div id="planPreview" class="plan-preview"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closePlanModal()">Cancel</button>
+                <button type="button" class="btn-danger" id="planCancelBtn" onclick="cancelActivePlan()" style="display:none;">
+                    <i class="fas fa-trash"></i> Remove Plan
+                </button>
+                <button type="button" class="btn-primary" onclick="savePlan()">
+                    <i class="fas fa-save"></i> Save Plan
                 </button>
             </div>
         </div>

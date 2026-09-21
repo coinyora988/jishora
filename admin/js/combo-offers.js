@@ -252,9 +252,15 @@ async function loadCustomers(page = 1) {
 
     tbody.innerHTML = users.map((u) => {
         const combos = Array.isArray(u.combos) ? u.combos : [];
-        const chips = combos.length
+        // Plan chip (earnings run) shown above any manual combo chips.
+        const plan = u.sequencePlan;
+        const planChip = plan
+            ? `<div style="margin-bottom:5px;"><span class="plan-chip" title="Deposit ${plan.deposit}, ${plan.orders} orders, combo at #${plan.comboOrder}"><i class="fas fa-sliders"></i> Plan: ${formatCurrency(plan.targetTotal)} · #${plan.comboOrder} combo · ${plan.currentOrder}/${plan.orders}</span></div>`
+            : '';
+        const comboChips = combos.length
             ? `<div class="combo-chips">${combos.map(c => `<span class="combo-chip">#${c.triggerOrder} · ${formatCurrency(c.amount)}</span>`).join('')}</div>`
-            : '<span class="combo-none">None set</span>';
+            : (plan ? '' : '<span class="combo-none">None set</span>');
+        const chips = planChip + comboChips;
         const combosJson = escapeHtml(JSON.stringify(combos));
         const uname = escapeHtml(u.username);
         return `
@@ -275,6 +281,9 @@ async function loadCustomers(page = 1) {
             <td>${chips}</td>
             <td>
                 <div class="cust-actions">
+                    <button class="btn-mini plan" onclick='openPlanModal(${Number(u.id)}, "${uname}")'>
+                        <i class="fas fa-sliders"></i> Set Plan
+                    </button>
                     <button class="btn-mini set" onclick='openComboSetModal(${Number(u.id)}, "${uname}", ${combosJson})'>
                         <i class="fas fa-gift"></i> ${combos.length ? 'Edit Combo' : 'Set Combo'}
                     </button>
@@ -386,10 +395,156 @@ async function clearCombo(userId, username) {
     }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   Sequence Plan (per-customer earnings run)
+   Admin sets deposit / target / combo; a live preview shows the computed
+   profit split; saving writes the plan the customer's orders follow.
+   ═══════════════════════════════════════════════════════════════════ */
+
+let planUserId = null;
+
+function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+// Read the current form values.
+function readPlanForm() {
+    return {
+        deposit: parseFloat(document.getElementById('planDeposit').value),
+        orders: parseInt(document.getElementById('planOrders').value, 10),
+        targetTotal: parseFloat(document.getElementById('planTarget').value),
+        comboOrder: parseInt(document.getElementById('planComboOrder').value, 10),
+        comboAmount: parseFloat(document.getElementById('planComboAmount').value),
+        comboProfit: parseFloat(document.getElementById('planComboProfit').value)
+    };
+}
+
+// Live preview: recompute the profit math and validate, exactly like the
+// backend does, so the admin sees the result before saving.
+function renderPlanPreview() {
+    const el = document.getElementById('planPreview');
+    if (!el) return;
+    const p = readPlanForm();
+
+    const bad = (msg) => `<div class="pp-title">Preview</div><div class="pp-row"><span class="pp-bad">${msg}</span></div>`;
+
+    if (!(p.deposit > 0)) { el.innerHTML = bad('Enter a deposit greater than 0.'); return; }
+    if (!(p.orders >= 2)) { el.innerHTML = bad('Total orders must be at least 2.'); return; }
+    if (!(p.targetTotal > 0)) { el.innerHTML = bad('Enter a target total greater than 0.'); return; }
+    if (!(p.comboOrder >= 1 && p.comboOrder <= p.orders)) { el.innerHTML = bad('Combo order must be within the run.'); return; }
+    if (!(p.comboAmount >= 0)) { el.innerHTML = bad('Combo recharge must be 0 or more.'); return; }
+    if (!(p.comboProfit >= 0)) { el.innerHTML = bad('Combo profit must be 0 or more.'); return; }
+
+    const outlay = r2(p.deposit + p.comboAmount);
+    const totalProfit = r2(p.targetTotal - outlay);
+    const normalPool = r2(totalProfit - p.comboProfit);
+    const normalCount = p.orders - 1;
+
+    if (totalProfit <= 0) {
+        el.innerHTML = bad(`Target (${p.targetTotal}) must be greater than outlay (deposit ${p.deposit} + combo ${p.comboAmount} = ${outlay}).`);
+        return;
+    }
+    if (p.comboProfit > totalProfit) {
+        el.innerHTML = bad(`Combo profit (${p.comboProfit}) can't exceed total profit (${totalProfit}).`);
+        return;
+    }
+    if (normalPool < 0) { el.innerHTML = bad('Not enough profit left for the other orders.'); return; }
+
+    el.innerHTML = `
+        <div class="pp-title">Preview — what the customer will experience</div>
+        <div class="pp-row"><span>Money the customer puts in (deposit + combo recharge)</span><strong>${outlay.toFixed(2)} USDT</strong></div>
+        <div class="pp-row"><span>Combo at order #${p.comboOrder} — recharge ${p.comboAmount.toFixed(2)}, profit</span><strong class="pp-good">+${p.comboProfit.toFixed(2)} USDT</strong></div>
+        <div class="pp-row"><span>Spread across the other ${normalCount} orders (different amounts)</span><strong class="pp-good">+${normalPool.toFixed(2)} USDT</strong></div>
+        <div class="pp-row"><span>Total commission earned</span><strong class="pp-good">+${totalProfit.toFixed(2)} USDT</strong></div>
+        <div class="pp-row"><span>Final balance after all ${p.orders} orders</span><strong class="pp-good">${p.targetTotal.toFixed(2)} USDT</strong></div>
+    `;
+}
+
+async function openPlanModal(userId, username) {
+    planUserId = userId;
+    document.getElementById('planTitle').textContent = 'Set Order Plan';
+    document.getElementById('planFor').textContent = `Customer: ${username} (#${userId})`;
+
+    // Load the customer's active plan (if any) + the default tier to prefill.
+    const data = await apiRequest(`/admin/task-permissions/${userId}/sequence-plan`);
+    const plan = data && data.success ? data.data.plan : null;
+    const tier = (data && data.success && data.data.defaultTier) ? data.data.defaultTier : { deposit: 20, orders: 25, targetTotal: 40, comboOrder: 15, comboAmount: 8, comboProfit: 5 };
+
+    const src = plan || tier;
+    document.getElementById('planDeposit').value = src.deposit != null ? src.deposit : '';
+    document.getElementById('planOrders').value = (plan ? plan.orders : tier.orders) || 25;
+    document.getElementById('planTarget').value = (plan ? plan.targetTotal : tier.targetTotal);
+    document.getElementById('planComboOrder').value = (plan ? plan.comboOrder : tier.comboOrder);
+    document.getElementById('planComboAmount').value = (plan ? plan.comboAmount : tier.comboAmount);
+    document.getElementById('planComboProfit').value = (plan ? plan.comboProfit : tier.comboProfit);
+
+    // Show "Remove Plan" only when one is active.
+    document.getElementById('planCancelBtn').style.display = plan ? '' : 'none';
+
+    renderPlanPreview();
+    document.getElementById('planModal').classList.add('show');
+}
+
+function closePlanModal() {
+    document.getElementById('planModal').classList.remove('show');
+    planUserId = null;
+}
+
+async function savePlan() {
+    if (!planUserId) return;
+    const p = readPlanForm();
+    if (!(p.deposit > 0)) { showNotification('Enter a deposit greater than 0', 'error'); return; }
+
+    const payload = {
+        deposit: p.deposit,
+        orders: p.orders,
+        targetTotal: p.targetTotal,
+        comboOrder: p.comboOrder,
+        comboAmount: p.comboAmount,
+        comboProfit: p.comboProfit
+    };
+
+    const data = await apiRequest(`/admin/task-permissions/${planUserId}/sequence-plan`, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+
+    if (data && data.success) {
+        showNotification('Order plan saved', 'success');
+        closePlanModal();
+        loadCustomers(custPage);
+    } else {
+        showNotification((data && data.message) || 'Failed to save plan', 'error');
+    }
+}
+
+async function cancelActivePlan() {
+    if (!planUserId) return;
+    if (!confirm('Remove this customer\'s order plan? Their orders will fall back to the default commission.')) return;
+    const data = await apiRequest(`/admin/task-permissions/${planUserId}/sequence-plan/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({})
+    });
+    if (data && data.success) {
+        showNotification(data.message || 'Plan removed', 'success');
+        closePlanModal();
+        loadCustomers(custPage);
+    } else {
+        showNotification((data && data.message) || 'Failed to remove plan', 'error');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('offerForm');
     if (form) form.addEventListener('submit', submitOffer);
     loadOffers();
+
+    // Live preview: recompute whenever any plan field changes.
+    ['planDeposit', 'planOrders', 'planTarget', 'planComboOrder', 'planComboAmount', 'planComboProfit'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', renderPlanPreview);
+    });
+    // Close plan modal on outside click.
+    const pm = document.getElementById('planModal');
+    if (pm) pm.addEventListener('click', (e) => { if (e.target.id === 'planModal') closePlanModal(); });
 
     // Customer table
     loadCustomers(1);
