@@ -227,35 +227,91 @@ router.get('/reports', getReports);
 router.post('/run-migration/sequence-plans', async (req, res, next) => {
   try {
     const { query } = require('../config/database');
+    const result = { steps: [] };
+
+    // 1) sequence_plans table
     const exists = await query(
       `SELECT 1 FROM information_schema.TABLES
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sequence_plans'`
     );
     if (exists.length) {
-      return res.json({ success: true, message: 'sequence_plans already exists', created: false });
+      result.steps.push('sequence_plans already exists');
+    } else {
+      await query(`
+        CREATE TABLE sequence_plans (
+          id INT PRIMARY KEY AUTO_INCREMENT,
+          user_id INT NOT NULL,
+          deposit DECIMAL(15,2) NOT NULL,
+          num_orders INT NOT NULL,
+          target_total DECIMAL(15,2) NOT NULL,
+          combo_order INT NOT NULL,
+          combo_amount DECIMAL(15,2) NOT NULL,
+          combo_profit DECIMAL(15,2) NOT NULL,
+          schedule JSON NOT NULL,
+          start_order INT NOT NULL DEFAULT 0,
+          current_order INT NOT NULL DEFAULT 0,
+          status ENUM('active','completed','cancelled') NOT NULL DEFAULT 'active',
+          created_by INT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          completed_at TIMESTAMP NULL,
+          INDEX idx_user_status (user_id, status),
+          CONSTRAINT fk_seqplan_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+      `);
+      result.steps.push('sequence_plans table created');
     }
-    await query(`
-      CREATE TABLE sequence_plans (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        user_id INT NOT NULL,
-        deposit DECIMAL(15,2) NOT NULL,
-        num_orders INT NOT NULL,
-        target_total DECIMAL(15,2) NOT NULL,
-        combo_order INT NOT NULL,
-        combo_amount DECIMAL(15,2) NOT NULL,
-        combo_profit DECIMAL(15,2) NOT NULL,
-        schedule JSON NOT NULL,
-        start_order INT NOT NULL DEFAULT 0,
-        current_order INT NOT NULL DEFAULT 0,
-        status ENUM('active','completed','cancelled') NOT NULL DEFAULT 'active',
-        created_by INT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        completed_at TIMESTAMP NULL,
-        INDEX idx_user_status (user_id, status),
-        CONSTRAINT fk_seqplan_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    `);
-    res.json({ success: true, message: 'sequence_plans table created', created: true });
+
+    // 2) tasks.no_freeze column (for sequence-normal display-only order amounts)
+    const col = await query(
+      `SELECT 1 FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tasks' AND COLUMN_NAME = 'no_freeze'`
+    );
+    if (col.length) {
+      result.steps.push('tasks.no_freeze already exists');
+    } else {
+      await query(`ALTER TABLE tasks ADD COLUMN no_freeze TINYINT(1) NOT NULL DEFAULT 0 AFTER is_combo`);
+      result.steps.push('tasks.no_freeze column added');
+    }
+
+    // 3) Distinct CDN images for every product (so each order shows a unique
+    // picture that always loads). Uses Unsplash direct CDN URLs.
+    const CDN = (imgId) => `https://images.unsplash.com/${imgId}?auto=format&fit=crop&w=400&q=70`;
+    const IMAGE_BY_NAME = {
+      'Wireless Earbuds': CDN('photo-1590658268037-6bf12165a8df'),
+      'Phone Stand': CDN('photo-1512499617640-c74ae3a79d37'),
+      'Phone Ring Holder': CDN('photo-1585060544812-6b45742d762f'),
+      'USB-C Cable': CDN('photo-1583863788434-e58a36330cf0'),
+      'LED Desk Lamp': CDN('photo-1507473885765-e6ed057f782c'),
+      'Bluetooth Speaker': CDN('photo-1608043152269-423dbba4e7e1'),
+      'Power Bank 10000mAh': CDN('photo-1609091839311-d5365f9ff1c5'),
+      'Smart Watch Pro': CDN('photo-1523275335684-37898b6baf30'),
+      'Noise-Cancelling Headphones': CDN('photo-1505740420928-5e560c06d30e'),
+      'Action Camera 4K': CDN('photo-1526170375885-4d8ecf77b99f'),
+      'Robot Vacuum': CDN('photo-1626436819821-d2edd5f5d5f9'),
+      'Espresso Machine': CDN('photo-1517668808822-9ebb02f2a0e6'),
+      'Wireless Charger': CDN('photo-1591290619762-d0b81c4d9c1f'),
+      '4K Monitor': CDN('photo-1527443224154-c4a3942d3acf'),
+      'Premium Laptop': CDN('photo-1496181133206-80ce9b88a853'),
+      'Gaming Console': CDN('photo-1486401899868-0e435ed85128'),
+      'Tablet Pro 12 inch': CDN('photo-1544244015-0df4b3ffc6b0'),
+      'Home Theatre System': CDN('photo-1593784991095-a205069470b6'),
+      'Mechanical Keyboard': CDN('photo-1541140532154-b024d705b90a')
+    };
+    const FALLBACKS = [
+      CDN('photo-1523275335684-37898b6baf30'),
+      CDN('photo-1560343090-f0409e92791a'),
+      CDN('photo-1526170375885-4d8ecf77b99f'),
+      CDN('photo-1550009158-9ebf69173e03')
+    ];
+    const products = await query('SELECT id, name FROM products');
+    let fb = 0;
+    for (const p of products) {
+      const url = IMAGE_BY_NAME[p.name] || FALLBACKS[(fb++) % FALLBACKS.length];
+      await query('UPDATE products SET image_url = ? WHERE id = ?', [url, p.id]);
+    }
+    result.steps.push(`${products.length} product image(s) set to CDN`);
+
+    res.json({ success: true, message: 'Migration applied', ...result });
   } catch (error) {
     next(error);
   }

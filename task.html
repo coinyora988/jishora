@@ -731,26 +731,11 @@
         if (comboBox) { comboBox.style.display = 'none'; comboBox.innerHTML = ''; }
         if (singleCard) singleCard.style.display = '';
         document.getElementById('productName').textContent = currentOrder.productName;
-        // Show a per-order UNIT PRICE + QUANTITY whose product equals the order
-        // amount, so each order looks distinct (different product, price and
-        // count). Unit price = product's catalog price; quantity is chosen so
-        // unit × qty ≈ order amount, with the unit price adjusted to hit the
-        // order amount exactly to the cent.
-        (function () {
-          var amount = currentOrder.orderAmount;
-          var unit = Number(currentOrder.displayPrice) || amount;
-          var qty = 1;
-          if (unit > 0 && amount > 0) {
-            qty = Math.max(1, Math.round(amount / unit));
-          }
-          // Recompute the unit price so unit × qty is EXACTLY the order amount.
-          var exactUnit = Math.round((amount / qty) * 100) / 100;
-          // Fix any rounding drift by nudging the unit price to the cent.
-          var drift = Math.round((amount - exactUnit * qty) * 100) / 100;
-          var shownUnit = Math.round((exactUnit + drift / qty) * 100) / 100;
-          document.getElementById('productPrice').textContent = `${shownUnit.toFixed(2)} USDT`;
-          document.getElementById('productQty').textContent = 'x' + qty;
-        })();
+        // The order amount now IS this product's own price (server-side), so
+        // each order shows a different amount. Display it directly as the unit
+        // price, quantity x1.
+        document.getElementById('productPrice').textContent = `${currentOrder.orderAmount.toFixed(2)} USDT`;
+        document.getElementById('productQty').textContent = 'x1';
         const img = document.getElementById('productImage');
         if (img) {
           // Fall back to the logo if the product image is missing OR fails to

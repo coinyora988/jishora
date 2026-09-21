@@ -170,6 +170,8 @@ class Task {
       let orderAmount;
       let isCombo = 0;
       let commissionOverride = null; // when set, use this instead of amount×rate
+      let noFreeze = false;          // sequence normal order: order amount is
+                                     // display-only, do not freeze the balance
 
       if (combo) {
         // COMBO order (per-user admin combo_plans): the admin-set amount.
@@ -192,17 +194,20 @@ class Task {
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
       } else if (seqEntry) {
-        // SEQUENCE NORMAL order: the COMMISSION comes from the run's schedule
-        // (NOT the market rate), so the order amount does not need to equal the
-        // product price. We freeze the customer's WHOLE balance for the order
-        // (returned in full on completion) — this lets ANY product be shown for
-        // display variety (different image/price/quantity each order) regardless
-        // of its catalog price, while the earnings still follow the plan.
-        orderAmount = Math.round(userBalance * 100) / 100;
+        // SEQUENCE NORMAL order: the order amount is THIS PRODUCT'S own price,
+        // so every order shows a different amount (20, 25, 30, 45, ...), never
+        // the customer's balance. The COMMISSION comes from the run's schedule
+        // (NOT the market rate). Because the commission is plan-driven, the
+        // order amount does NOT need to be frozen against the balance — so ANY
+        // product is eligible regardless of price and the customer is never
+        // blocked. `noFreeze` skips the wallet freeze; on completion only the
+        // scheduled commission is credited (see Task.complete).
+        orderAmount = Math.round(parseFloat(productData.price) * 100) / 100;
         if (!(orderAmount > 0)) {
-          throw new Error('Insufficient balance');
+          throw new Error('Product price is not set');
         }
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
+        noFreeze = true;
       } else {
         // Normal order (no active sequence): order amount is the PRODUCT'S PRICE
         // and commission = product price × market rate. The customer just needs
@@ -225,8 +230,8 @@ class Task {
       const [result] = await conn.execute(
         `INSERT INTO tasks
            (user_id, market_id, product_id, order_number, quantity,
-            order_amount, commission, expected_income, status, is_combo)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?, 'pending', ?)`,
+            order_amount, commission, expected_income, status, is_combo, no_freeze)
+         VALUES (?, ?, ?, ?, 1, ?, ?, ?, 'pending', ?, ?)`,
         [
           userId,
           productData.market_id,
@@ -235,19 +240,20 @@ class Task {
           orderAmount,
           commission,
           expectedIncome,
-          isCombo
+          isCombo,
+          noFreeze ? 1 : 0
         ]
       );
 
-      if (isCombo) {
-        // Combo order is not frozen at grab. If it came from a PER-USER combo
-        // plan, mark that plan triggered. Global proxy combos have no plan row,
-        // so there is nothing to mark.
+      if (isCombo || noFreeze) {
+        // Not frozen at grab: combo orders and sequence-normal orders (whose
+        // order amount is display-only). If it came from a PER-USER combo plan,
+        // mark that plan triggered.
         if (combo) {
           await ComboPlan.markTriggeredInTransaction(conn, combo.id, result.insertId);
         }
       } else {
-        // Freeze the order amount for a normal task.
+        // Freeze the order amount for a plain normal task.
         await conn.execute(
           'UPDATE wallets SET balance = balance - ?, frozen_balance = frozen_balance + ? WHERE user_id = ?',
           [orderAmount, orderAmount, userId]
@@ -283,13 +289,14 @@ class Task {
         [newUsed, exhausted ? 'used' : 'granted', exhausted ? 1 : 0, result.insertId, permission.id]
       );
 
+      const frozen = (isCombo || noFreeze) ? 0 : orderAmount;
       return {
         taskId: result.insertId,
         productName: productData.name,
         productImage: productData.image_url,
         orderAmount,
-        frozenAmount: isCombo ? 0 : orderAmount,
-        newBalance: isCombo ? userBalance : userBalance - orderAmount,
+        frozenAmount: frozen,
+        newBalance: userBalance - frozen,
         commission,
         expectedIncome,
         isCombo: !!isCombo,
@@ -322,6 +329,7 @@ class Task {
       const orderAmount = parseFloat(taskData.order_amount);
       const commission = parseFloat(taskData.commission);
       const isCombo = Number(taskData.is_combo) === 1;
+      const noFreeze = Number(taskData.no_freeze) === 1;
 
       // Lock wallet.
       const [wallet] = await conn.execute(
@@ -329,6 +337,29 @@ class Task {
         [userId]
       );
       const balanceBefore = parseFloat(wallet[0].balance);
+
+      // SEQUENCE NORMAL order (no_freeze): nothing was frozen at grab and the
+      // order amount is display-only. Completing it just credits the scheduled
+      // commission. No recharge required, no unfreeze.
+      if (noFreeze && !isCombo) {
+        await conn.execute(
+          'UPDATE tasks SET status = "completed", completion_time = CURRENT_TIMESTAMP WHERE id = ?',
+          [taskId]
+        );
+        const balanceAfter = balanceBefore + commission;
+        await conn.execute(
+          `UPDATE wallets SET balance = balance + ?, total_earned = total_earned + ? WHERE user_id = ?`,
+          [commission, commission, userId]
+        );
+        await conn.execute(
+          `INSERT INTO transactions
+             (user_id, transaction_number, type, amount, balance_before, balance_after, status, notes)
+           VALUES (?, ?, 'commission', ?, ?, ?, 'completed', ?)`,
+          [userId, generateNumber('COM'), commission, balanceBefore, balanceAfter,
+           `Commission from order ${taskData.order_number}`]
+        );
+        return { commission, totalReturn: commission, taskId, isCombo: false };
+      }
 
       if (isCombo) {
         // A combo order was not frozen at grab. To submit it the customer must
@@ -526,9 +557,11 @@ class Task {
         [taskId]
       );
 
-      // A combo task is NOT frozen at grab, so cancelling it must not credit
-      // any balance. A normal task had its order amount frozen, so return it.
-      if (Number(taskData.is_combo) !== 1) {
+      // A combo task and a sequence-normal (no_freeze) task were NOT frozen at
+      // grab, so cancelling them must not credit any balance. A plain normal
+      // task had its order amount frozen, so return it.
+      const wasFrozen = Number(taskData.is_combo) !== 1 && Number(taskData.no_freeze) !== 1;
+      if (wasFrozen) {
         const frozenAmount = parseFloat(taskData.order_amount);
         await conn.execute(
           `UPDATE wallets
@@ -537,7 +570,7 @@ class Task {
            WHERE user_id = ?`,
           [frozenAmount, frozenAmount, userId]
         );
-      } else {
+      } else if (Number(taskData.is_combo) === 1) {
         // Re-open the combo plan so it can trigger again on a later grab.
         await conn.execute(
           `UPDATE combo_plans SET status = 'pending', task_id = NULL, triggered_at = NULL
