@@ -731,9 +731,9 @@
         if (comboBox) { comboBox.style.display = 'none'; comboBox.innerHTML = ''; }
         if (singleCard) singleCard.style.display = '';
         document.getElementById('productName').textContent = currentOrder.productName;
-        // The order amount now IS this product's own price (server-side), so
-        // each order shows a different amount. Display it directly as the unit
-        // price, quantity x1.
+        // The order amount is set by the plan schedule (a different value each
+        // order, always within the customer's balance). The product provides
+        // only the image/name for variety; the price shown is the order amount.
         document.getElementById('productPrice').textContent = `${currentOrder.orderAmount.toFixed(2)} USDT`;
         document.getElementById('productQty').textContent = 'x1';
         const img = document.getElementById('productImage');

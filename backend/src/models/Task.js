@@ -194,20 +194,29 @@ class Task {
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
       } else if (seqEntry) {
-        // SEQUENCE NORMAL order: the order amount is THIS PRODUCT'S own price,
-        // so every order shows a different amount (20, 25, 30, 45, ...), never
-        // the customer's balance. The COMMISSION comes from the run's schedule
-        // (NOT the market rate). Because the commission is plan-driven, the
-        // order amount does NOT need to be frozen against the balance — so ANY
-        // product is eligible regardless of price and the customer is never
-        // blocked. `noFreeze` skips the wallet freeze; on completion only the
-        // scheduled commission is credited (see Task.complete).
-        orderAmount = Math.round(parseFloat(productData.price) * 100) / 100;
+        // SEQUENCE NORMAL order: the ORDER AMOUNT comes from the plan schedule
+        // (a different value each order, always <= the deposit so it's
+        // affordable), and the COMMISSION also comes from the schedule (NOT the
+        // market rate). The order amount is frozen from the balance and returned
+        // in full on completion; only the scheduled commission is the net gain,
+        // so the whole run sums exactly to the target. The displayed product is
+        // just for variety (image/name) and does NOT set the amount.
+        orderAmount = Math.round(parseFloat(seqEntry.orderAmount) * 100) / 100;
         if (!(orderAmount > 0)) {
-          throw new Error('Product price is not set');
+          // Safety: if the plan somehow has no amount, fall back to the balance.
+          orderAmount = Math.round(userBalance * 100) / 100;
+        }
+        // Never let the order exceed what the customer can afford.
+        if (orderAmount > userBalance) {
+          orderAmount = Math.round(userBalance * 100) / 100;
+        }
+        if (!(orderAmount > 0)) {
+          throw new Error('Insufficient balance');
         }
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
-        noFreeze = true;
+        // Frozen normally (like a plain order): balance is reduced by the order
+        // amount and returned on completion.
+        noFreeze = false;
       } else {
         // Normal order (no active sequence): order amount is the PRODUCT'S PRICE
         // and commission = product price × market rate. The customer just needs

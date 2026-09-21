@@ -197,6 +197,15 @@ function buildSchedule(params) {
   const poolCents = Math.round(normalPool * 100);
   const distinct = splitDistinctCents(poolCents, normalCount);
 
+  // Per-order ORDER AMOUNT for the normal orders. Each order shows a DIFFERENT
+  // amount that must NEVER exceed the customer's deposit (their working
+  // balance), otherwise they couldn't afford it. We pick each normal order a
+  // random amount between a sensible floor and the deposit, so orders look
+  // varied (e.g. $10, $26...) while always affordable. The amount is
+  // display/working value; the commission (from `distinct` above) is what the
+  // customer actually earns, so the run still sums exactly to the target.
+  const orderAmounts = buildOrderAmounts(normalCount, deposit);
+
   const schedule = [];
   let di = 0;
   for (let order = 1; order <= orders; order++) {
@@ -211,6 +220,7 @@ function buildSchedule(params) {
       schedule.push({
         order,
         isCombo: false,
+        orderAmount: r2((orderAmounts[di] || 0) / 100),
         commission: r2((distinct[di] || 0) / 100)
       });
       di += 1;
@@ -228,6 +238,28 @@ function buildSchedule(params) {
     normalPool,
     schedule
   };
+}
+
+/**
+ * Build `count` random order amounts (in CENTS) for the normal orders. Every
+ * amount is between a floor and the deposit cap (never above the deposit, so
+ * the customer can always afford it). Amounts vary order to order.
+ *
+ * @param {number} count   number of normal orders
+ * @param {number} deposit the customer's deposit (the max any order can be)
+ */
+function buildOrderAmounts(count, deposit) {
+  const capCents = Math.max(1, Math.round(deposit * 100));
+  // Floor: at least ~40% of the deposit so amounts aren't tiny, but never above
+  // the cap. For a $20 deposit that's a $8–$20 range of varied amounts.
+  const floorCents = Math.max(1, Math.round(capCents * 0.4));
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const span = capCents - floorCents;
+    const amt = floorCents + (span > 0 ? Math.floor(Math.random() * (span + 1)) : 0);
+    out.push(amt);
+  }
+  return out;
 }
 
 /**
