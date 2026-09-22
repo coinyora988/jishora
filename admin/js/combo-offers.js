@@ -628,9 +628,11 @@ async function cancelActivePlan() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // The old "Combo Offers" grid was removed; this page now only manages
+    // per-customer plans/combos. Keep the offer-form listener guarded in case
+    // the modal markup is still present, but don't load the offers grid.
     const form = document.getElementById('offerForm');
     if (form) form.addEventListener('submit', submitOffer);
-    loadOffers();
 
     // Live preview: recompute whenever deposit/orders/target change. (Combo row
     // inputs get their own listeners as they're added.)
@@ -656,8 +658,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const m = document.getElementById('comboSetModal');
     if (m) m.addEventListener('click', (e) => { if (e.target.id === 'comboSetModal') closeComboSetModal(); });
 
-    // Real-time: refresh offers + customer combo table automatically.
+    // Real-time: refresh the customer plans/combos table automatically.
     if (typeof registerAutoRefresh === 'function') {
-        registerAutoRefresh(() => { loadOffers(); loadCustomers(custPage); });
+        registerAutoRefresh(() => { loadCustomers(custPage); });
     }
 });
