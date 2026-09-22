@@ -491,6 +491,25 @@
         .plan-preview .pp-bad { color:#dc2626; font-weight:700; }
         .plan-preview .pp-title { font-weight:700; margin-bottom:6px; color:#374151; }
 
+        /* Plan combo rows */
+        .plan-combo-row { display:flex; gap:8px; align-items:flex-end; margin-bottom:8px; }
+        .plan-combo-row .pcf { flex:1; }
+        .plan-combo-row label { display:block; font-size:11px; color:#6b7280; margin-bottom:4px; font-weight:600; }
+        .plan-combo-row input {
+            width:100%; box-sizing:border-box; padding:8px 10px;
+            border:1px solid #d1d5db; border-radius:8px; font-size:13.5px;
+        }
+        .plan-combo-row input:focus { outline:none; border-color:#FE5722; box-shadow:0 0 0 3px rgba(254,87,34,.1); }
+        .plan-combo-remove {
+            border:none; background:#fee2e2; color:#991b1b; width:34px; height:34px;
+            border-radius:8px; cursor:pointer; flex-shrink:0;
+        }
+        .plan-tier-btn {
+            border:1px solid #d1d5db; background:#f9fafb; color:#374151; border-radius:8px;
+            padding:7px 12px; font-size:12.5px; font-weight:600; cursor:pointer;
+        }
+        .plan-tier-btn:hover { background:#ede9fe; border-color:#6d28d9; color:#5b21b6; }
+
         /* Plan status chip in the Combos Set column */
         .plan-chip {
             display:inline-flex; align-items:center; gap:5px; background:#ede9fe; color:#5b21b6;
@@ -779,6 +798,9 @@
                     lands on the target total. Everything below is editable.
                 </p>
 
+                <!-- Quick tier templates -->
+                <div id="planTierButtons" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+
                 <div class="plan-grid">
                     <div class="form-group">
                         <label>Deposit (USDT)</label>
@@ -792,18 +814,17 @@
                         <label>Target total (final balance)</label>
                         <input type="number" id="planTarget" min="1" step="0.01" placeholder="e.g. 40">
                     </div>
-                    <div class="form-group">
-                        <label>Combo at order #</label>
-                        <input type="number" id="planComboOrder" min="1" step="1" placeholder="e.g. 15">
-                    </div>
-                    <div class="form-group">
-                        <label>Combo recharge (USDT)</label>
-                        <input type="number" id="planComboAmount" min="0" step="0.01" placeholder="e.g. 8">
-                    </div>
-                    <div class="form-group">
-                        <label>Combo profit / commission (USDT)</label>
-                        <input type="number" id="planComboProfit" min="0" step="0.01" placeholder="e.g. 5">
-                    </div>
+                </div>
+
+                <!-- Combos (up to 3). Each: order #, recharge, profit. -->
+                <div style="margin-top:14px;">
+                    <label style="display:block;font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;">
+                        Combos (up to 3)
+                    </label>
+                    <div id="planComboRows"></div>
+                    <button type="button" class="btn-secondary" id="planAddComboBtn" onclick="addPlanComboRow()" style="margin-top:4px;">
+                        <i class="fas fa-plus"></i> Add combo
+                    </button>
                 </div>
 
                 <!-- Live preview of the computed totals -->

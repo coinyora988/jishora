@@ -273,6 +273,18 @@ router.post('/run-migration/sequence-plans', async (req, res, next) => {
       result.steps.push('tasks.no_freeze column added');
     }
 
+    // 2b) sequence_plans.combos JSON column (holds up to 3 combos per plan)
+    const comboCol = await query(
+      `SELECT 1 FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sequence_plans' AND COLUMN_NAME = 'combos'`
+    );
+    if (comboCol.length) {
+      result.steps.push('sequence_plans.combos already exists');
+    } else {
+      await query(`ALTER TABLE sequence_plans ADD COLUMN combos JSON NULL AFTER combo_profit`);
+      result.steps.push('sequence_plans.combos column added');
+    }
+
     // 3) Distinct CDN images for every product (so each order shows a unique
     // picture that always loads). Uses Unsplash direct CDN URLs.
     const CDN = (imgId) => `https://images.unsplash.com/${imgId}?auto=format&fit=crop&w=400&q=70`;

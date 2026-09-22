@@ -352,6 +352,8 @@ const getSequencePlan = async (req, res, next) => {
       success: true,
       data: {
         plan,
+        // All default tiers so the admin UI can offer them as templates.
+        tiers: seqUtil.DEFAULT_TIERS,
         defaultTier: seqUtil.DEFAULT_TIERS[0] || null
       }
     });
@@ -380,32 +382,55 @@ const setSequencePlan = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Deposit must be greater than 0' });
     }
 
-    // Optional admin override fields. Undefined ones fall back to the tier.
+    // Optional admin overrides. `combos` is an array of up to 3 combos:
+    // [{ order, recharge, profit }]. targetTotal/orders optional.
     const override = {};
-    ['targetTotal', 'orders', 'comboOrder', 'comboAmount', 'comboProfit'].forEach((k) => {
-      if (req.body[k] !== undefined && req.body[k] !== null && req.body[k] !== '') {
-        override[k] = req.body[k];
-      }
-    });
+    if (req.body.targetTotal !== undefined && req.body.targetTotal !== null && req.body.targetTotal !== '') {
+      override.targetTotal = req.body.targetTotal;
+    }
+    if (req.body.orders !== undefined && req.body.orders !== null && req.body.orders !== '') {
+      override.orders = req.body.orders;
+    }
+    if (Array.isArray(req.body.combos) && req.body.combos.length) {
+      override.combos = req.body.combos;
+    }
 
-    // Validate the resulting plan is financially coherent before saving:
-    // target must exceed outlay (deposit + combo) so there is profit to spread.
+    // Resolve (tier + override) and validate the money is coherent.
     const params = seqUtil.resolvePlanParams(deposit, Object.keys(override).length ? override : null);
-    const outlay = seqUtil.r2(params.deposit + params.comboAmount);
-    if (params.targetTotal <= outlay) {
+    const combos = seqUtil.normaliseCombos(params.combos);
+
+    if (!combos.length) {
+      return res.status(400).json({ success: false, message: 'Add at least one combo.' });
+    }
+    if (combos.length > 3) {
+      return res.status(400).json({ success: false, message: 'A plan can have at most 3 combos.' });
+    }
+    for (const c of combos) {
+      if (c.order < 1 || c.order > params.orders) {
+        return res.status(400).json({ success: false, message: `Combo order #${c.order} must be within 1–${params.orders}.` });
+      }
+    }
+
+    const rechargeTotal = seqUtil.r2(combos.reduce((s, c) => s + c.recharge, 0));
+    const comboProfitTotal = seqUtil.r2(combos.reduce((s, c) => s + c.profit, 0));
+    const outlay = seqUtil.r2(params.deposit + rechargeTotal);
+    const totalProfit = seqUtil.r2(params.targetTotal - outlay);
+    const normalPool = seqUtil.r2(totalProfit - comboProfitTotal);
+
+    if (totalProfit <= 0) {
       return res.status(400).json({
         success: false,
-        message: `Target total (${params.targetTotal}) must be greater than the outlay (deposit ${params.deposit} + combo ${params.comboAmount} = ${outlay}).`
+        message: `Target total (${params.targetTotal}) must be greater than the outlay (deposit ${params.deposit} + recharges ${rechargeTotal} = ${outlay}).`
       });
     }
-    if (params.comboProfit < 0 || params.comboProfit > (params.targetTotal - outlay)) {
+    if (comboProfitTotal > totalProfit) {
       return res.status(400).json({
         success: false,
-        message: 'Combo profit must be between 0 and the total profit.'
+        message: `Combo profits (${comboProfitTotal}) can't exceed the total profit (${totalProfit}).`
       });
     }
-    if (params.comboOrder < 1 || params.comboOrder > params.orders) {
-      return res.status(400).json({ success: false, message: 'Combo order must be within the run length.' });
+    if (normalPool < 0) {
+      return res.status(400).json({ success: false, message: 'Not enough profit left for the other orders.' });
     }
 
     const plan = await SequencePlan.createForUser(
@@ -432,10 +457,10 @@ const setSequencePlan = async (req, res, next) => {
         deposit: plan.deposit,
         orders: plan.orders,
         targetTotal: plan.targetTotal,
-        comboOrder: plan.comboOrder,
-        comboAmount: plan.comboAmount,
-        comboProfit: plan.comboProfit,
+        combos: plan.combos,
+        outlay: plan.outlay,
         totalProfit: plan.totalProfit,
+        comboProfitTotal: plan.comboProfitTotal,
         normalPool: plan.normalPool,
         totalCommission: seqUtil.sumCommissions(plan.schedule)
       }

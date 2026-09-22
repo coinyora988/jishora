@@ -254,8 +254,10 @@ async function loadCustomers(page = 1) {
         const combos = Array.isArray(u.combos) ? u.combos : [];
         // Plan chip (earnings run) shown above any manual combo chips.
         const plan = u.sequencePlan;
+        const planCombos = (plan && Array.isArray(plan.combos)) ? plan.combos : [];
+        const comboOrdersLabel = planCombos.map((c) => `#${c.order}`).join(', ');
         const planChip = plan
-            ? `<div style="margin-bottom:5px;"><span class="plan-chip" title="Deposit ${plan.deposit}, ${plan.orders} orders, combo at #${plan.comboOrder}"><i class="fas fa-sliders"></i> Plan: ${formatCurrency(plan.targetTotal)} · #${plan.comboOrder} combo · ${plan.currentOrder}/${plan.orders}</span></div>`
+            ? `<div style="margin-bottom:5px;"><span class="plan-chip" title="Deposit ${plan.deposit}, ${plan.orders} orders, combos at ${comboOrdersLabel || 'none'}"><i class="fas fa-sliders"></i> Plan: ${formatCurrency(plan.targetTotal)} · ${planCombos.length} combo${planCombos.length === 1 ? '' : 's'} (${comboOrdersLabel}) · ${plan.currentOrder}/${plan.orders}</span></div>`
             : '';
         const comboChips = combos.length
             ? `<div class="combo-chips">${combos.map(c => `<span class="combo-chip">#${c.triggerOrder} · ${formatCurrency(c.amount)}</span>`).join('')}</div>`
@@ -402,23 +404,92 @@ async function clearCombo(userId, username) {
    ═══════════════════════════════════════════════════════════════════ */
 
 let planUserId = null;
+let planTiers = [];
 
 function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 
-// Read the current form values.
+// Add one combo row to the modal (order #, recharge, profit). Max 3.
+function addPlanComboRow(order, recharge, profit) {
+    const container = document.getElementById('planComboRows');
+    if (!container) return;
+    if (container.querySelectorAll('.plan-combo-row').length >= 3) {
+        showNotification('A plan can have at most 3 combos', 'info');
+        return;
+    }
+    const row = document.createElement('div');
+    row.className = 'plan-combo-row';
+    row.innerHTML = `
+        <div class="pcf">
+            <label>Combo at order #</label>
+            <input type="number" class="pc-order" min="1" step="1" placeholder="e.g. 15" value="${order != null ? order : ''}">
+        </div>
+        <div class="pcf">
+            <label>Recharge (USDT)</label>
+            <input type="number" class="pc-recharge" min="0" step="0.01" placeholder="e.g. 8" value="${recharge != null ? recharge : ''}">
+        </div>
+        <div class="pcf">
+            <label>Profit (USDT)</label>
+            <input type="number" class="pc-profit" min="0" step="0.01" placeholder="e.g. 5" value="${profit != null ? profit : ''}">
+        </div>
+        <button type="button" class="plan-combo-remove" title="Remove" onclick="this.closest('.plan-combo-row').remove(); renderPlanPreview();">
+            <i class="fas fa-xmark"></i>
+        </button>`;
+    container.appendChild(row);
+    // Recompute preview when any field in this row changes.
+    row.querySelectorAll('input').forEach((inp) => inp.addEventListener('input', renderPlanPreview));
+}
+
+// Read the combos entered in the modal.
+function readPlanCombos() {
+    const rows = document.querySelectorAll('#planComboRows .plan-combo-row');
+    const combos = [];
+    rows.forEach((row) => {
+        const order = parseInt(row.querySelector('.pc-order').value, 10);
+        const recharge = parseFloat(row.querySelector('.pc-recharge').value);
+        const profit = parseFloat(row.querySelector('.pc-profit').value);
+        if (order >= 1 && recharge >= 0 && profit >= 0 && !isNaN(recharge) && !isNaN(profit)) {
+            combos.push({ order, recharge, profit });
+        }
+    });
+    return combos;
+}
+
+// Read the current form values (deposit/orders/target + combos).
 function readPlanForm() {
     return {
         deposit: parseFloat(document.getElementById('planDeposit').value),
         orders: parseInt(document.getElementById('planOrders').value, 10),
         targetTotal: parseFloat(document.getElementById('planTarget').value),
-        comboOrder: parseInt(document.getElementById('planComboOrder').value, 10),
-        comboAmount: parseFloat(document.getElementById('planComboAmount').value),
-        comboProfit: parseFloat(document.getElementById('planComboProfit').value)
+        combos: readPlanCombos()
     };
 }
 
-// Live preview: recompute the profit math and validate, exactly like the
-// backend does, so the admin sees the result before saving.
+// Render the tier template buttons.
+function renderPlanTierButtons() {
+    const wrap = document.getElementById('planTierButtons');
+    if (!wrap) return;
+    if (!planTiers.length) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = planTiers.map((t, i) => {
+        const label = t.range ? `$${t.range[0]}–${t.range[1]}` : `$${t.deposit}`;
+        return `<button type="button" class="plan-tier-btn" onclick="applyPlanTier(${i})">${label} → $${t.targetTotal}</button>`;
+    }).join('');
+}
+
+// Apply a tier template into the form.
+function applyPlanTier(index) {
+    const t = planTiers[index];
+    if (!t) return;
+    document.getElementById('planDeposit').value = t.range ? t.range[0] : t.deposit;
+    document.getElementById('planOrders').value = t.orders || 25;
+    document.getElementById('planTarget').value = t.targetTotal;
+    const container = document.getElementById('planComboRows');
+    container.innerHTML = '';
+    (t.combos || []).forEach((c) => addPlanComboRow(c.order, c.recharge, c.profit));
+    renderPlanPreview();
+}
+
+// Live preview: recompute the multi-combo profit math and validate, exactly
+// like the backend does, so the admin sees the result before saving.
 function renderPlanPreview() {
     const el = document.getElementById('planPreview');
     if (!el) return;
@@ -429,29 +500,43 @@ function renderPlanPreview() {
     if (!(p.deposit > 0)) { el.innerHTML = bad('Enter a deposit greater than 0.'); return; }
     if (!(p.orders >= 2)) { el.innerHTML = bad('Total orders must be at least 2.'); return; }
     if (!(p.targetTotal > 0)) { el.innerHTML = bad('Enter a target total greater than 0.'); return; }
-    if (!(p.comboOrder >= 1 && p.comboOrder <= p.orders)) { el.innerHTML = bad('Combo order must be within the run.'); return; }
-    if (!(p.comboAmount >= 0)) { el.innerHTML = bad('Combo recharge must be 0 or more.'); return; }
-    if (!(p.comboProfit >= 0)) { el.innerHTML = bad('Combo profit must be 0 or more.'); return; }
+    if (!p.combos.length) { el.innerHTML = bad('Add at least one combo.'); return; }
+    if (p.combos.length > 3) { el.innerHTML = bad('At most 3 combos.'); return; }
 
-    const outlay = r2(p.deposit + p.comboAmount);
+    const orders = new Set();
+    for (const c of p.combos) {
+        if (c.order < 1 || c.order > p.orders) { el.innerHTML = bad(`Combo order #${c.order} must be within 1–${p.orders}.`); return; }
+        if (orders.has(c.order)) { el.innerHTML = bad(`Two combos share order #${c.order}. Use different orders.`); return; }
+        orders.add(c.order);
+    }
+
+    const rechargeTotal = r2(p.combos.reduce((s, c) => s + c.recharge, 0));
+    const comboProfitTotal = r2(p.combos.reduce((s, c) => s + c.profit, 0));
+    const outlay = r2(p.deposit + rechargeTotal);
     const totalProfit = r2(p.targetTotal - outlay);
-    const normalPool = r2(totalProfit - p.comboProfit);
-    const normalCount = p.orders - 1;
+    const normalPool = r2(totalProfit - comboProfitTotal);
+    const normalCount = p.orders - p.combos.length;
 
     if (totalProfit <= 0) {
-        el.innerHTML = bad(`Target (${p.targetTotal}) must be greater than outlay (deposit ${p.deposit} + combo ${p.comboAmount} = ${outlay}).`);
+        el.innerHTML = bad(`Target (${p.targetTotal}) must be greater than outlay (deposit ${p.deposit} + recharges ${rechargeTotal} = ${outlay}).`);
         return;
     }
-    if (p.comboProfit > totalProfit) {
-        el.innerHTML = bad(`Combo profit (${p.comboProfit}) can't exceed total profit (${totalProfit}).`);
+    if (comboProfitTotal > totalProfit) {
+        el.innerHTML = bad(`Combo profits (${comboProfitTotal}) can't exceed total profit (${totalProfit}).`);
         return;
     }
     if (normalPool < 0) { el.innerHTML = bad('Not enough profit left for the other orders.'); return; }
 
+    const comboLines = p.combos
+        .slice()
+        .sort((a, b) => a.order - b.order)
+        .map((c) => `<div class="pp-row"><span>Combo at order #${c.order} — recharge ${c.recharge.toFixed(2)}, profit</span><strong class="pp-good">+${c.profit.toFixed(2)} USDT</strong></div>`)
+        .join('');
+
     el.innerHTML = `
         <div class="pp-title">Preview — what the customer will experience</div>
-        <div class="pp-row"><span>Money the customer puts in (deposit + combo recharge)</span><strong>${outlay.toFixed(2)} USDT</strong></div>
-        <div class="pp-row"><span>Combo at order #${p.comboOrder} — recharge ${p.comboAmount.toFixed(2)}, profit</span><strong class="pp-good">+${p.comboProfit.toFixed(2)} USDT</strong></div>
+        <div class="pp-row"><span>Money the customer puts in (deposit + recharges)</span><strong>${outlay.toFixed(2)} USDT</strong></div>
+        ${comboLines}
         <div class="pp-row"><span>Spread across the other ${normalCount} orders (different amounts)</span><strong class="pp-good">+${normalPool.toFixed(2)} USDT</strong></div>
         <div class="pp-row"><span>Total commission earned</span><strong class="pp-good">+${totalProfit.toFixed(2)} USDT</strong></div>
         <div class="pp-row"><span>Final balance after all ${p.orders} orders</span><strong class="pp-good">${p.targetTotal.toFixed(2)} USDT</strong></div>
@@ -463,18 +548,29 @@ async function openPlanModal(userId, username) {
     document.getElementById('planTitle').textContent = 'Set Order Plan';
     document.getElementById('planFor').textContent = `Customer: ${username} (#${userId})`;
 
-    // Load the customer's active plan (if any) + the default tier to prefill.
+    // Load the customer's active plan (if any) + the default tiers to prefill.
     const data = await apiRequest(`/admin/task-permissions/${userId}/sequence-plan`);
     const plan = data && data.success ? data.data.plan : null;
-    const tier = (data && data.success && data.data.defaultTier) ? data.data.defaultTier : { deposit: 20, orders: 25, targetTotal: 40, comboOrder: 15, comboAmount: 8, comboProfit: 5 };
+    planTiers = (data && data.success && Array.isArray(data.data.tiers)) ? data.data.tiers : [];
+    const tier = (data && data.success && data.data.defaultTier)
+        ? data.data.defaultTier
+        : { deposit: 20, orders: 25, targetTotal: 40, combos: [{ order: 15, recharge: 8, profit: 5 }] };
 
-    const src = plan || tier;
-    document.getElementById('planDeposit').value = src.deposit != null ? src.deposit : '';
+    renderPlanTierButtons();
+
+    // Prefill deposit / orders / target from the active plan or default tier.
+    document.getElementById('planDeposit').value = plan ? plan.deposit : (tier.range ? tier.range[0] : tier.deposit);
     document.getElementById('planOrders').value = (plan ? plan.orders : tier.orders) || 25;
-    document.getElementById('planTarget').value = (plan ? plan.targetTotal : tier.targetTotal);
-    document.getElementById('planComboOrder').value = (plan ? plan.comboOrder : tier.comboOrder);
-    document.getElementById('planComboAmount').value = (plan ? plan.comboAmount : tier.comboAmount);
-    document.getElementById('planComboProfit').value = (plan ? plan.comboProfit : tier.comboProfit);
+    document.getElementById('planTarget').value = plan ? plan.targetTotal : tier.targetTotal;
+
+    // Fill combo rows from the active plan's combos, or the tier's combos.
+    const container = document.getElementById('planComboRows');
+    container.innerHTML = '';
+    const combos = (plan && Array.isArray(plan.combos) && plan.combos.length)
+        ? plan.combos
+        : (tier.combos || []);
+    combos.forEach((c) => addPlanComboRow(c.order, c.recharge, c.profit));
+    if (!combos.length) addPlanComboRow();
 
     // Show "Remove Plan" only when one is active.
     document.getElementById('planCancelBtn').style.display = plan ? '' : 'none';
@@ -492,14 +588,13 @@ async function savePlan() {
     if (!planUserId) return;
     const p = readPlanForm();
     if (!(p.deposit > 0)) { showNotification('Enter a deposit greater than 0', 'error'); return; }
+    if (!p.combos.length) { showNotification('Add at least one combo', 'error'); return; }
 
     const payload = {
         deposit: p.deposit,
         orders: p.orders,
         targetTotal: p.targetTotal,
-        comboOrder: p.comboOrder,
-        comboAmount: p.comboAmount,
-        comboProfit: p.comboProfit
+        combos: p.combos
     };
 
     const data = await apiRequest(`/admin/task-permissions/${planUserId}/sequence-plan`, {
@@ -537,8 +632,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (form) form.addEventListener('submit', submitOffer);
     loadOffers();
 
-    // Live preview: recompute whenever any plan field changes.
-    ['planDeposit', 'planOrders', 'planTarget', 'planComboOrder', 'planComboAmount', 'planComboProfit'].forEach((id) => {
+    // Live preview: recompute whenever deposit/orders/target change. (Combo row
+    // inputs get their own listeners as they're added.)
+    ['planDeposit', 'planOrders', 'planTarget'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', renderPlanPreview);
     });

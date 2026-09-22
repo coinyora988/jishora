@@ -40,19 +40,27 @@ class SequencePlan {
     );
     const startOrder = Number(rows[0] ? rows[0].n : 0);
 
+    // The plan may have up to 3 combos. The single combo_* columns keep the
+    // FIRST combo (backward-compat / NOT NULL), and the full list is stored in
+    // the `combos` JSON column. The `schedule` JSON already encodes every
+    // per-order combo/normal entry the grab needs.
+    const combos = Array.isArray(plan.combos) ? plan.combos : [];
+    const first = combos[0] || { order: 0, recharge: 0, profit: 0 };
+
     const result = await query(
       `INSERT INTO sequence_plans
          (user_id, deposit, num_orders, target_total, combo_order,
-          combo_amount, combo_profit, schedule, start_order, current_order, status, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', ?)`,
+          combo_amount, combo_profit, combos, schedule, start_order, current_order, status, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', ?)`,
       [
         userId,
         plan.deposit,
         plan.orders,
         plan.targetTotal,
-        plan.comboOrder,
-        plan.comboAmount,
-        plan.comboProfit,
+        first.order,
+        first.recharge,
+        first.profit,
+        JSON.stringify(combos),
         JSON.stringify(plan.schedule),
         startOrder,
         createdBy
@@ -163,9 +171,7 @@ class SequencePlan {
           deposit: p.deposit,
           orders: p.orders,
           targetTotal: p.targetTotal,
-          comboOrder: p.comboOrder,
-          comboAmount: p.comboAmount,
-          comboProfit: p.comboProfit,
+          combos: p.combos,
           currentOrder: p.currentOrder
         };
       });
@@ -188,12 +194,23 @@ class SequencePlan {
     return result.affectedRows || 0;
   }
 
-  // Parse the JSON schedule column into a real array (mysql2 may return it as a
-  // string or already-parsed object depending on driver/column type).
+  // Parse the JSON columns into real arrays (mysql2 may return them as a string
+  // or already-parsed object depending on the driver/column type).
   static _parse(row) {
-    let schedule = row.schedule;
-    if (typeof schedule === 'string') {
-      try { schedule = JSON.parse(schedule); } catch (_) { schedule = []; }
+    const parseJson = (v, fallback) => {
+      if (v == null) return fallback;
+      if (typeof v === 'string') {
+        try { return JSON.parse(v); } catch (_) { return fallback; }
+      }
+      return v;
+    };
+    const schedule = parseJson(row.schedule, []) || [];
+    let combos = parseJson(row.combos, null);
+    // Fall back to the single combo_* columns for older rows without `combos`.
+    if (!Array.isArray(combos)) {
+      combos = Number(row.combo_order) > 0
+        ? [{ order: Number(row.combo_order), recharge: parseFloat(row.combo_amount), profit: parseFloat(row.combo_profit) }]
+        : [];
     }
     return {
       id: row.id,
@@ -201,10 +218,12 @@ class SequencePlan {
       deposit: parseFloat(row.deposit),
       orders: Number(row.num_orders),
       targetTotal: parseFloat(row.target_total),
+      combos,
+      // Keep the single-combo fields for any legacy caller/display.
       comboOrder: Number(row.combo_order),
       comboAmount: parseFloat(row.combo_amount),
       comboProfit: parseFloat(row.combo_profit),
-      schedule: schedule || [],
+      schedule,
       startOrder: Number(row.start_order || 0),
       currentOrder: Number(row.current_order),
       status: row.status

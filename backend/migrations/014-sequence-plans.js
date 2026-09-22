@@ -44,9 +44,12 @@ async function run() {
         combo_order INT NOT NULL,
         combo_amount DECIMAL(15,2) NOT NULL,
         combo_profit DECIMAL(15,2) NOT NULL,
+        -- Up to 3 combos as JSON: [{ order, recharge, profit }]. The single
+        -- combo_* columns above keep the FIRST combo for backward-compat.
+        combos JSON NULL,
         -- Precomputed per-order commission schedule (JSON array of
-        -- { order, isCombo, commission, comboAmount? }). Order numbers are
-        -- 1-based WITHIN the run.
+        -- { order, isCombo, commission, orderAmount?, comboAmount? }). Order
+        -- numbers are 1-based WITHIN the run.
         schedule JSON NOT NULL,
         -- The customer's global completed-order count at the moment the plan
         -- started. The run's order 1 = the customer's (start_order + 1)th
