@@ -170,6 +170,19 @@ class SequencePlan {
   }
 
   /**
+   * The schedule entry for a RUN order number directly (1-based within the
+   * plan). The plan's own cursor decides this, so combo #N fires on the plan's
+   * Nth order EXACTLY — independent of the customer's global history or which
+   * market they grab on. Returns null if the run order is outside the plan.
+   */
+  static entryByRunOrder(plan, runOrder) {
+    if (!plan || !Array.isArray(plan.schedule)) return null;
+    const n = Number(runOrder);
+    if (n < 1 || n > Number(plan.orders)) return null;
+    return plan.schedule.find((e) => Number(e.order) === n) || null;
+  }
+
+  /**
    * Map a global order number to this run's 1-based order number.
    */
   static runOrder(plan, globalOrderNumber) {

@@ -184,8 +184,14 @@ class Task {
         }
       }
 
+      // The plan uses its OWN order counter (current_order), so the Nth grab of
+      // this plan is always run-order N — combo #10 fires on the plan's 10th
+      // order EXACTLY, regardless of the customer's prior history or which
+      // market they grab on. `planRunOrder` is the order number this grab
+      // represents within the plan.
+      const planRunOrder = sequence ? (Number(sequence.currentOrder) + 1) : null;
       const seqEntry = sequence
-        ? SequencePlan.entryForOrder(sequence, upcomingOrderNumber)
+        ? SequencePlan.entryByRunOrder(sequence, planRunOrder)
         : null;
       // If a sequence plan drives this grab, it takes precedence over the
       // per-market proxy combo template for this order.
@@ -297,9 +303,9 @@ class Task {
       // of the run is grabbed the plan flips to 'completed'. Only when this grab
       // is actually part of the active sequence (seqEntry set).
       if (sequence && seqEntry) {
-        const runOrder = SequencePlan.runOrder(sequence, upcomingOrderNumber);
+        // Advance the plan's own cursor by exactly one (this grab = planRunOrder).
         await SequencePlan.advanceInTransaction(
-          conn, sequence.id, runOrder, sequence.orders
+          conn, sequence.id, planRunOrder, sequence.orders
         );
       }
 
@@ -651,6 +657,29 @@ class Task {
            WHERE id = ?`,
           [restoredUsed, newStatus, perm[0].id]
         );
+      }
+
+      // Roll the SEQUENCE PLAN cursor back by one, so cancelling a plan order
+      // doesn't skip a run order — combo #N still fires on the plan's Nth
+      // ACTUAL order. Reactivate the plan if it had been marked completed.
+      try {
+        const [sp] = await conn.execute(
+          `SELECT id, current_order FROM sequence_plans
+           WHERE user_id = ? AND current_order > 0
+           ORDER BY id DESC LIMIT 1 FOR UPDATE`,
+          [userId]
+        );
+        if (sp[0]) {
+          const back = Math.max(0, Number(sp[0].current_order) - 1);
+          await conn.execute(
+            `UPDATE sequence_plans
+             SET current_order = ?, status = 'active', completed_at = NULL
+             WHERE id = ?`,
+            [back, sp[0].id]
+          );
+        }
+      } catch (e) {
+        if (!e || e.code !== 'ER_NO_SUCH_TABLE') throw e;
       }
 
       return true;
