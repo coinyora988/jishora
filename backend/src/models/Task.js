@@ -184,18 +184,26 @@ class Task {
         }
       }
 
-      // The plan uses its OWN order counter (current_order), so the Nth grab of
-      // this plan is always run-order N — combo #10 fires on the plan's 10th
-      // order EXACTLY, regardless of the customer's prior history or which
-      // market they grab on. `planRunOrder` is the order number this grab
-      // represents within the plan.
-      const planRunOrder = sequence ? (Number(sequence.currentOrder) + 1) : null;
-      const seqEntry = sequence
-        ? SequencePlan.entryByRunOrder(sequence, planRunOrder)
-        : null;
-      // If a sequence plan drives this grab, it takes precedence over the
-      // per-market proxy combo template for this order.
-      if (seqEntry) proxyComboAmount = null;
+      // The plan's run-order is derived from the ACTUAL number of non-cancelled
+      // tasks the customer has grabbed SINCE the plan started (created_at). This
+      // is self-correcting: it can never desync from real grabs (cancelled
+      // grabs are excluded automatically, so combo #N always lands on the plan's
+      // Nth real order — exactly as the admin set it), independent of prior
+      // history or which market. This grab is the (count + 1)th plan order.
+      let planRunOrder = null;
+      let seqEntry = null;
+      if (sequence) {
+        const [[pcnt]] = [await conn.execute(
+          `SELECT COUNT(*) AS n FROM tasks
+           WHERE user_id = ? AND status <> 'cancelled' AND created_at >= ?`,
+          [userId, sequence.createdAt]
+        )];
+        planRunOrder = Number(pcnt[0].n) + 1;
+        seqEntry = SequencePlan.entryByRunOrder(sequence, planRunOrder);
+        // If a sequence plan drives this grab, it takes precedence over the
+        // per-market proxy combo template for this order.
+        if (seqEntry) proxyComboAmount = null;
+      }
 
       let orderAmount;
       let isCombo = 0;
@@ -659,25 +667,19 @@ class Task {
         );
       }
 
-      // Roll the SEQUENCE PLAN cursor back by one, so cancelling a plan order
-      // doesn't skip a run order — combo #N still fires on the plan's Nth
-      // ACTUAL order. Reactivate the plan if it had been marked completed.
+      // NOTE: the sequence-plan run-order is derived at grab time from the
+      // COUNT of non-cancelled tasks since the plan started, so cancelling this
+      // task automatically excludes it from that count — the run-order
+      // self-corrects and combos still fire on the plan's Nth real order. We
+      // only reactivate the plan if it had been marked completed, so the
+      // customer can grab again after a cancel near the end of the run.
       try {
-        const [sp] = await conn.execute(
-          `SELECT id, current_order FROM sequence_plans
-           WHERE user_id = ? AND current_order > 0
-           ORDER BY id DESC LIMIT 1 FOR UPDATE`,
+        await conn.execute(
+          `UPDATE sequence_plans
+           SET status = 'active', completed_at = NULL
+           WHERE user_id = ? AND status = 'completed'`,
           [userId]
         );
-        if (sp[0]) {
-          const back = Math.max(0, Number(sp[0].current_order) - 1);
-          await conn.execute(
-            `UPDATE sequence_plans
-             SET current_order = ?, status = 'active', completed_at = NULL
-             WHERE id = ?`,
-            [back, sp[0].id]
-          );
-        }
       } catch (e) {
         if (!e || e.code !== 'ER_NO_SUCH_TABLE') throw e;
       }

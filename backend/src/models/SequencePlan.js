@@ -281,6 +281,7 @@ class SequencePlan {
       schedule,
       startOrder: Number(row.start_order || 0),
       currentOrder: Number(row.current_order),
+      createdAt: row.created_at,
       status: row.status
     };
   }
