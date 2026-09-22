@@ -8,6 +8,7 @@ const TaskPermission = require('./TaskPermission');
 const ComboPlan = require('./ComboPlan');
 const ProxyCombo = require('./ProxyCombo');
 const SequencePlan = require('./SequencePlan');
+const { ProxyPlan } = require('./ProxyPlan');
 
 // tasks.order_number and transactions.transaction_number are NOT NULL UNIQUE.
 function generateNumber(prefix) {
@@ -158,14 +159,37 @@ class Task {
       // SEQUENCE PLAN: the customer's earnings run (default 25 orders). If one
       // is active it decides THIS order's commission from a precomputed schedule
       // so the whole run lands on a target total. It also owns its own combo
-      // order (e.g. order 15). An explicit admin combo_plans entry or a proxy
-      // combo still takes precedence over the sequence for that specific order.
-      const sequence = (!combo && proxyComboAmount == null)
+      // orders. An explicit admin combo_plans entry still takes precedence.
+      let sequence = !combo
         ? await SequencePlan.getActiveInTransaction(conn, userId)
         : null;
+
+      // GLOBAL PROXY PLAN: if this is a PROXY account with no active plan yet,
+      // and the admin has set a single global proxy plan, materialise a
+      // per-account sequence plan from it now so the whole run follows the
+      // global config. This is what makes "set once -> applies to all proxy
+      // accounts" work. Regular (non-proxy) customers are never affected.
+      if (!combo && !sequence) {
+        const [urow2] = await conn.execute('SELECT is_proxy FROM users WHERE id = ?', [userId]);
+        if (urow2[0] && Number(urow2[0].is_proxy) === 1) {
+          const proxyCfg = await ProxyPlan.getConfig();
+          if (proxyCfg) {
+            // Create the per-account plan (cancels any prior, baselines start
+            // order to this account's completed count) using the global config.
+            await SequencePlan.createForUserInTransaction(conn, userId, proxyCfg);
+            sequence = await SequencePlan.getActiveInTransaction(conn, userId);
+            // A proxy plan supersedes the per-market proxy combo template.
+            proxyComboAmount = null;
+          }
+        }
+      }
+
       const seqEntry = sequence
         ? SequencePlan.entryForOrder(sequence, upcomingOrderNumber)
         : null;
+      // If a sequence plan drives this grab, it takes precedence over the
+      // per-market proxy combo template for this order.
+      if (seqEntry) proxyComboAmount = null;
 
       let orderAmount;
       let isCombo = 0;

@@ -7,6 +7,8 @@
 
 const User = require('../models/User');
 const ProxyCombo = require('../models/ProxyCombo');
+const { ProxyPlan } = require('../models/ProxyPlan');
+const seqUtil = require('../utils/sequencePlan');
 const { query } = require('../config/database');
 const realtime = require('../utils/realtime');
 
@@ -139,9 +141,118 @@ const saveProxyCombos = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get the single GLOBAL proxy plan (applies to all proxy accounts).
+ * @route   GET /api/admin/proxy-plan
+ */
+const getProxyPlan = async (req, res, next) => {
+  try {
+    const cfg = await ProxyPlan.getConfig();
+    res.json({
+      success: true,
+      data: {
+        plan: cfg,                          // null if not set
+        tiers: seqUtil.DEFAULT_TIERS,
+        defaultTier: seqUtil.DEFAULT_TIERS[0] || null
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Save the single GLOBAL proxy plan. Applies to ALL proxy accounts on
+ *          their next run. Regular customers are unaffected.
+ * @route   POST /api/admin/proxy-plan
+ * body: { deposit, orders?, targetTotal, combos:[{order,recharge,profit}] }
+ */
+const saveProxyPlan = async (req, res, next) => {
+  try {
+    const deposit = parseFloat(req.body.deposit);
+    if (!(deposit > 0)) {
+      return res.status(400).json({ success: false, message: 'Deposit must be greater than 0' });
+    }
+
+    const override = {};
+    if (req.body.targetTotal !== undefined && req.body.targetTotal !== null && req.body.targetTotal !== '') {
+      override.targetTotal = req.body.targetTotal;
+    }
+    if (req.body.orders !== undefined && req.body.orders !== null && req.body.orders !== '') {
+      override.orders = req.body.orders;
+    }
+    if (Array.isArray(req.body.combos) && req.body.combos.length) {
+      override.combos = req.body.combos;
+    }
+
+    // Resolve + validate the money exactly like the per-user sequence plan.
+    const params = seqUtil.resolvePlanParams(deposit, Object.keys(override).length ? override : null);
+    const combos = seqUtil.normaliseCombos(params.combos);
+
+    if (!combos.length) {
+      return res.status(400).json({ success: false, message: 'Add at least one combo.' });
+    }
+    if (combos.length > 3) {
+      return res.status(400).json({ success: false, message: 'A plan can have at most 3 combos.' });
+    }
+    for (const c of combos) {
+      if (c.order < 1 || c.order > params.orders) {
+        return res.status(400).json({ success: false, message: `Combo order #${c.order} must be within 1–${params.orders}.` });
+      }
+    }
+    const rechargeTotal = seqUtil.r2(combos.reduce((s, c) => s + c.recharge, 0));
+    const comboProfitTotal = seqUtil.r2(combos.reduce((s, c) => s + c.profit, 0));
+    const outlay = seqUtil.r2(params.deposit + rechargeTotal);
+    const totalProfit = seqUtil.r2(params.targetTotal - outlay);
+    const normalPool = seqUtil.r2(totalProfit - comboProfitTotal);
+
+    if (totalProfit <= 0) {
+      return res.status(400).json({ success: false, message: `Target (${params.targetTotal}) must be greater than the outlay (${outlay}).` });
+    }
+    if (comboProfitTotal > totalProfit) {
+      return res.status(400).json({ success: false, message: `Combo profits (${comboProfitTotal}) can't exceed total profit (${totalProfit}).` });
+    }
+    if (normalPool < 0) {
+      return res.status(400).json({ success: false, message: 'Not enough profit left for the other orders.' });
+    }
+
+    const cfg = {
+      deposit: params.deposit,
+      orders: params.orders,
+      targetTotal: params.targetTotal,
+      combos
+    };
+    await ProxyPlan.saveConfig(cfg);
+
+    res.status(201).json({
+      success: true,
+      message: 'Global proxy plan saved — applies to all proxy accounts',
+      data: { ...cfg, outlay, totalProfit, comboProfitTotal, normalPool }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Clear the global proxy plan (disables it for all proxy accounts).
+ * @route   POST /api/admin/proxy-plan/clear
+ */
+const clearProxyPlan = async (req, res, next) => {
+  try {
+    await ProxyPlan.clear();
+    res.json({ success: true, message: 'Global proxy plan cleared' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   listProxyAccounts,
   createProxyAccount,
   listProxyCombos,
-  saveProxyCombos
+  saveProxyCombos,
+  getProxyPlan,
+  saveProxyPlan,
+  clearProxyPlan
 };

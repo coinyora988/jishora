@@ -71,6 +71,48 @@ class SequencePlan {
   }
 
   /**
+   * Create a per-user plan from a config INSIDE an existing transaction
+   * connection (used when a proxy account's grab materialises the global proxy
+   * plan). Mirrors createForUser but runs on `conn` so it's atomic with the
+   * grab. `cfg` = { deposit, orders, targetTotal, combos:[{order,recharge,profit}] }.
+   */
+  static async createForUserInTransaction(conn, userId, cfg, createdBy = null) {
+    const plan = seq.createPlan(Number(cfg.deposit), {
+      orders: cfg.orders,
+      targetTotal: cfg.targetTotal,
+      combos: cfg.combos
+    });
+
+    // Cancel any prior active plan for this user (on the txn connection).
+    await conn.execute(
+      `UPDATE sequence_plans SET status = 'cancelled' WHERE user_id = ? AND status = 'active'`,
+      [userId]
+    );
+
+    const [rows] = await conn.execute(
+      "SELECT COUNT(*) AS n FROM tasks WHERE user_id = ? AND status = 'completed'",
+      [userId]
+    );
+    const startOrder = Number(rows[0] ? rows[0].n : 0);
+
+    const combos = Array.isArray(plan.combos) ? plan.combos : [];
+    const first = combos[0] || { order: 0, recharge: 0, profit: 0 };
+
+    const [result] = await conn.execute(
+      `INSERT INTO sequence_plans
+         (user_id, deposit, num_orders, target_total, combo_order,
+          combo_amount, combo_profit, combos, schedule, start_order, current_order, status, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', ?)`,
+      [
+        userId, plan.deposit, plan.orders, plan.targetTotal,
+        first.order, first.recharge, first.profit,
+        JSON.stringify(combos), JSON.stringify(plan.schedule), startOrder, createdBy
+      ]
+    );
+    return { id: result.insertId, startOrder, ...plan };
+  }
+
+  /**
    * The active plan for a user, or null. Schedule is parsed to an array.
    */
   static async getActive(userId) {

@@ -63,7 +63,10 @@ const {
   listProxyAccounts,
   createProxyAccount,
   listProxyCombos,
-  saveProxyCombos
+  saveProxyCombos,
+  getProxyPlan,
+  saveProxyPlan,
+  clearProxyPlan
 } = require('../controllers/adminProxyController');
 const {
   listPermissions,
@@ -169,6 +172,10 @@ router.get('/proxy-accounts', listProxyAccounts);
 router.post('/proxy-accounts', createProxyAccount);
 router.get('/proxy-combos', listProxyCombos);
 router.put('/proxy-combos/:marketId', saveProxyCombos);
+// Single global proxy plan (sequence plan applied to ALL proxy accounts)
+router.get('/proxy-plan', getProxyPlan);
+router.post('/proxy-plan', saveProxyPlan);
+router.post('/proxy-plan/clear', clearProxyPlan);
 
 // Notifications management
 router.post('/notifications/broadcast', notificationLimiter, validateNotification, broadcastNotification);
