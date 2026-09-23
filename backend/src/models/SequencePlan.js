@@ -32,6 +32,15 @@ class SequencePlan {
 
     await SequencePlan.cancelActive(userId);
 
+    // Cancel any lingering PENDING COMBO tasks from the old plan so the sticky-
+    // combo short-circuit doesn't re-show stale combos after a plan change. The
+    // customer hasn't submitted/recharged them yet, so no balance impact.
+    await query(
+      `UPDATE tasks SET status = 'cancelled', completion_time = CURRENT_TIMESTAMP
+       WHERE user_id = ? AND status = 'pending' AND is_combo = 1`,
+      [userId]
+    );
+
     // Baseline the run at the customer's current global completed-order count,
     // so run-order 1 = their next real order even if they already have history.
     const rows = await query(
@@ -86,6 +95,13 @@ class SequencePlan {
     // Cancel any prior active plan for this user (on the txn connection).
     await conn.execute(
       `UPDATE sequence_plans SET status = 'cancelled' WHERE user_id = ? AND status = 'active'`,
+      [userId]
+    );
+
+    // Cancel stale pending combo tasks so the sticky-combo path can't re-show them.
+    await conn.execute(
+      `UPDATE tasks SET status = 'cancelled', completion_time = CURRENT_TIMESTAMP
+       WHERE user_id = ? AND status = 'pending' AND is_combo = 1`,
       [userId]
     );
 
