@@ -193,9 +193,19 @@ class Task {
       let planRunOrder = null;
       let seqEntry = null;
       if (sequence) {
+        // Run-order = (orders the customer has already FINISHED since the plan
+        // started) + 1 for THIS grab. We count only COMPLETED tasks (plus any
+        // still-pending combo, which occupies its slot until submitted) so a
+        // normal pending grab does NOT inflate the count. This makes combo #N
+        // fire EXACTLY on the plan's Nth order, exactly as the admin set it.
+        // We also count a currently-pending COMBO as its own slot so the run
+        // doesn't skip it. `> ?` (not >=) excludes anything created in the same
+        // instant as the plan itself.
         const [[pcnt]] = [await conn.execute(
           `SELECT COUNT(*) AS n FROM tasks
-           WHERE user_id = ? AND status <> 'cancelled' AND created_at >= ?`,
+           WHERE user_id = ?
+             AND created_at > ?
+             AND (status = 'completed' OR (status = 'pending' AND is_combo = 1))`,
           [userId, sequence.createdAt]
         )];
         planRunOrder = Number(pcnt[0].n) + 1;
