@@ -242,28 +242,34 @@ class Task {
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
       } else if (seqEntry) {
-        // SEQUENCE NORMAL order: the ORDER AMOUNT comes from the plan schedule
-        // (a different value each order, always <= the deposit so it's
-        // affordable), and the COMMISSION also comes from the schedule (NOT the
-        // market rate). The order amount is frozen from the balance and returned
-        // in full on completion; only the scheduled commission is the net gain,
-        // so the whole run sums exactly to the target. The displayed product is
-        // just for variety (image/name) and does NOT set the amount.
-        orderAmount = Math.round(parseFloat(seqEntry.orderAmount) * 100) / 100;
-        if (!(orderAmount > 0)) {
-          // Safety: if the plan somehow has no amount, fall back to the balance.
-          orderAmount = Math.round(userBalance * 100) / 100;
-        }
-        // Never let the order exceed what the customer can afford.
-        if (orderAmount > userBalance) {
-          orderAmount = Math.round(userBalance * 100) / 100;
-        }
+        // SEQUENCE NORMAL order (Option ক): order amount is derived from the
+        // customer's CURRENT BALANCE (varied per order, always <= balance so it
+        // never fails) and commission = order amount × THIS MARKET'S rate.
+        // This means Rakuten (12%) and Temu (18%) orders automatically have
+        // higher amounts AND higher commissions than JD (6%) — same plan
+        // continues across markets, only combo timing/profit is plan-driven.
+        // Use the plan schedule's orderAmount as a FRACTION of the deposit,
+        // then scale it to the customer's current balance so the order amount
+        // grows proportionally when the customer moves to a richer market.
+        const planDeposit = parseFloat(sequence.deposit) || userBalance;
+        const scheduledAmt = Math.round(parseFloat(seqEntry.orderAmount) * 100) / 100;
+        // Scale: scheduledAmt was generated relative to the plan deposit.
+        // When balance > deposit (e.g. Rakuten 506 vs JD deposit 20–50),
+        // scale the amount proportionally so it reflects the bigger balance.
+        // Cap at the actual current balance to never exceed what they have.
+        const scaleFactor = planDeposit > 0 ? (userBalance / planDeposit) : 1;
+        let scaledAmt = Math.round(scheduledAmt * scaleFactor * 100) / 100;
+        // Always keep the amount in a reasonable range: at least 40% of balance,
+        // at most 100% of balance, so Rakuten/Temu orders look proportionate.
+        const floor = Math.round(userBalance * 0.4 * 100) / 100;
+        const cap = Math.round(userBalance * 100) / 100;
+        orderAmount = Math.min(cap, Math.max(floor, scaledAmt));
+        orderAmount = Math.round(orderAmount * 100) / 100;
         if (!(orderAmount > 0)) {
           throw new Error('Insufficient balance');
         }
-        commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
-        // Frozen normally (like a plain order): balance is reduced by the order
-        // amount and returned on completion.
+        // Commission = market rate × order amount (NOT plan schedule).
+        // commissionOverride stays null so the code below uses market rate.
         noFreeze = false;
       } else {
         // Normal order (no active sequence): order amount is the PRODUCT'S PRICE
