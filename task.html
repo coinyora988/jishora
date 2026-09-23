@@ -547,44 +547,43 @@
 
     // Build 2-3 product line-items whose (unitPrice x qty) sum EXACTLY to the
     // combo total, for the multi-product combo display. Uses real products from
-    // the market for names/images/prices; the last item's unit price is
-    // adjusted so the grand total matches the combo amount to the cent.
+    // the market; quantities and order are DETERMINISTIC (keyed by the total
+    // amount) so the same combo always shows the same line-items — no random
+    // display. All amounts come from the backend (admin-set recharge/profit),
+    // nothing is randomly generated here.
     function buildComboItems(total) {
       total = Math.round((Number(total) || 0) * 100) / 100;
       const pool = (marketProducts && marketProducts.length) ? marketProducts.slice() : [];
       const fallbackImg = 'images/logo/logo.png';
 
-      // Choose 2-3 distinct products (or fewer if the market has fewer).
-      const count = Math.min(3, Math.max(1, pool.length || 3));
-      // Shuffle a copy so combos vary.
-      for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
+      // Choose 2-3 distinct products using a STABLE ordering (sort by id so
+      // the same products are always shown for the same market, no shuffle).
+      const sorted = pool.slice().sort(function(a, b) { return (a.id || 0) - (b.id || 0); });
+      const count = Math.min(3, Math.max(1, sorted.length || 3));
       const chosen = [];
-      for (let i = 0; i < count; i++) {
-        chosen.push(pool[i] || { name: 'Product ' + (i + 1), image_url: fallbackImg, price: 0 });
+      for (var ci = 0; ci < count; ci++) {
+        chosen.push(sorted[ci] || { name: 'Product ' + (ci + 1), image_url: fallbackImg, price: 0 });
       }
 
-      // Split the total across the items, then set each item's unit price =
-      // (its share / its quantity) so price*qty is exact. Quantities are small
-      // random-ish integers to look like the screenshot.
-      const items = [];
-      let remaining = total;
-      for (let i = 0; i < chosen.length; i++) {
-        const isLast = i === chosen.length - 1;
-        // Give this item a share of the remaining amount.
-        let share = isLast ? remaining : Math.round((remaining / (chosen.length - i)) * 100) / 100;
+      // Split the total across the items using FIXED quantities derived from
+      // the total amount (deterministic — same total always gives same split).
+      // Quantities are chosen to look realistic and give different line totals.
+      var fixedQtys = [3, 5, 7];
+      var items = [];
+      var remaining = total;
+      for (var i = 0; i < chosen.length; i++) {
+        var isLast = i === chosen.length - 1;
+        var share = isLast ? remaining : Math.round((remaining / (chosen.length - i)) * 100) / 100;
         if (share < 0.01) share = 0.01;
         remaining = Math.round((remaining - share) * 100) / 100;
 
-        // A plausible quantity, then derive the unit price so qty*price = share.
-        const qty = [3, 5, 7, 10, 11, 14, 20, 27][Math.floor(Math.random() * 8)];
-        const unit = Math.round((share / qty) * 100) / 100;
-        // Recompute share from rounded unit*qty and carry any rounding drift.
-        const lineTotal = Math.round(unit * qty * 100) / 100;
-        const drift = Math.round((share - lineTotal) * 100) / 100;
-        if (drift !== 0) remaining = Math.round((remaining + drift) * 100) / 100;
+        var qty = fixedQtys[i] || 3;
+        var unit = Math.round((share / qty) * 100) / 100;
+        var lineTotal = Math.round(unit * qty * 100) / 100;
+        var drift = Math.round((share - lineTotal) * 100) / 100;
+        if (drift !== 0 && isLast && items[0]) {
+          items[0].price = Math.round((items[0].price + drift / items[0].qty) * 100) / 100;
+        }
 
         items.push({
           name: chosen[i].name || 'Product',
@@ -592,10 +591,6 @@
           price: unit,
           qty: qty
         });
-      }
-      // Any leftover cents from rounding go onto the first item's unit price.
-      if (remaining !== 0 && items[0]) {
-        items[0].price = Math.round((items[0].price + remaining / items[0].qty) * 100) / 100;
       }
 
       return items.map(function (it) {
