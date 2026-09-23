@@ -484,6 +484,8 @@
       taskData.todayTasks = Number(s.today_tasks) || 0;
       taskData.todayCommission = Number(s.today_commission) || 0;
       taskData.yesterdayCommission = Number(s.yesterday_commission) || 0;
+      // "Cash gap between tasks" = recharge still needed for a pending combo.
+      taskData.cashGap = Number(s.cash_gap) || 0;
       updateUI();
     }
 
@@ -773,6 +775,13 @@
         showToast('Permission accepted — order grabbed. You can start the task now.', 'success');
       }
 
+      // For a COMBO grab, refresh the stats so "Cash gap between tasks" shows
+      // the recharge the customer now needs. (Normal grabs intentionally don't
+      // refresh the display until submit.)
+      if (d.isCombo) {
+        loadTaskStats();
+      }
+
       modal.classList.add('active');
       document.body.style.overflow = 'hidden';
     }
@@ -797,6 +806,9 @@
       if (typeof LiveData !== 'undefined' && LiveData.load) {
         LiveData.load({ silent: true }).then(() => applyLiveWalletData());
       }
+      // Also refresh task stats so "Cash gap between tasks" (combo recharge
+      // still needed) updates as soon as the customer grabs a combo or recharges.
+      loadTaskStats();
     }
 
     // Show combo recharge modal

@@ -591,6 +591,26 @@ class Task {
 
     stats.yesterday_commission = ydayRows[0] ? ydayRows[0].yesterday_commission : 0;
 
+    // "Cash gap between tasks" = how much the customer still needs to RECHARGE
+    // to submit a pending combo order. When they have a pending combo whose
+    // order amount exceeds their current balance, the gap is (order_amount -
+    // balance). Once they recharge enough (or submit / have no pending combo),
+    // the gap is 0. This drives the "Cash gap between tasks" card.
+    const comboRows = await query(
+      `SELECT order_amount FROM tasks
+       WHERE user_id = ? AND status = 'pending' AND is_combo = 1
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId]
+    );
+    let cashGap = 0;
+    if (comboRows[0]) {
+      const balRows = await query('SELECT COALESCE(balance, 0) AS balance FROM wallets WHERE user_id = ?', [userId]);
+      const balance = balRows[0] ? parseFloat(balRows[0].balance) : 0;
+      const need = parseFloat(comboRows[0].order_amount) - balance;
+      cashGap = need > 0 ? Math.round(need * 100) / 100 : 0;
+    }
+    stats.cash_gap = cashGap;
+
     // Provide both names so any caller (frontend expects total_commission) works.
     stats.total_earned = stats.total_commission;
     return stats;
