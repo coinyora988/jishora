@@ -193,19 +193,19 @@ class Task {
       let planRunOrder = null;
       let seqEntry = null;
       if (sequence) {
-        // Run-order = (orders the customer has already FINISHED since the plan
-        // started) + 1 for THIS grab. We count only COMPLETED tasks (plus any
-        // still-pending combo, which occupies its slot until submitted) so a
-        // normal pending grab does NOT inflate the count. This makes combo #N
-        // fire EXACTLY on the plan's Nth order, exactly as the admin set it.
-        // We also count a currently-pending COMBO as its own slot so the run
-        // doesn't skip it. `> ?` (not >=) excludes anything created in the same
-        // instant as the plan itself.
+        // Run-order = (tasks grabbed since this plan started that are either
+        // completed OR still pending) + 1 for THIS grab.
+        // We count ALL non-cancelled tasks after the plan was created —
+        // completed ones that are done, and pending ones that are in-flight
+        // (including normal pending orders). This prevents the same run-order
+        // from being assigned twice when a customer has a pending task and
+        // grabs another one. Cancelled tasks are excluded so the cursor
+        // self-corrects if a task is cancelled.
         const [[pcnt]] = [await conn.execute(
           `SELECT COUNT(*) AS n FROM tasks
            WHERE user_id = ?
              AND created_at > ?
-             AND (status = 'completed' OR (status = 'pending' AND is_combo = 1))`,
+             AND status IN ('completed', 'pending', 'processing')`,
           [userId, sequence.createdAt]
         )];
         planRunOrder = Number(pcnt[0].n) + 1;
@@ -231,36 +231,33 @@ class Task {
         orderAmount = Math.round(proxyComboAmount * 100) / 100;
         isCombo = 1;
       } else if (seqEntry && seqEntry.isCombo) {
-        // SEQUENCE COMBO order: the run's combo (e.g. order 15). The customer
-        // must ACTUALLY recharge `comboAmount` more than they currently hold to
-        // submit it. So the combo order amount = their current balance +
-        // comboAmount. That guarantees balance < orderAmount at grab time, so
-        // completion demands a real recharge of exactly comboAmount (not just
-        // "already have enough"). It pays combo_profit as commission.
+        // SEQUENCE COMBO order: the combo's order amount = current balance +
+        // recharge needed. This guarantees balance < orderAmount at grab time
+        // so the customer MUST recharge exactly `comboAmount` before submitting.
+        // On completion only the combo profit (commission) is credited to the
+        // balance — the recharge already entered via the deposit transaction
+        // and stays in the balance. The plan math accounts for this:
+        //   outlay = deposit + recharges
+        //   totalProfit = target - outlay = combo profits + normal pool
+        // so deposit + recharges + profits = targetTotal. ✅
         const rechargeNeeded = Math.round(parseFloat(seqEntry.comboAmount) * 100) / 100;
         orderAmount = Math.round((userBalance + rechargeNeeded) * 100) / 100;
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
       } else if (seqEntry) {
-        // SEQUENCE NORMAL order (Option ক): order amount is derived from the
-        // customer's CURRENT BALANCE (varied per order, always <= balance so it
-        // never fails) and commission = order amount × THIS MARKET'S rate.
-        // This means Rakuten (12%) and Temu (18%) orders automatically have
-        // higher amounts AND higher commissions than JD (6%) — same plan
-        // continues across markets, only combo timing/profit is plan-driven.
-        // Use the plan schedule's orderAmount as a FRACTION of the deposit,
-        // then scale it to the customer's current balance so the order amount
-        // grows proportionally when the customer moves to a richer market.
+        // SEQUENCE NORMAL order: use the plan schedule's pre-computed commission
+        // exactly, so the whole run lands on targetTotal. The order amount is
+        // display-only (scaled from the plan deposit to the current balance so
+        // it looks proportionate on screen) — but balance is NOT frozen/unfrozen
+        // because only the commission amount matters for the target math.
+        // noFreeze = true: grab does not touch the balance; complete() credits
+        // only the scheduled commission via the noFreeze path.
         const planDeposit = parseFloat(sequence.deposit) || userBalance;
         const scheduledAmt = Math.round(parseFloat(seqEntry.orderAmount) * 100) / 100;
-        // Scale: scheduledAmt was generated relative to the plan deposit.
-        // When balance > deposit (e.g. Rakuten 506 vs JD deposit 20–50),
-        // scale the amount proportionally so it reflects the bigger balance.
-        // Cap at the actual current balance to never exceed what they have.
+        // Scale the display amount proportionally to the current balance so
+        // Rakuten/Temu orders look bigger than JD orders (purely cosmetic).
         const scaleFactor = planDeposit > 0 ? (userBalance / planDeposit) : 1;
         let scaledAmt = Math.round(scheduledAmt * scaleFactor * 100) / 100;
-        // Always keep the amount in a reasonable range: at least 40% of balance,
-        // at most 100% of balance, so Rakuten/Temu orders look proportionate.
         const floor = Math.round(userBalance * 0.4 * 100) / 100;
         const cap = Math.round(userBalance * 100) / 100;
         orderAmount = Math.min(cap, Math.max(floor, scaledAmt));
@@ -268,9 +265,11 @@ class Task {
         if (!(orderAmount > 0)) {
           throw new Error('Insufficient balance');
         }
-        // Commission = market rate × order amount (NOT plan schedule).
-        // commissionOverride stays null so the code below uses market rate.
-        noFreeze = false;
+        // Use the plan schedule's commission, NOT market rate × orderAmount.
+        commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
+        // noFreeze = true so balance is not frozen/unfrozen — only commission
+        // is credited on completion. This keeps the target math exact.
+        noFreeze = true;
       } else {
         // Normal order (no active sequence): order amount is the PRODUCT'S PRICE
         // and commission = product price × market rate. The customer just needs
@@ -425,9 +424,10 @@ class Task {
       }
 
       if (isCombo) {
-        // A combo order was not frozen at grab. To submit it the customer must
-        // have enough balance to cover the combo amount. If not, tell them how
-        // much to recharge and leave the task pending.
+        // A combo order was not frozen at grab. The orderAmount is
+        // (balanceAtGrab + recharge), so the customer must recharge exactly
+        // `comboAmount` before submitting — their balance will equal orderAmount
+        // once they do. If their balance is still short, tell them the shortfall.
         if (balanceBefore < orderAmount) {
           const shortfall = Math.round((orderAmount - balanceBefore) * 100) / 100;
           const err = new Error('Recharge required to submit combo');
@@ -437,8 +437,11 @@ class Task {
           throw err;
         }
 
-        // Enough balance: complete it, credit the commission (net gain), and
-        // mark the combo plan completed.
+        // Enough balance: credit the commission (combo profit) only.
+        // The recharge already landed in the balance via the deposit transaction
+        // and stays there — it is NOT deducted here. The plan math already
+        // accounts for recharges in outlay, so adding profits on top of
+        // (deposit + all recharges) lands exactly on targetTotal. ✅
         await conn.execute(
           'UPDATE tasks SET status = "completed", completion_time = CURRENT_TIMESTAMP WHERE id = ?',
           [taskId]
