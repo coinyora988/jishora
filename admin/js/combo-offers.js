@@ -286,10 +286,9 @@ async function loadCustomers(page = 1) {
                     <button class="btn-mini plan" onclick='openPlanModal(${Number(u.id)}, "${uname}")'>
                         <i class="fas fa-sliders"></i> Set Plan
                     </button>
-                    <button class="btn-mini set" onclick='openComboSetModal(${Number(u.id)}, "${uname}", ${combosJson})'>
-                        <i class="fas fa-gift"></i> ${combos.length ? 'Edit Combo' : 'Set Combo'}
-                    </button>
-                    ${combos.length ? `<button class="btn-mini clear" onclick="clearCombo(${Number(u.id)}, '${uname}')"><i class="fas fa-xmark"></i></button>` : ''}
+                    ${plan ? `<button class="btn-mini kill" onclick="killPlan(${Number(u.id)}, '${uname}')" title="Kill this customer's active plan">
+                        <i class="fas fa-skull"></i> Kill Plan
+                    </button>` : ''}
                 </div>
             </td>
         </tr>`;
@@ -624,6 +623,24 @@ async function cancelActivePlan() {
         loadCustomers(custPage);
     } else {
         showNotification((data && data.message) || 'Failed to remove plan', 'error');
+    }
+}
+
+/**
+ * Kill Plan — admin directly cancels a customer's active sequence plan
+ * from the customer table row (without opening the Set Plan modal).
+ */
+async function killPlan(userId, username) {
+    if (!confirm(`Kill the active plan for ${username}? Their pending combos will be cancelled and orders will fall back to default commission.`)) return;
+    const data = await apiRequest(`/admin/task-permissions/${userId}/sequence-plan/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({})
+    });
+    if (data && data.success) {
+        showNotification(`Plan killed for ${username}`, 'success');
+        loadCustomers(custPage);
+    } else {
+        showNotification((data && data.message) || 'Failed to kill plan', 'error');
     }
 }
 
