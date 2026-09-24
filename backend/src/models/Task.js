@@ -248,26 +248,25 @@ class Task {
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
       } else if (seqEntry) {
-        // SEQUENCE NORMAL order: commission = seqEntry.commission (plan schedule).
-        // orderAmount is display-only (scaled from plan deposit to current balance
-        // so it looks proportionate on screen). noFreeze=true means balance is NOT
-        // frozen — only the scheduled commission is credited on completion.
-        // expectedIncome = commission only (not orderAmount + commission) so the
-        // modal shows a truthful number.
-        const planDeposit = parseFloat(sequence.deposit) || userBalance;
-        const scheduledAmt = Math.round(parseFloat(seqEntry.orderAmount) * 100) / 100;
-        const scaleFactor = planDeposit > 0 ? (userBalance / planDeposit) : 1;
-        let scaledAmt = Math.round(scheduledAmt * scaleFactor * 100) / 100;
-        const floor = Math.round(userBalance * 0.4 * 100) / 100;
-        const cap = Math.round(userBalance * 100) / 100;
-        orderAmount = Math.min(cap, Math.max(floor, scaledAmt));
-        orderAmount = Math.round(orderAmount * 100) / 100;
+        // SEQUENCE NORMAL order: order amount comes from the plan schedule
+        // (based on deposit, so small amounts like $8-$20 for a $20 deposit).
+        // Commission = order amount × market commission rate so they always match.
+        // The order amount is frozen from balance and returned on completion;
+        // the customer earns commission on top.
+        orderAmount = Math.round(parseFloat(seqEntry.orderAmount) * 100) / 100;
+        if (!(orderAmount > 0)) {
+          orderAmount = Math.round(userBalance * 100) / 100;
+        }
+        // Never let the order exceed what the customer can afford.
+        if (orderAmount > userBalance) {
+          orderAmount = Math.round(userBalance * 100) / 100;
+        }
         if (!(orderAmount > 0)) {
           throw new Error('Insufficient balance');
         }
-        // Use the plan schedule's commission, NOT market rate × orderAmount.
-        commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
-        noFreeze = true;
+        // Commission = order amount × market rate. No override — they match.
+        // noFreeze = false so the order amount is frozen and returned normally.
+        noFreeze = false;
       } else {
         // Normal order (no active sequence): order amount is the PRODUCT'S PRICE
         // and commission = product price × market rate. The customer just needs
