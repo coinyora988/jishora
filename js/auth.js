@@ -131,6 +131,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Auto-fill referral code from URL ?ref=XXXXXXXX
+    // so when a customer opens a referral link the code is pre-filled.
+    if (window.location.pathname.includes('register.html')) {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) {
+            const refField = document.getElementById('referralCode');
+            if (refField) {
+                refField.value = ref.trim().toUpperCase();
+                // Make the field read-only so it can't be accidentally cleared.
+                refField.setAttribute('readonly', 'readonly');
+            }
+        }
+    }
+
     // Note: Form submission is now handled by auth-page-handler.js
     // which calls handleLogin and handleRegister functions
 
