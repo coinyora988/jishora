@@ -749,6 +749,13 @@
 
       document.getElementById('transactionTime').textContent = new Date().toLocaleString();
       document.getElementById('orderAmount').textContent = `${currentOrder.orderAmount.toFixed(2)} USDT`;
+      // Update commission rate label to show the ACTUAL rate for this order.
+      // For sequence-plan orders the effective rate differs from the market's
+      // nominal rate, so use the rate the server computed (commission/amount).
+      const modalRateEl = document.getElementById('modalCommissionRate');
+      if (modalRateEl && d.commissionRate != null) {
+        modalRateEl.textContent = `${Number(d.commissionRate).toFixed(2)}%`;
+      }
       document.getElementById('commissionAmount').textContent = `+${currentOrder.commission.toFixed(2)} USDT`;
       document.getElementById('expectedIncome').textContent = `${currentOrder.expectedIncome.toFixed(2)} USDT`;
 

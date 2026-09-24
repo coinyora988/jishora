@@ -79,7 +79,10 @@ class Task {
           commission: ecCommission,
           expectedIncome: ecAmount + ecCommission,
           isCombo: true,
-          firstOfBatch: false
+          firstOfBatch: false,
+          commissionRate: ecAmount > 0
+            ? Math.round((ecCommission / ecAmount) * 10000) / 100
+            : 0
         };
       }
 
@@ -352,6 +355,12 @@ class Task {
       );
 
       const frozen = (isCombo || noFreeze) ? 0 : orderAmount;
+      // commissionRate shown in the modal: for sequence plan orders the actual
+      // effective rate differs from the market's nominal rate, so compute it
+      // from the real commission / orderAmount so the label stays accurate.
+      const displayCommissionRate = (orderAmount > 0)
+        ? Math.round((commission / orderAmount) * 10000) / 100  // e.g. 6.00
+        : Math.round(commissionRate * 10000) / 100;
       return {
         taskId: result.insertId,
         productName: productData.name,
@@ -362,7 +371,8 @@ class Task {
         commission,
         expectedIncome,
         isCombo: !!isCombo,
-        firstOfBatch
+        firstOfBatch,
+        commissionRate: displayCommissionRate   // actual % shown in order modal
       };
     });
   }
