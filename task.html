@@ -182,8 +182,7 @@
           <div class="order-detail-row">
             <span class="order-detail-label">Commissions (<span id="modalCommissionRate">6%</span>)</span>
             <span class="order-detail-value success" id="commissionAmount">+6.8784 USDT</span>
-          </div>
-        </div>
+          </div>        </div>
 
         <!-- Expected Income -->
         <div class="order-expected-income">
@@ -749,16 +748,20 @@
 
       document.getElementById('transactionTime').textContent = new Date().toLocaleString();
       document.getElementById('orderAmount').textContent = `${currentOrder.orderAmount.toFixed(2)} USDT`;
-      // Update commission rate label to show the ACTUAL rate for this order.
-      // For sequence-plan orders the effective rate differs from the market's
-      // nominal rate, so use the rate the server computed (commission/amount).
+      // Commission rate label: use the actual effective rate from the server.
+      // For sequence-plan orders the schedule commission ÷ display orderAmount
+      // gives the real rate (may differ from the market's nominal 6%).
       const modalRateEl = document.getElementById('modalCommissionRate');
-      if (modalRateEl && d.commissionRate != null) {
-        modalRateEl.textContent = `${Number(d.commissionRate).toFixed(2)}%`;
+      if (modalRateEl) {
+        const actualRate = (d.commissionRate != null)
+          ? Number(d.commissionRate)
+          : (currentOrder.orderAmount > 0
+              ? Math.round((currentOrder.commission / currentOrder.orderAmount) * 10000) / 100
+              : (currentMarket ? currentMarket.commissionRate * 100 : 6));
+        modalRateEl.textContent = `${actualRate.toFixed(2)}%`;
       }
       document.getElementById('commissionAmount').textContent = `+${currentOrder.commission.toFixed(2)} USDT`;
       document.getElementById('expectedIncome').textContent = `${currentOrder.expectedIncome.toFixed(2)} USDT`;
-
       const modalTitle = document.querySelector('.order-modal-title');
       if (modalTitle) {
         modalTitle.textContent = d.isCombo ? 'Successful Order' : 'Order Grabbed';

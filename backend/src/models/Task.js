@@ -248,17 +248,14 @@ class Task {
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
       } else if (seqEntry) {
-        // SEQUENCE NORMAL order: use the plan schedule's pre-computed commission
-        // exactly, so the whole run lands on targetTotal. The order amount is
-        // display-only (scaled from the plan deposit to the current balance so
-        // it looks proportionate on screen) — but balance is NOT frozen/unfrozen
-        // because only the commission amount matters for the target math.
-        // noFreeze = true: grab does not touch the balance; complete() credits
-        // only the scheduled commission via the noFreeze path.
+        // SEQUENCE NORMAL order: commission = seqEntry.commission (plan schedule).
+        // orderAmount is display-only (scaled from plan deposit to current balance
+        // so it looks proportionate on screen). noFreeze=true means balance is NOT
+        // frozen — only the scheduled commission is credited on completion.
+        // expectedIncome = commission only (not orderAmount + commission) so the
+        // modal shows a truthful number.
         const planDeposit = parseFloat(sequence.deposit) || userBalance;
         const scheduledAmt = Math.round(parseFloat(seqEntry.orderAmount) * 100) / 100;
-        // Scale the display amount proportionally to the current balance so
-        // Rakuten/Temu orders look bigger than JD orders (purely cosmetic).
         const scaleFactor = planDeposit > 0 ? (userBalance / planDeposit) : 1;
         let scaledAmt = Math.round(scheduledAmt * scaleFactor * 100) / 100;
         const floor = Math.round(userBalance * 0.4 * 100) / 100;
@@ -270,8 +267,6 @@ class Task {
         }
         // Use the plan schedule's commission, NOT market rate × orderAmount.
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
-        // noFreeze = true so balance is not frozen/unfrozen — only commission
-        // is credited on completion. This keeps the target math exact.
         noFreeze = true;
       } else {
         // Normal order (no active sequence): order amount is the PRODUCT'S PRICE
@@ -290,7 +285,10 @@ class Task {
       const commission = commissionOverride != null
         ? commissionOverride
         : Math.round(orderAmount * commissionRate * 100) / 100;
-      const expectedIncome = orderAmount + commission;
+      // For noFreeze orders (sequence normal) the balance is never frozen, so
+      // the customer's actual gain is ONLY the commission — not orderAmount+commission.
+      // expectedIncome reflects what they actually receive on completion.
+      const expectedIncome = noFreeze ? commission : orderAmount + commission;
 
       const [result] = await conn.execute(
         `INSERT INTO tasks
