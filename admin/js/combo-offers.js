@@ -256,8 +256,9 @@ async function loadCustomers(page = 1) {
         const plan = u.sequencePlan;
         const planCombos = (plan && Array.isArray(plan.combos)) ? plan.combos : [];
         const comboOrdersLabel = planCombos.map((c) => `#${c.order}`).join(', ');
+        const isKilled = plan && plan.isKilled;
         const planChip = plan
-            ? `<div style="margin-bottom:5px;"><span class="plan-chip" title="Deposit ${plan.deposit}, ${plan.orders} orders, combos at ${comboOrdersLabel || 'none'}"><i class="fas fa-sliders"></i> Plan: ${formatCurrency(plan.targetTotal)} · ${planCombos.length} combo${planCombos.length === 1 ? '' : 's'} (${comboOrdersLabel}) · ${plan.currentOrder}/${plan.orders}</span></div>`
+            ? `<div style="margin-bottom:5px;"><span class="plan-chip${isKilled ? ' plan-killed' : ''}" title="Deposit ${plan.deposit}, ${plan.orders} orders, combos at ${comboOrdersLabel || 'none'}${isKilled ? ' — KILLED' : ''}"><i class="fas fa-sliders"></i> Plan: ${formatCurrency(plan.targetTotal)} · ${planCombos.length} combo${planCombos.length === 1 ? '' : 's'} (${comboOrdersLabel}) · ${plan.currentOrder}/${plan.orders}${isKilled ? ' ☠' : ''}</span></div>`
             : '';
         const comboChips = combos.length
             ? `<div class="combo-chips">${combos.map(c => `<span class="combo-chip">#${c.triggerOrder} · ${formatCurrency(c.amount)}</span>`).join('')}</div>`
@@ -283,12 +284,12 @@ async function loadCustomers(page = 1) {
             <td>${chips}</td>
             <td>
                 <div class="cust-actions">
-                    <button class="btn-mini plan" onclick='openPlanModal(${Number(u.id)}, "${uname}")'>
+                    <button class="btn-mini plan" onclick='openPlanModal(${Number(u.id)}, "${uname}", false)'>
                         <i class="fas fa-sliders"></i> Set Plan
                     </button>
-                    ${plan ? `<button class="btn-mini kill" onclick="killPlan(${Number(u.id)}, '${uname}')" title="Kill this customer's active plan">
-                        <i class="fas fa-skull"></i> Kill Plan
-                    </button>` : ''}
+                    <button class="btn-mini kill${isKilled ? ' killed' : ''}" onclick='openPlanModal(${Number(u.id)}, "${uname}", true)' title="${isKilled ? 'Plan is KILLED — click to modify' : 'Kill: open plan with kill mode'}">
+                        <i class="fas fa-skull"></i> ${isKilled ? 'Killed ☠' : 'Kill Plan'}
+                    </button>
                 </div>
             </td>
         </tr>`;
@@ -403,6 +404,7 @@ async function clearCombo(userId, username) {
    ═══════════════════════════════════════════════════════════════════ */
 
 let planUserId = null;
+let planKillMode = false;
 let planTiers = [];
 
 function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
@@ -542,9 +544,10 @@ function renderPlanPreview() {
     `;
 }
 
-async function openPlanModal(userId, username) {
+async function openPlanModal(userId, username, killMode = false) {
     planUserId = userId;
-    document.getElementById('planTitle').textContent = 'Set Order Plan';
+    planKillMode = killMode;
+    document.getElementById('planTitle').textContent = killMode ? '☠ Kill Plan (Modify)' : 'Set Order Plan';
     document.getElementById('planFor').textContent = `Customer: ${username} (#${userId})`;
 
     // Load the customer's active plan (if any) + the default tiers to prefill.
@@ -593,7 +596,8 @@ async function savePlan() {
         deposit: p.deposit,
         orders: p.orders,
         targetTotal: p.targetTotal,
-        combos: p.combos
+        combos: p.combos,
+        killMode: planKillMode  // true = save as killed state (yellow button)
     };
 
     const data = await apiRequest(`/admin/task-permissions/${planUserId}/sequence-plan`, {
@@ -602,7 +606,7 @@ async function savePlan() {
     });
 
     if (data && data.success) {
-        showNotification('Order plan saved', 'success');
+        showNotification(planKillMode ? '☠ Kill Plan saved — button is now yellow' : 'Order plan saved', 'success');
         closePlanModal();
         loadCustomers(custPage);
     } else {

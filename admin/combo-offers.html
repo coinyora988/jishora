@@ -474,6 +474,11 @@
         /* Kill-plan button — red, admin-only kill switch */
         .btn-mini.kill { background: #dc2626; color: #fff; }
         .btn-mini.kill:hover { background: #b91c1c; }
+        /* Kill button — yellow when plan is in killed state */
+        .btn-mini.kill.killed { background: #d97706; color: #fff; }
+        .btn-mini.kill.killed:hover { background: #b45309; }
+        /* Plan chip — orange/yellow tint when killed */
+        .plan-chip.plan-killed { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
 
         /* Sequence-plan modal */
         .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }

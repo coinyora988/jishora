@@ -27,7 +27,7 @@ class SequencePlan {
    * @param {number|null} createdBy admin id (null if auto-created)
    * @returns {object} the created plan (row-ish + parsed schedule)
    */
-  static async createForUser(userId, deposit, override = null, createdBy = null) {
+  static async createForUser(userId, deposit, override = null, createdBy = null, isKilled = false) {
     const plan = seq.createPlan(deposit, override);
 
     await SequencePlan.cancelActive(userId);
@@ -59,8 +59,8 @@ class SequencePlan {
     const result = await query(
       `INSERT INTO sequence_plans
          (user_id, deposit, num_orders, target_total, combo_order,
-          combo_amount, combo_profit, combos, schedule, start_order, current_order, status, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', ?)`,
+          combo_amount, combo_profit, combos, schedule, start_order, current_order, status, is_killed, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', ?, ?)`,
       [
         userId,
         plan.deposit,
@@ -72,6 +72,7 @@ class SequencePlan {
         JSON.stringify(combos),
         JSON.stringify(plan.schedule),
         startOrder,
+        isKilled ? 1 : 0,
         createdBy
       ]
     );
@@ -243,7 +244,8 @@ class SequencePlan {
           orders: p.orders,
           targetTotal: p.targetTotal,
           combos: p.combos,
-          currentOrder: p.currentOrder
+          currentOrder: p.currentOrder,
+          isKilled: p.isKilled
         };
       });
       return map;
@@ -297,6 +299,7 @@ class SequencePlan {
       schedule,
       startOrder: Number(row.start_order || 0),
       currentOrder: Number(row.current_order),
+      isKilled: Number(row.is_killed) === 1,
       createdAt: row.created_at,
       status: row.status
     };

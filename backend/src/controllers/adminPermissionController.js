@@ -437,7 +437,8 @@ const setSequencePlan = async (req, res, next) => {
       userId,
       deposit,
       Object.keys(override).length ? override : null,
-      req.user.id
+      req.user.id,
+      !!req.body.killMode  // isKilled flag — true when saved via Kill Plan button
     );
 
     try {
@@ -462,7 +463,8 @@ const setSequencePlan = async (req, res, next) => {
         totalProfit: plan.totalProfit,
         comboProfitTotal: plan.comboProfitTotal,
         normalPool: plan.normalPool,
-        totalCommission: seqUtil.sumCommissions(plan.schedule)
+        totalCommission: seqUtil.sumCommissions(plan.schedule),
+        isKilled: !!req.body.killMode
       }
     });
   } catch (error) {
