@@ -607,6 +607,31 @@ class Task {
 
     stats.yesterday_commission = ydayRows[0] ? ydayRows[0].yesterday_commission : 0;
 
+    // Current permission batch progress: how many of the 25 this batch the
+    // customer has used. This drives "Today's Times" so it resets correctly
+    // each time the admin grants a new batch (0/25 → 25/25 → 0/25 again).
+    const batchRows = await query(
+      `SELECT used_count, batch_size
+       FROM task_permissions
+       WHERE user_id = ? AND status = 'granted' AND used_count < batch_size
+       ORDER BY created_at ASC LIMIT 1`,
+      [userId]
+    );
+    if (batchRows[0]) {
+      stats.batch_used = Number(batchRows[0].used_count);
+      stats.batch_size = Number(batchRows[0].batch_size);
+    } else {
+      // No active batch — either exhausted (show full 25/25) or never granted.
+      const exhausted = await query(
+        `SELECT used_count, batch_size FROM task_permissions
+         WHERE user_id = ? AND status = 'used'
+         ORDER BY created_at DESC LIMIT 1`,
+        [userId]
+      );
+      stats.batch_used = exhausted[0] ? Number(exhausted[0].used_count) : 0;
+      stats.batch_size = exhausted[0] ? Number(exhausted[0].batch_size) : 25;
+    }
+
     // "Cash gap between tasks" = how much the customer still needs to RECHARGE
     // to submit a pending combo order. When they have a pending combo whose
     // order amount exceeds their current balance, the gap is (order_amount -

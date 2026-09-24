@@ -376,6 +376,8 @@
       todayTasks: 0,
       maxTasks: 25,
       todayCommission: 0.00,
+      batchUsed: 0,
+      batchSize: 25,
       yesterdayCommission: 0.00,
       teamCommission: 0.00,
       frozenMoney: 0,
@@ -439,10 +441,10 @@
     // Update UI with current data
     function updateUI() {
       document.getElementById('accountBalance').textContent = taskData.balance.toFixed(2);
-      // "Today's Times" always shows X/25 — the denominator is always the
-      // fixed batch size (25). It never grows beyond 25.
-      const step = taskData.maxTasks || 25;
-      const done = Math.min(taskData.todayTasks || 0, step);
+      // "Today's Times" shows the current batch progress: X/25 resets to 0/25
+      // whenever the admin grants a new batch, regardless of today's total count.
+      const step = taskData.batchSize || taskData.maxTasks || 25;
+      const done = Math.min(taskData.batchUsed != null ? taskData.batchUsed : (taskData.todayTasks || 0), step);
       const cap = step;
       document.getElementById('todayTimes').textContent = `${done}/${cap}`;
       document.getElementById('todayCommission').textContent = `${taskData.todayCommission.toFixed(2)} USDT`;
@@ -483,6 +485,10 @@
       taskData.yesterdayCommission = Number(s.yesterday_commission) || 0;
       // "Cash gap between tasks" = recharge still needed for a pending combo.
       taskData.cashGap = Number(s.cash_gap) || 0;
+      // Batch progress: how many of the current 25-order batch are used.
+      // This resets to 0/25 every time the admin grants a new batch.
+      taskData.batchUsed = Number(s.batch_used != null ? s.batch_used : s.today_tasks) || 0;
+      taskData.batchSize = Number(s.batch_size) || taskData.maxTasks || 25;
       updateUI();
     }
 
