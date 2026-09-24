@@ -748,17 +748,12 @@
 
       document.getElementById('transactionTime').textContent = new Date().toLocaleString();
       document.getElementById('orderAmount').textContent = `${currentOrder.orderAmount.toFixed(2)} USDT`;
-      // Commission rate label: use the actual effective rate from the server.
-      // For sequence-plan orders the schedule commission ÷ display orderAmount
-      // gives the real rate (may differ from the market's nominal 6%).
+      // Commission rate label: always show the MARKET's commission rate (6%, 12%, 18%)
+      // so it matches the "Rules & Description" section and the market definition.
       const modalRateEl = document.getElementById('modalCommissionRate');
-      if (modalRateEl) {
-        const actualRate = (d.commissionRate != null)
-          ? Number(d.commissionRate)
-          : (currentOrder.orderAmount > 0
-              ? Math.round((currentOrder.commission / currentOrder.orderAmount) * 10000) / 100
-              : (currentMarket ? currentMarket.commissionRate * 100 : 6));
-        modalRateEl.textContent = `${actualRate.toFixed(2)}%`;
+      if (modalRateEl && currentMarket) {
+        const marketPct = `${(currentMarket.commissionRate * 100).toFixed(0)}%`;
+        modalRateEl.textContent = marketPct;
       }
       document.getElementById('commissionAmount').textContent = `+${currentOrder.commission.toFixed(2)} USDT`;
       document.getElementById('expectedIncome').textContent = `${currentOrder.expectedIncome.toFixed(2)} USDT`;
