@@ -439,14 +439,11 @@
     // Update UI with current data
     function updateUI() {
       document.getElementById('accountBalance').textContent = taskData.balance.toFixed(2);
-      // "Today's Times" shows how many tasks the customer has done today. The
-      // denominator grows in steps of the batch size (25) so it never shows an
-      // impossible value like 26/25 after the admin approves a new round — it
-      // reads 26/50, 51/75, etc. There is no hard daily cap; the admin's
-      // approvals control how much they can work.
+      // "Today's Times" always shows X/25 — the denominator is always the
+      // fixed batch size (25). It never grows beyond 25.
       const step = taskData.maxTasks || 25;
-      const done = taskData.todayTasks || 0;
-      const cap = Math.max(step, Math.ceil((done + 1) / step) * step);
+      const done = Math.min(taskData.todayTasks || 0, step);
+      const cap = step;
       document.getElementById('todayTimes').textContent = `${done}/${cap}`;
       document.getElementById('todayCommission').textContent = `${taskData.todayCommission.toFixed(2)} USDT`;
       document.getElementById('cashGap').textContent = `${taskData.cashGap.toFixed(2)} USDT`;
