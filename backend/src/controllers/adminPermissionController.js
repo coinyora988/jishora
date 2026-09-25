@@ -236,9 +236,17 @@ const setComboPlan = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Add at least one combo' });
     }
 
-    const [user] = await query('SELECT id, username FROM users WHERE id = ?', [userId]);
+    const [user] = await query('SELECT id, username, is_proxy FROM users WHERE id = ?', [userId]);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Proxy accounts use the Global Proxy Plan exclusively — block Combo Plan assignment.
+    if (Number(user.is_proxy) === 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Proxy accounts use the Global Proxy Plan. Combo Plans cannot be assigned to proxy accounts.'
+      });
     }
 
     // Replace any existing pending plans, then create all the new ones.
@@ -375,6 +383,18 @@ const setSequencePlan = async (req, res, next) => {
     const userId = parseInt(req.params.userId, 10);
     if (!userId) {
       return res.status(400).json({ success: false, message: 'Invalid user id' });
+    }
+
+    // Proxy accounts use the Global Proxy Plan exclusively — block per-user Sequence Plan assignment.
+    const [userCheck] = await query('SELECT is_proxy FROM users WHERE id = ?', [userId]);
+    if (!userCheck) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    if (Number(userCheck.is_proxy) === 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Proxy accounts use the Global Proxy Plan. Per-user Sequence Plans cannot be assigned to proxy accounts.'
+      });
     }
 
     const deposit = parseFloat(req.body.deposit);

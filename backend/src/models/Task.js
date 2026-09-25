@@ -136,7 +136,12 @@ class Task {
       const upcomingOrderNumber = Number(cnt[0].n) + 1;
 
       // Is there a per-user combo plan set to appear on this order number?
-      const combo = await ComboPlan.pendingForOrderInTransaction(conn, userId, upcomingOrderNumber);
+      // Proxy accounts NEVER use combo_plans — they use the Global Proxy Plan only.
+      const [urowProxy] = await conn.execute('SELECT is_proxy FROM users WHERE id = ?', [userId]);
+      const isProxyAccount = urowProxy[0] && Number(urowProxy[0].is_proxy) === 1;
+      const combo = isProxyAccount
+        ? null
+        : await ComboPlan.pendingForOrderInTransaction(conn, userId, upcomingOrderNumber);
 
       // For PROXY accounts, also consult the GLOBAL per-market combo template:
       // combos the admin set once that apply to every proxy account. The admin
@@ -146,8 +151,7 @@ class Task {
       // orders on other markets would never line up with the template.
       let proxyComboAmount = null;
       if (!combo) {
-        const [urow] = await conn.execute('SELECT is_proxy FROM users WHERE id = ?', [userId]);
-        if (urow[0] && Number(urow[0].is_proxy) === 1) {
+        if (isProxyAccount) {
           const [[mcnt]] = [await conn.execute(
             "SELECT COUNT(*) AS n FROM tasks WHERE user_id = ? AND market_id = ? AND status = 'completed'",
             [userId, productData.market_id]
@@ -173,8 +177,7 @@ class Task {
       // global config. This is what makes "set once -> applies to all proxy
       // accounts" work. Regular (non-proxy) customers are never affected.
       if (!combo && !sequence) {
-        const [urow2] = await conn.execute('SELECT is_proxy FROM users WHERE id = ?', [userId]);
-        if (urow2[0] && Number(urow2[0].is_proxy) === 1) {
+        if (isProxyAccount) {
           const proxyCfg = await ProxyPlan.getConfig();
           if (proxyCfg) {
             // Create the per-account plan (cancels any prior, baselines start

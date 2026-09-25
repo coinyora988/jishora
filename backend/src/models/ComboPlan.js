@@ -134,7 +134,7 @@ class ComboPlan {
   static async customerOverview(page = 1, limit = 12, search = '') {
     const offset = (page - 1) * limit;
     const params = [];
-    let where = "WHERE u.role = 'user'";
+    let where = "WHERE u.role = 'user' AND u.is_proxy = 0";
     if (search) {
       where += ' AND (u.username LIKE ? OR u.email LIKE ?)';
       const like = `%${search}%`;
