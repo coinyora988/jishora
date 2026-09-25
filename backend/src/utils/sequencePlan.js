@@ -4,7 +4,7 @@
  * A "sequence" is one run of N orders (default 25) tied to a customer's
  * deposit. The customer finishes the whole run with a TARGET total balance.
  *
- * A plan can have UP TO 3 combos. Each combo appears on a given order number
+ * A plan can have UP TO 8 combos. Each combo appears on a given order number
  * and requires the customer to recharge `recharge` (added to their balance) to
  * submit it; it pays `profit` commission. The LEFTOVER profit (after the combo
  * profits) is spread across ALL the NON-combo orders as different commissions
@@ -83,7 +83,7 @@ function normaliseCombos(combos) {
     .filter((c) => c.order >= 1 && c.recharge >= 0 && c.profit >= 0)
     .sort((a, b) => a.order - b.order)
     .forEach((c) => {
-      if (out.length < 5 && !seen.has(c.order)) {
+      if (out.length < 8 && !seen.has(c.order)) {
         seen.add(c.order);
         out.push(c);
       }
