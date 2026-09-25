@@ -287,9 +287,6 @@ async function loadCustomers(page = 1) {
                     <button class="btn-mini plan" onclick='openPlanModal(${Number(u.id)}, "${uname}", false)'>
                         <i class="fas fa-sliders"></i> Set Plan
                     </button>
-                    <button class="btn-mini kill${isKilled ? ' killed' : ''}" onclick='openPlanModal(${Number(u.id)}, "${uname}", true)' title="${isKilled ? 'Plan is KILLED — click to modify' : 'Kill: open plan with kill mode'}">
-                        <i class="fas fa-skull"></i> ${isKilled ? 'Killed ☠' : 'Kill Plan'}
-                    </button>
                 </div>
             </td>
         </tr>`;
@@ -413,8 +410,8 @@ function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 function addPlanComboRow(order, recharge, profit) {
     const container = document.getElementById('planComboRows');
     if (!container) return;
-    if (container.querySelectorAll('.plan-combo-row').length >= 3) {
-        showNotification('A plan can have at most 3 combos', 'info');
+    if (container.querySelectorAll('.plan-combo-row').length >= 5) {
+        showNotification('A plan can have at most 5 combos', 'info');
         return;
     }
     const row = document.createElement('div');
@@ -502,7 +499,7 @@ function renderPlanPreview() {
     if (!(p.orders >= 2)) { el.innerHTML = bad('Total orders must be at least 2.'); return; }
     if (!(p.targetTotal > 0)) { el.innerHTML = bad('Enter a target total greater than 0.'); return; }
     if (!p.combos.length) { el.innerHTML = bad('Add at least one combo.'); return; }
-    if (p.combos.length > 3) { el.innerHTML = bad('At most 3 combos.'); return; }
+    if (p.combos.length > 5) { el.innerHTML = bad('At most 5 combos.'); return; }
 
     const orders = new Set();
     for (const c of p.combos) {
