@@ -203,16 +203,27 @@ const createWithdrawal = async (req, res, next) => {
  */
 const getWalletAddress = async (req, res, next) => {
   try {
-    const [row] = await query(
-      'SELECT wallet_address, wallet_network FROM wallets WHERE user_id = ?',
-      [req.user.id]
+    // Check if wallet_network column exists (added in migration 016).
+    const cols = await query(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'wallets' AND COLUMN_NAME = 'wallet_network'`
     );
+    const hasNetworkCol = cols.length > 0;
+
+    const selectSql = hasNetworkCol
+      ? 'SELECT wallet_address, wallet_network FROM wallets WHERE user_id = ?'
+      : 'SELECT wallet_address FROM wallets WHERE user_id = ?';
+
+    const [row] = await query(selectSql, [req.user.id]);
     if (!row || !row.wallet_address) {
       return res.json({ success: true, data: null });
     }
     res.json({
       success: true,
-      data: { address: row.wallet_address, network: row.wallet_network || 'trc20' }
+      data: {
+        address: row.wallet_address,
+        network: (hasNetworkCol && row.wallet_network) ? row.wallet_network : 'trc20'
+      }
     });
   } catch (error) {
     next(error);

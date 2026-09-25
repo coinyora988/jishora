@@ -364,8 +364,8 @@
       updateSummary();
     }
 
-    // Call loadWalletConfig when page loads
-    window.addEventListener('DOMContentLoaded', loadWalletConfig);
+    // loadWalletConfig is called after external scripts load (see script tag below).
+    function _triggerWalletLoad() { loadWalletConfig(); }
 
     // Paste button functionality (only works if wallet not configured)
     document.getElementById('pasteBtn').addEventListener('click', async function() {
@@ -542,5 +542,6 @@
   <script src="js/toast-notifications.js"></script>
   <script src="js/notif-badge.js"></script>
   <script src="js/page-loader.js"></script>
+  <script>_triggerWalletLoad();</script>
 </body>
 </html>

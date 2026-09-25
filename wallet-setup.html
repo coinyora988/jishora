@@ -485,8 +485,10 @@
       }, 3000);
     }
 
-    // Load on page ready (api.js must be loaded first).
-    document.addEventListener('DOMContentLoaded', loadWalletConfig);
+    // Load on page ready — DOMContentLoaded may already have fired since this
+    // script runs after all external scripts at the bottom of the body.
+    // Use a direct call instead so it always runs.
+    loadWalletConfig();
   </script>
 </body>
 </html>
