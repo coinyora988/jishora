@@ -6,7 +6,9 @@ const {
   createDeposit,
   createWithdrawal,
   getWithdrawalStatus,
-  getDepositNetworks
+  getDepositNetworks,
+  getWalletAddress,
+  saveWalletAddress
 } = require('../controllers/walletController');
 const {
   validateDeposit,
@@ -38,5 +40,15 @@ router.post('/deposit', protect, transactionLimiter, validateDeposit, createDepo
 // @desc    Create withdrawal request
 // @access  Private
 router.post('/withdraw', protect, transactionLimiter, validateWithdrawal, createWithdrawal);
+
+// @route   GET /api/wallet/address
+// @desc    Get the user's saved withdrawal wallet address
+// @access  Private
+router.get('/address', protect, apiLimiter, getWalletAddress);
+
+// @route   PUT /api/wallet/address
+// @desc    Save / update the user's withdrawal wallet address
+// @access  Private
+router.put('/address', protect, apiLimiter, saveWalletAddress);
 
 module.exports = router;

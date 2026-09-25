@@ -274,9 +274,6 @@
   </nav>
 
   <script>
-    // Check if wallet is already configured
-    const walletConfig = JSON.parse(localStorage.getItem('walletConfig'));
-    
     const formSection = document.querySelector('.wallet-form-section');
     const configuredSection = document.getElementById('configuredSection');
     const walletAddressInput = document.getElementById('walletAddress');
@@ -286,6 +283,8 @@
     const networkOptions = document.querySelectorAll('.network-card');
 
     let selectedNetwork = 'trc20';
+    // Live wallet config fetched from the server (not localStorage).
+    let currentWalletConfig = null;
 
     // Fill the network card logos from the shared icon set.
     (function fillWsIcons() {
@@ -304,19 +303,38 @@
       aptos: 'Aptos', erc20: 'ERC20 (Ethereum)'
     };
 
-    // Show configured wallet or setup form
-    if (walletConfig && walletConfig.address) {
-      showConfiguredWallet();
+    // Load wallet address from the server (per-user, not localStorage).
+    async function loadWalletConfig() {
+      try {
+        const data = await apiRequest('/wallet/address');
+        if (data && data.success && data.data && data.data.address) {
+          currentWalletConfig = data.data;
+          // Keep localStorage in sync so withdraw.html picks it up instantly
+          // without an extra API call (it will still verify via API on load).
+          localStorage.setItem('walletConfig', JSON.stringify(currentWalletConfig));
+          showConfiguredWallet();
+        } else {
+          // No server-side address — clear any stale localStorage entry so
+          // another user's address does not bleed through.
+          localStorage.removeItem('walletConfig');
+          showSetupForm();
+        }
+      } catch (e) {
+        // If the API fails (e.g. not logged in), fall back to hidden form.
+        localStorage.removeItem('walletConfig');
+        showSetupForm();
+      }
     }
 
     function showConfiguredWallet() {
       formSection.style.display = 'none';
       configuredSection.style.display = 'block';
-      
+
+      const cfg = currentWalletConfig;
       document.getElementById('configuredNetwork').textContent =
-        NET_LABEL[walletConfig.network] || (walletConfig.network || '').toUpperCase();
-      
-      const address = walletConfig.address;
+        NET_LABEL[cfg.network] || (cfg.network || '').toUpperCase();
+
+      const address = cfg.address;
       const masked = address.substring(0, 6) + '...' + address.substring(address.length - 6);
       document.getElementById('configuredAddress').textContent = masked;
       document.getElementById('configuredAddress').title = address;
@@ -325,12 +343,11 @@
     function showSetupForm() {
       formSection.style.display = 'block';
       configuredSection.style.display = 'none';
-      
-      // Pre-fill if editing
-      if (walletConfig) {
-        selectedNetwork = walletConfig.network;
-        walletAddressInput.value = walletConfig.address;
-        
+
+      // Pre-fill if editing an existing address.
+      if (currentWalletConfig) {
+        selectedNetwork = currentWalletConfig.network || 'trc20';
+        walletAddressInput.value = currentWalletConfig.address || '';
         networkOptions.forEach(opt => {
           opt.classList.toggle('active', opt.dataset.network === selectedNetwork);
         });
@@ -352,12 +369,8 @@
         const text = await navigator.clipboard.readText();
         walletAddressInput.value = text.trim();
         walletAddressInput.focus();
-        
-        // Visual feedback
         pasteBtn.innerHTML = '<i class="ri-check-line"></i>';
-        setTimeout(() => {
-          pasteBtn.innerHTML = '<i class="ri-clipboard-line"></i>';
-        }, 2000);
+        setTimeout(() => { pasteBtn.innerHTML = '<i class="ri-clipboard-line"></i>'; }, 2000);
       } catch (err) {
         alert('Failed to paste. Please paste manually.');
       }
@@ -368,7 +381,6 @@
       if (!address || address.length < 20) {
         return { valid: false, message: 'Address is too short' };
       }
-      
       if (network === 'trc20') {
         if (!address.startsWith('T')) {
           return { valid: false, message: 'TRC20 address must start with "T"' };
@@ -384,21 +396,19 @@
           return { valid: false, message: 'ERC20 address must be 42 characters' };
         }
       }
-      
       return { valid: true };
     }
 
-    // Save wallet configuration
-    saveBtn.addEventListener('click', function() {
+    // Save wallet configuration via API (not localStorage).
+    saveBtn.addEventListener('click', async function() {
       const address = walletAddressInput.value.trim();
-      
+
       if (!address) {
         alert('Please enter a wallet address');
         walletAddressInput.focus();
         return;
       }
 
-      // Validate address
       const validation = validateAddress(address, selectedNetwork);
       if (!validation.valid) {
         alert(validation.message);
@@ -406,32 +416,30 @@
         return;
       }
 
-      // Show loading
       saveBtn.classList.add('loading');
       saveBtn.disabled = true;
 
-      // Simulate API call
-      setTimeout(() => {
-        // Save to localStorage
-        const config = {
-          network: selectedNetwork,
-          address: address,
-          savedAt: new Date().toISOString()
-        };
-        localStorage.setItem('walletConfig', JSON.stringify(config));
+      try {
+        const data = await apiRequest('/wallet/address', {
+          method: 'PUT',
+          body: JSON.stringify({ address, network: selectedNetwork })
+        });
 
-        // Remove loading
+        if (data && data.success) {
+          currentWalletConfig = { address, network: selectedNetwork };
+          // Mirror to localStorage so withdraw.html gets it immediately.
+          localStorage.setItem('walletConfig', JSON.stringify(currentWalletConfig));
+          showSuccessNotification();
+          setTimeout(() => { location.reload(); }, 1500);
+        } else {
+          alert((data && data.message) || 'Failed to save wallet address. Please try again.');
+        }
+      } catch (e) {
+        alert('Network error. Please check your connection and try again.');
+      } finally {
         saveBtn.classList.remove('loading');
         saveBtn.disabled = false;
-
-        // Show success notification
-        showSuccessNotification();
-
-        // Refresh view
-        setTimeout(() => {
-          location.reload();
-        }, 1500);
-      }, 2000);
+      }
     });
 
     // Change wallet button
@@ -465,13 +473,15 @@
         </div>
       `;
       document.body.appendChild(notification);
-      
       setTimeout(() => notification.classList.add('show'), 100);
       setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => notification.remove(), 300);
       }, 3000);
     }
+
+    // Load on page ready (api.js must be loaded first).
+    document.addEventListener('DOMContentLoaded', loadWalletConfig);
   </script>
 
   <script src="js/toast-notifications.js"></script>

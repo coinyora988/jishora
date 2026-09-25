@@ -296,57 +296,72 @@
       erc20: 5
     };
 
-    // Load wallet configuration on page load
-    function loadWalletConfig() {
-      const walletConfig = JSON.parse(localStorage.getItem('walletConfig'));
-      
-      if (walletConfig && walletConfig.address && walletConfig.network) {
-        const walletInput = document.getElementById('walletAddress');
-        const pasteBtn = document.getElementById('pasteBtn');
-        
-        // Set wallet address
-        walletInput.value = walletConfig.address;
-        walletInput.readOnly = true;
-        walletInput.style.background = '#f3f4f6';
-        walletInput.style.cursor = 'not-allowed';
-        
-        // Replace paste button with change wallet link
-        pasteBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
-        pasteBtn.title = 'Change Wallet';
-        pasteBtn.onclick = function(e) {
-          e.preventDefault();
-          showConfirmPopup();
-        };
-        
-        // Activate the network the customer chose in Wallet Setup. Normalise
-        // common aliases (bnb -> bep20) so older saved configs still match.
-        let savedNet = String(walletConfig.network || '').toLowerCase();
-        if (savedNet === 'bnb' || savedNet === 'bsc') savedNet = 'bep20';
-        if (savedNet === 'eth') savedNet = 'erc20';
-        if (savedNet === 'tron' || savedNet === 'trc') savedNet = 'trc20';
-        selectedNetwork = savedNet;
-
-        const networkCards = document.querySelectorAll('.network-card');
-        networkCards.forEach(c => c.classList.remove('active'));
-        let matched = false;
-        networkCards.forEach(card => {
-          if (card.getAttribute('data-network') === savedNet) {
-            card.classList.add('active');
-            const radio = card.querySelector('input[type="radio"]');
-            if (radio) radio.checked = true;
-            matched = true;
-          }
-        });
-        // Fallback: if no card matched, keep the first (TRC20) active.
-        if (!matched && networkCards[0]) networkCards[0].classList.add('active');
-
-        // Reflect the fee for the selected network in the summary.
-        const feeEl = document.getElementById('networkFeeDisplay');
-        if (feeEl && networkFees[selectedNetwork] != null) {
-          feeEl.textContent = networkFees[selectedNetwork] + ' USDT';
+    // Load wallet configuration from server (per-user, not shared localStorage).
+    async function loadWalletConfig() {
+      try {
+        const data = await apiRequest('/wallet/address');
+        if (data && data.success && data.data && data.data.address) {
+          const walletConfig = data.data;
+          // Mirror to localStorage for instant availability on same session.
+          localStorage.setItem('walletConfig', JSON.stringify(walletConfig));
+          applyWalletConfig(walletConfig);
+        } else {
+          // No address on server — clear any stale localStorage entry.
+          localStorage.removeItem('walletConfig');
         }
-        updateSummary();
+      } catch (e) {
+        // API unavailable — fall back to localStorage as a best-effort cache.
+        const cached = JSON.parse(localStorage.getItem('walletConfig'));
+        if (cached && cached.address && cached.network) applyWalletConfig(cached);
       }
+    }
+
+    function applyWalletConfig(walletConfig) {
+      const walletInput = document.getElementById('walletAddress');
+      const pasteBtn = document.getElementById('pasteBtn');
+      
+      // Set wallet address
+      walletInput.value = walletConfig.address;
+      walletInput.readOnly = true;
+      walletInput.style.background = '#f3f4f6';
+      walletInput.style.cursor = 'not-allowed';
+      
+      // Replace paste button with change wallet link
+      pasteBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+      pasteBtn.title = 'Change Wallet';
+      pasteBtn.onclick = function(e) {
+        e.preventDefault();
+        showConfirmPopup();
+      };
+      
+      // Activate the network the customer chose in Wallet Setup. Normalise
+      // common aliases (bnb -> bep20) so older saved configs still match.
+      let savedNet = String(walletConfig.network || '').toLowerCase();
+      if (savedNet === 'bnb' || savedNet === 'bsc') savedNet = 'bep20';
+      if (savedNet === 'eth') savedNet = 'erc20';
+      if (savedNet === 'tron' || savedNet === 'trc') savedNet = 'trc20';
+      selectedNetwork = savedNet;
+
+      const networkCards = document.querySelectorAll('.network-card');
+      networkCards.forEach(c => c.classList.remove('active'));
+      let matched = false;
+      networkCards.forEach(card => {
+        if (card.getAttribute('data-network') === savedNet) {
+          card.classList.add('active');
+          const radio = card.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+          matched = true;
+        }
+      });
+      // Fallback: if no card matched, keep the first (TRC20) active.
+      if (!matched && networkCards[0]) networkCards[0].classList.add('active');
+
+      // Reflect the fee for the selected network in the summary.
+      const feeEl = document.getElementById('networkFeeDisplay');
+      if (feeEl && networkFees[selectedNetwork] != null) {
+        feeEl.textContent = networkFees[selectedNetwork] + ' USDT';
+      }
+      updateSummary();
     }
 
     // Call loadWalletConfig when page loads

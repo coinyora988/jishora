@@ -116,6 +116,7 @@ async function handleLogout() {
         localStorage.removeItem('authToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
+        localStorage.removeItem('walletConfig');
 
         // Redirect to login
         window.location.href = '/login.html';

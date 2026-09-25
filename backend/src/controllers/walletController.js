@@ -196,10 +196,78 @@ const createWithdrawal = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc  Get the user's saved withdrawal wallet address (network + address).
+ * @route GET /api/wallet/address
+ * @access Private
+ */
+const getWalletAddress = async (req, res, next) => {
+  try {
+    const [row] = await query(
+      'SELECT wallet_address, wallet_network FROM wallets WHERE user_id = ?',
+      [req.user.id]
+    );
+    if (!row || !row.wallet_address) {
+      return res.json({ success: true, data: null });
+    }
+    res.json({
+      success: true,
+      data: { address: row.wallet_address, network: row.wallet_network || 'trc20' }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc  Save / update the user's withdrawal wallet address.
+ * @route PUT /api/wallet/address
+ * @access Private
+ * body: { address, network }
+ */
+const saveWalletAddress = async (req, res, next) => {
+  try {
+    const address = (req.body.address || '').trim();
+    const network = (req.body.network || 'trc20').trim().toLowerCase();
+
+    if (!address || address.length < 20) {
+      return res.status(400).json({ success: false, message: 'Invalid wallet address' });
+    }
+
+    const ALLOWED_NETWORKS = ['trc20', 'bep20', 'erc20', 'aptos'];
+    if (!ALLOWED_NETWORKS.includes(network)) {
+      return res.status(400).json({ success: false, message: 'Invalid network' });
+    }
+
+    // Check wallets table has wallet_network column; if not, only update address.
+    const cols = await query(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'wallets' AND COLUMN_NAME = 'wallet_network'`
+    );
+    if (cols.length) {
+      await query(
+        'UPDATE wallets SET wallet_address = ?, wallet_network = ? WHERE user_id = ?',
+        [address, network, req.user.id]
+      );
+    } else {
+      await query(
+        'UPDATE wallets SET wallet_address = ? WHERE user_id = ?',
+        [address, req.user.id]
+      );
+    }
+
+    res.json({ success: true, message: 'Wallet address saved', data: { address, network } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getWallet,
   createDeposit,
   createWithdrawal,
   getWithdrawalStatus,
-  getDepositNetworks
+  getDepositNetworks,
+  getWalletAddress,
+  saveWalletAddress
 };

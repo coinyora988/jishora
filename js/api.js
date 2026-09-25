@@ -96,6 +96,7 @@ function redirectToLogin() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('walletConfig');
     window.location.href = '/login.html';
 }
 
@@ -139,6 +140,7 @@ async function logoutUser() {
     // Page-local caches that would otherwise leak between accounts.
     localStorage.removeItem('userProfile');
     localStorage.removeItem('taskData');
+    localStorage.removeItem('walletConfig');
 
     window.location.href = 'login.html';
 }
