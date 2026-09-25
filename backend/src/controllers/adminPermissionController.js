@@ -402,7 +402,7 @@ const setSequencePlan = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Deposit must be greater than 0' });
     }
 
-    // Optional admin overrides. `combos` is an array of up to 5 combos:
+    // Optional admin overrides. `combos` is an array of up to 8 combos:
     // [{ order, recharge, profit }]. targetTotal/orders optional.
     const override = {};
     if (req.body.targetTotal !== undefined && req.body.targetTotal !== null && req.body.targetTotal !== '') {
@@ -422,8 +422,8 @@ const setSequencePlan = async (req, res, next) => {
     if (!combos.length) {
       return res.status(400).json({ success: false, message: 'Add at least one combo.' });
     }
-    if (combos.length > 5) {
-      return res.status(400).json({ success: false, message: 'A plan can have at most 5 combos.' });
+    if (combos.length > 8) {
+      return res.status(400).json({ success: false, message: 'A plan can have at most 8 combos.' });
     }
     for (const c of combos) {
       if (c.order < 1 || c.order > params.orders) {

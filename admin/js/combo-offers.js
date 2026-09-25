@@ -410,8 +410,8 @@ function r2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
 function addPlanComboRow(order, recharge, profit) {
     const container = document.getElementById('planComboRows');
     if (!container) return;
-    if (container.querySelectorAll('.plan-combo-row').length >= 5) {
-        showNotification('A plan can have at most 5 combos', 'info');
+    if (container.querySelectorAll('.plan-combo-row').length >= 8) {
+        showNotification('A plan can have at most 8 combos', 'info');
         return;
     }
     const row = document.createElement('div');
@@ -499,7 +499,7 @@ function renderPlanPreview() {
     if (!(p.orders >= 2)) { el.innerHTML = bad('Total orders must be at least 2.'); return; }
     if (!(p.targetTotal > 0)) { el.innerHTML = bad('Enter a target total greater than 0.'); return; }
     if (!p.combos.length) { el.innerHTML = bad('Add at least one combo.'); return; }
-    if (p.combos.length > 5) { el.innerHTML = bad('At most 5 combos.'); return; }
+    if (p.combos.length > 8) { el.innerHTML = bad('At most 8 combos.'); return; }
 
     const orders = new Set();
     for (const c of p.combos) {
