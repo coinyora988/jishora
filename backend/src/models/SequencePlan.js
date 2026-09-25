@@ -56,26 +56,56 @@ class SequencePlan {
     const combos = Array.isArray(plan.combos) ? plan.combos : [];
     const first = combos[0] || { order: 0, recharge: 0, profit: 0 };
 
-    const result = await query(
-      `INSERT INTO sequence_plans
-         (user_id, deposit, num_orders, target_total, combo_order,
-          combo_amount, combo_profit, combos, schedule, start_order, current_order, status, is_killed, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', ?, ?)`,
-      [
-        userId,
-        plan.deposit,
-        plan.orders,
-        plan.targetTotal,
-        first.order,
-        first.recharge,
-        first.profit,
-        JSON.stringify(combos),
-        JSON.stringify(plan.schedule),
-        startOrder,
-        isKilled ? 1 : 0,
-        createdBy
-      ]
+    // Check if is_killed column exists (added in a later migration).
+    const killedCols = await query(
+      `SELECT 1 FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sequence_plans' AND COLUMN_NAME = 'is_killed'`
     );
+    const hasIsKilled = killedCols.length > 0;
+
+    let result;
+    if (hasIsKilled) {
+      result = await query(
+        `INSERT INTO sequence_plans
+           (user_id, deposit, num_orders, target_total, combo_order,
+            combo_amount, combo_profit, combos, schedule, start_order, current_order, status, is_killed, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', ?, ?)`,
+        [
+          userId,
+          plan.deposit,
+          plan.orders,
+          plan.targetTotal,
+          first.order,
+          first.recharge,
+          first.profit,
+          JSON.stringify(combos),
+          JSON.stringify(plan.schedule),
+          startOrder,
+          isKilled ? 1 : 0,
+          createdBy
+        ]
+      );
+    } else {
+      result = await query(
+        `INSERT INTO sequence_plans
+           (user_id, deposit, num_orders, target_total, combo_order,
+            combo_amount, combo_profit, combos, schedule, start_order, current_order, status, created_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'active', ?)`,
+        [
+          userId,
+          plan.deposit,
+          plan.orders,
+          plan.targetTotal,
+          first.order,
+          first.recharge,
+          first.profit,
+          JSON.stringify(combos),
+          JSON.stringify(plan.schedule),
+          startOrder,
+          createdBy
+        ]
+      );
+    }
 
     return { id: result.insertId, startOrder, ...plan };
   }
