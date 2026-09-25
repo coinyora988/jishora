@@ -69,7 +69,7 @@ function r2(n) {
 }
 
 // Normalise a combos array: keep valid { order, recharge, profit }, sorted by
-// order, de-duplicated by order, capped at 3.
+// order, de-duplicated by order, capped at 5.
 function normaliseCombos(combos) {
   if (!Array.isArray(combos)) return [];
   const seen = new Set();
@@ -83,7 +83,7 @@ function normaliseCombos(combos) {
     .filter((c) => c.order >= 1 && c.recharge >= 0 && c.profit >= 0)
     .sort((a, b) => a.order - b.order)
     .forEach((c) => {
-      if (out.length < 3 && !seen.has(c.order)) {
+      if (out.length < 5 && !seen.has(c.order)) {
         seen.add(c.order);
         out.push(c);
       }
