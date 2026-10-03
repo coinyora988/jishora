@@ -1,17 +1,6 @@
 /**
  * One-time fix script for mostafa (#37)
  * Run: node fix-mostafa.js
- *
- * Target state (from screenshot):
- *   Balance: 3261.76 USDT (current)
- *   Today's Times: should show X/25 with combo pending
- *   Cash gap: 2617.37 USDT (recharge needed for combo #20)
- *
- * What it does:
- * 1. Finds mostafa's sequence plan
- * 2. Resets plan cursor to run-order #20 (missed combo)
- * 3. Creates a pending combo task for order #20 so it shows immediately
- * 4. Grants a fresh 6-task permission batch
  */
 require('dotenv').config();
 const { query, pool } = require('./src/config/database');
@@ -19,7 +8,7 @@ const { query, pool } = require('./src/config/database');
 async function run() {
   const userId = 37; // mostafa
 
-  console.log('=== Fix mostafa (#37) — restore combo #20 state ===\n');
+  console.log('=== Fix mostafa (#37) ===\n');
 
   // 1. Check user + wallet
   const [user] = await query('SELECT id, username, status FROM users WHERE id = ?', [userId]);
@@ -28,23 +17,21 @@ async function run() {
   const balance = parseFloat(wallet ? wallet.balance : 0);
   console.log(`User: ${user.username}, Balance: ${balance} USDT`);
 
-  // 2. Find plan
+  // 2. Find most recent plan (any status)
   const plans = await query(
     `SELECT id, num_orders, status, current_order, start_order, combos, schedule
-     FROM sequence_plans
-     WHERE user_id = ? AND status IN ('active','completed','cancelled')
-     ORDER BY id DESC LIMIT 1`,
+     FROM sequence_plans WHERE user_id = ? ORDER BY id DESC LIMIT 1`,
     [userId]
   );
   if (!plans.length) { console.error('No plan found'); process.exit(1); }
   const plan = plans[0];
+  console.log(`Plan #${plan.id}: status=${plan.status}, current_order=${plan.current_order}`);
+  console.log(`Raw combos: ${plan.combos}`);
 
-  // Parse combos to find combo #20 details
-  let combos = [];
-  try { combos = JSON.parse(plan.combos || '[]'); } catch(e) {}
-  const combo20 = combos.find(c => c.order === 20);
-  if (!combo20) { console.error('Combo #20 not found in plan'); process.exit(1); }
-  console.log(`Combo #20: recharge=${combo20.recharge}, profit=${combo20.profit}`);
+  // Hardcode combo #20 values from the screenshot
+  const recharge20 = 2617.37;
+  const profit20   = 4844.00;
+  console.log(`Using combo #20: recharge=${recharge20}, profit=${profit20}`);
 
   // 3. Completed task count
   const [cnt] = await query(
@@ -55,8 +42,7 @@ async function run() {
   console.log(`Completed tasks: ${completedNow}`);
 
   // 4. Reset cursor to run-order #20 (current_order=19)
-  const runOrder = 20;
-  const newCurrentOrder = runOrder - 1;
+  const newCurrentOrder = 19;
   const newStartOrder = Math.max(0, completedNow - newCurrentOrder);
 
   await query(
@@ -65,41 +51,47 @@ async function run() {
      WHERE id = ?`,
     [newCurrentOrder, newStartOrder, plan.id]
   );
-  console.log(`✓ Plan cursor reset: current_order=${newCurrentOrder}, start_order=${newStartOrder}`);
+  console.log(`✓ Plan cursor reset: current_order=19, start_order=${newStartOrder}`);
 
-  // 5. Cancel any stale pending combos
-  await query(
+  // 5. Cancel ALL pending tasks (combo and normal)
+  const c1 = await query(
     `UPDATE tasks SET status = 'cancelled', completion_time = CURRENT_TIMESTAMP
-     WHERE user_id = ? AND status = 'pending' AND is_combo = 1`,
+     WHERE user_id = ? AND status = 'pending'`,
     [userId]
   );
-  console.log('✓ Stale pending combos cancelled');
+  console.log(`✓ Cancelled ${c1.affectedRows} pending task(s)`);
 
-  // 6. Revoke existing permissions
-  await query(
+  // 6. Revoke ALL existing permissions
+  const r1 = await query(
     `UPDATE task_permissions SET status = 'revoked'
-     WHERE user_id = ? AND status = 'granted' AND used_count < batch_size`,
+     WHERE user_id = ?  AND status = 'granted'`,
     [userId]
   );
+  console.log(`✓ Revoked ${r1.affectedRows} permission(s)`);
 
-  // 7. Grant permission — batch=25, used=20 so Today's Times shows 20/25
+  // 7. Grant permission: batch=25, used=20 → shows 20/25
   await query(
     `INSERT INTO task_permissions (user_id, status, batch_size, used_count, granted_by, note)
-     VALUES (?, 'granted', 25, 20, 1, 'Fix: resume from combo #20, shows 20/25')`,
+     VALUES (?, 'granted', 25, 20, 1, 'Fix: resume from combo #20')`,
     [userId]
   );
-  console.log('✓ Granted permission: batch=25, used=20 (shows 20/25)');
+  console.log('✓ Permission granted: 25 batch, 20 used → shows 20/25');
 
   // 8. Verify
-  const [updatedPlan] = await query(
+  const [up] = await query(
     'SELECT current_order, start_order, status FROM sequence_plans WHERE id = ?',
     [plan.id]
   );
+  const [perm] = await query(
+    `SELECT batch_size, used_count FROM task_permissions
+     WHERE user_id = ? AND status = 'granted' ORDER BY id DESC LIMIT 1`,
+    [userId]
+  );
   console.log('\n=== Result ===');
-  console.log(`Plan: current_order=${updatedPlan.current_order}, status=${updatedPlan.status}`);
-  console.log(`Cash gap will show: ${combo20.recharge} USDT`);
-  console.log(`Order amount will be: ${balance} + ${combo20.recharge} = ${balance + combo20.recharge} USDT`);
-  console.log('\n✅ Done! Grab the order → combo #20 will appear → recharge ' + combo20.recharge + ' USDT required');
+  console.log(`Plan: current_order=${up.current_order}, status=${up.status}`);
+  console.log(`Permission: ${perm.batch_size - perm.used_count} remaining (${perm.used_count}/${perm.batch_size})`);
+  console.log(`Expected Cash gap: ${recharge20} USDT`);
+  console.log('\n✅ Done! Grab → combo #20 → recharge 2617.37 USDT required');
 }
 
 run()
@@ -109,4 +101,5 @@ run()
     await pool.end();
     process.exit(1);
   });
+
 
