@@ -104,6 +104,9 @@ async function loadPermissions(page = 1, silent = false) {
                         <button class="btn btn-sm btn-secondary" onclick="viewHistory(${user.id}, '${uname}')">
                             <i class="fas fa-clock-rotate-left"></i>
                         </button>
+                        <button class="btn btn-sm btn-warning" onclick="fixPermissionCount(${user.id}, '${uname}')" title="Fix: reduce Times Requested by 1">
+                            <i class="fas fa-minus"></i>
+                        </button>
                     </td>
                 </tr>
             `;
@@ -344,6 +347,40 @@ async function viewHistory(userId, username) {
 
 function closeHistory() {
     document.getElementById('historyModal').classList.remove('active');
+}
+
+// Fix: reduce Times Requested by 1 (revoke most recent exhausted grant row)
+async function fixPermissionCount(userId, username) {
+    if (!confirm(`Reduce Times Requested for ${username} by 1?\n\nThis marks the most recent grant row as revoked.`)) return;
+    const data = await apiRequest(`/admin/fix/permission-count/${userId}`, {
+        method: 'POST',
+        body: JSON.stringify({ count: 1 })
+    });
+    if (data && data.success) {
+        showNotification(data.message, 'success');
+        loadPermissions(currentPage, true);
+    } else {
+        showNotification((data && data.message) || 'Failed to fix permission count', 'error');
+    }
+}
+
+// Fix: reset plan cursor to a specific run-order (e.g. order #20 to replay missed combo)
+async function fixPlanCursor(userId, username) {
+    const runOrderStr = prompt(`Reset plan for ${username}.\n\nEnter the plan run-order number to resume from (e.g. 20 = next grab will be plan order #20):`);
+    if (!runOrderStr) return;
+    const runOrder = parseInt(runOrderStr, 10);
+    if (!runOrder || runOrder < 1) { showNotification('Invalid order number', 'error'); return; }
+    if (!confirm(`Reset ${username}'s plan so the NEXT order is plan order #${runOrder}?\n\nAny pending combo orders will be cancelled.`)) return;
+    const data = await apiRequest(`/admin/fix/plan-cursor/${userId}`, {
+        method: 'POST',
+        body: JSON.stringify({ runOrder })
+    });
+    if (data && data.success) {
+        showNotification(data.message, 'success');
+        loadPermissions(currentPage, true);
+    } else {
+        showNotification((data && data.message) || 'Failed to reset plan cursor', 'error');
+    }
 }
 
 // Close modal on outside click

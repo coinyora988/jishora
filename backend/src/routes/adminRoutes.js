@@ -386,4 +386,123 @@ router.get('/chart/activity', async (req, res, next) => {
   }
 });
 
+/**
+ * @route  POST /api/admin/fix/plan-cursor/:userId
+ * @desc   Reset a user's active sequence plan cursor so it re-runs from a
+ *         specific run-order (e.g. to replay a missed combo from order #20).
+ *         Body: { runOrder: 19 }  — sets current_order to runOrder-1 so the
+ *         NEXT grab is at runOrder. Also resets start_order so the plan math
+ *         lines up correctly from the user's current completed-task count.
+ * @access Admin
+ */
+router.post('/fix/plan-cursor/:userId', async (req, res, next) => {
+  try {
+    const { query } = require('../config/database');
+    const userId = parseInt(req.params.userId, 10);
+    if (!userId) return res.status(400).json({ success: false, message: 'Invalid userId' });
+
+    // runOrder: the plan run-order we want to be the NEXT grab (1-based within plan).
+    const runOrder = parseInt(req.body.runOrder, 10);
+    if (!runOrder || runOrder < 1) {
+      return res.status(400).json({ success: false, message: 'runOrder must be >= 1' });
+    }
+
+    // Get active plan
+    const plans = await query(
+      `SELECT id, num_orders FROM sequence_plans WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1`,
+      [userId]
+    );
+    if (!plans.length) {
+      return res.status(404).json({ success: false, message: 'No active plan for this user' });
+    }
+    const plan = plans[0];
+
+    if (runOrder > plan.num_orders) {
+      return res.status(400).json({ success: false, message: `runOrder ${runOrder} exceeds plan length ${plan.num_orders}` });
+    }
+
+    // Get user's current completed task count — this becomes the new start_order
+    // so that grab #1 of the "resumed" run is this user's next real order.
+    const [cnt] = await query(
+      "SELECT COUNT(*) AS n FROM tasks WHERE user_id = ? AND status = 'completed'",
+      [userId]
+    );
+    const completedNow = Number(cnt ? cnt.n : 0);
+
+    // Set current_order = runOrder - 1 so the NEXT grab lands on runOrder.
+    // Set start_order = completedNow - (runOrder - 1) so that:
+    //   planRunOrder = (non-cancelled tasks since plan started) + 1
+    //               = runOrder  on the very next grab. ✓
+    const newCurrentOrder = runOrder - 1;
+    const newStartOrder = Math.max(0, completedNow - newCurrentOrder);
+
+    await query(
+      `UPDATE sequence_plans
+         SET current_order = ?, start_order = ?, status = 'active', completed_at = NULL
+       WHERE id = ?`,
+      [newCurrentOrder, newStartOrder, plan.id]
+    );
+
+    // Cancel any stale pending combo tasks so sticky-combo doesn't re-show old ones.
+    await query(
+      `UPDATE tasks SET status = 'cancelled', completion_time = CURRENT_TIMESTAMP
+       WHERE user_id = ? AND status = 'pending' AND is_combo = 1`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      message: `Plan cursor reset: next grab will be plan run-order #${runOrder}`,
+      data: { planId: plan.id, newCurrentOrder, newStartOrder, completedNow }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route  POST /api/admin/fix/permission-count/:userId
+ * @desc   Reduce a user's Times Requested count by revoking the most recent
+ *         unused grant row. Body: { count: 1 } — how many to revoke (default 1).
+ * @access Admin
+ */
+router.post('/fix/permission-count/:userId', async (req, res, next) => {
+  try {
+    const { query } = require('../config/database');
+    const userId = parseInt(req.params.userId, 10);
+    if (!userId) return res.status(400).json({ success: false, message: 'Invalid userId' });
+
+    const count = Math.max(1, parseInt(req.body.count, 10) || 1);
+
+    // Find the most recent 'used' or 'granted' non-revoked rows and mark them revoked.
+    // We target 'used' rows first (already exhausted) to avoid blocking active work.
+    const rows = await query(
+      `SELECT id, status FROM task_permissions
+       WHERE user_id = ? AND status IN ('used','granted')
+       ORDER BY created_at DESC
+       LIMIT ?`,
+      [userId, count]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'No eligible permission rows found' });
+    }
+
+    const ids = rows.map(r => r.id);
+    const placeholders = ids.map(() => '?').join(',');
+    await query(
+      `UPDATE task_permissions SET status = 'revoked' WHERE id IN (${placeholders})`,
+      ids
+    );
+
+    res.json({
+      success: true,
+      message: `Revoked ${ids.length} permission row(s) — Times Requested reduced by ${ids.length}`,
+      data: { revokedIds: ids }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

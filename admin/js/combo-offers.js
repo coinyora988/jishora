@@ -287,6 +287,9 @@ async function loadCustomers(page = 1) {
                     <button class="btn-mini plan" onclick='openPlanModal(${Number(u.id)}, "${uname}", false)'>
                         <i class="fas fa-sliders"></i> Set Plan
                     </button>
+                    ${plan ? `<button class="btn-mini" style="background:#f59e0b;color:#fff;" onclick='fixPlanCursorFromCombo(${Number(u.id)}, "${uname}")' title="Fix: reset plan cursor to a specific order">
+                        <i class="fas fa-rotate-left"></i> Fix
+                    </button>` : ''}
                 </div>
             </td>
         </tr>`;
@@ -681,3 +684,22 @@ document.addEventListener('DOMContentLoaded', () => {
         registerAutoRefresh(() => { loadCustomers(custPage); });
     }
 });
+
+// Fix: reset plan cursor from the Combo Offers page
+async function fixPlanCursorFromCombo(userId, username) {
+    const runOrderStr = prompt(`Reset plan cursor for ${username}.\n\nEnter the plan run-order to resume from (e.g. 20 = next grab will be plan order #20):`);
+    if (!runOrderStr) return;
+    const runOrder = parseInt(runOrderStr, 10);
+    if (!runOrder || runOrder < 1) { showNotification('Invalid order number', 'error'); return; }
+    if (!confirm(`Reset ${username}'s plan so the NEXT order is plan order #${runOrder}?\n\nAny pending combo orders will be cancelled.`)) return;
+    const data = await apiRequest(`/admin/fix/plan-cursor/${userId}`, {
+        method: 'POST',
+        body: JSON.stringify({ runOrder })
+    });
+    if (data && data.success) {
+        showNotification(data.message, 'success');
+        loadCustomers(custPage);
+    } else {
+        showNotification((data && data.message) || 'Failed to reset plan cursor', 'error');
+    }
+}
