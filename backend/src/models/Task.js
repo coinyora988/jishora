@@ -199,25 +199,12 @@ class Task {
       let planRunOrder = null;
       let seqEntry = null;
       if (sequence) {
-        // Run-order = (tasks grabbed since this plan started that are either
-        // completed OR still pending) + 1 for THIS grab.
-        // We count ALL non-cancelled tasks after the plan was created —
-        // completed ones that are done, and pending ones that are in-flight
-        // (including normal pending orders). This prevents the same run-order
-        // from being assigned twice when a customer has a pending task and
-        // grabs another one. Cancelled tasks are excluded so the cursor
-        // self-corrects if a task is cancelled.
-        const [[pcnt]] = [await conn.execute(
-          `SELECT COUNT(*) AS n FROM tasks
-           WHERE user_id = ?
-             AND created_at > ?
-             AND status IN ('completed', 'pending', 'processing')`,
-          [userId, sequence.createdAt]
-        )];
-        planRunOrder = Number(pcnt[0].n) + 1;
+        // planRunOrder = sequence.currentOrder + 1
+        // current_order tracks how many grabs this plan has processed.
+        // Using current_order directly is more reliable than counting tasks
+        // by created_at (which breaks when plan created_at is reset).
+        planRunOrder = Number(sequence.currentOrder) + 1;
         seqEntry = SequencePlan.entryByRunOrder(sequence, planRunOrder);
-        // If a sequence plan drives this grab, it takes precedence over the
-        // per-market proxy combo template for this order.
         if (seqEntry) proxyComboAmount = null;
       }
 
