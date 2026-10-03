@@ -1,217 +1,47 @@
-/**
- * One-time fix script for mostafa (#37)
- * Target state (from screenshot):
- *   Balance: 3289.25 USDT
- *   Today's Times: 20/25
- *   Cash gap: 2617.37 USDT
- *   Today's commission: 1938.18 USDT
- *   Yesterday's buy commission: 197.07 USDT
- */
 require('dotenv').config();
 const { query, pool } = require('./src/config/database');
 
 async function run() {
-  const userId = 37; // mostafa
+  const userId = 37;
+  console.log('=== Fix mostafa (#37) ===\n');
 
-  console.log('=== Fix mostafa (#37) — exact screenshot state ===\n');
+  await query('UPDATE wallets SET balance = 3289.25 WHERE user_id = ?', [userId]);
+  console.log('✓ Balance: 3289.25');
 
-  // 1. Restore balance to 3289.25
-  const targetBalance = 3289.25;
-  await query(
-    'UPDATE wallets SET balance = ? WHERE user_id = ?',
-    [targetBalance, userId]
-  );
-  console.log(`✓ Balance restored to ${targetBalance} USDT`);
-
-  // 2. Find most recent plan
   const plans = await query(
-    'SELECT id, num_orders, status FROM sequence_plans WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+    'SELECT id FROM sequence_plans WHERE user_id = ? ORDER BY id DESC LIMIT 1',
     [userId]
   );
-  if (!plans.length) { console.error('No plan found'); process.exit(1); }
-  const plan = plans[0];
+  if (!plans.length) { console.error('No plan'); process.exit(1); }
 
-  // 3. Reset plan cursor to run-order #20 (current_order=19)
   await query(
-    `UPDATE sequence_plans
-       SET current_order = 19, status = 'active', completed_at = NULL,
-           created_at = DATE_SUB(NOW(), INTERVAL 1 SECOND)
-     WHERE id = ?`,
-    [plan.id]
+    `UPDATE sequence_plans SET current_order=19, status='active', completed_at=NULL WHERE id=?`,
+    [plans[0].id]
   );
-  console.log('✓ Plan cursor reset to order #20 (current_order=19)');
+  console.log('✓ Plan cursor: 19 (next grab = order #20 combo)');
 
-  // 4. Cancel all pending tasks
   await query(
-    `UPDATE tasks SET status = 'cancelled', completion_time = CURRENT_TIMESTAMP
-     WHERE user_id = ? AND status = 'pending'`,
+    `UPDATE tasks SET status='cancelled', completion_time=NOW() WHERE user_id=? AND status='pending'`,
     [userId]
   );
   console.log('✓ Pending tasks cancelled');
 
-  // 5. Revoke all active permissions
   await query(
-    `UPDATE task_permissions SET status = 'revoked' WHERE user_id = ? AND status = 'granted'`,
+    `UPDATE task_permissions SET status='revoked' WHERE user_id=? AND status='granted'`,
     [userId]
   );
-
-  // 6. Grant permission: batch=25, used=20 → shows 20/25
   await query(
-    `INSERT INTO task_permissions (user_id, status, batch_size, used_count, granted_by, note)
-     VALUES (?, 'granted', 25, 20, 1, 'Fix: exact screenshot state, combo #20 next')`,
+    `INSERT INTO task_permissions (user_id,status,batch_size,used_count,granted_by,note) VALUES (?,'granted',25,20,1,'fix combo20')`,
     [userId]
   );
-  console.log('✓ Permission: 25 batch, 20 used → 20/25');
+  console.log('✓ Permission: 20/25');
 
-  // 7. Verify
-  const [w] = await query('SELECT balance FROM wallets WHERE user_id = ?', [userId]);
-  const [p] = await query('SELECT current_order, status FROM sequence_plans WHERE id = ?', [plan.id]);
-  const [perm] = await query(
-    `SELECT batch_size, used_count FROM task_permissions
-     WHERE user_id = ? AND status = 'granted' ORDER BY id DESC LIMIT 1`,
-    [userId]
-  );
-
-  console.log('\n=== Result ===');
-  console.log(`Balance: ${w.balance} USDT`);
-  console.log(`Plan: current_order=${p.current_order}, status=${p.status}`);
-  console.log(`Times: ${perm.used_count}/${perm.batch_size}`);
-  console.log('Cash gap will show: 2617.37 USDT');
-  console.log('\n✅ Done! Grab → combo #20 → recharge 2617.37 USDT required');
+  const [w] = await query('SELECT balance FROM wallets WHERE user_id=?', [userId]);
+  console.log('\n=== Done ===');
+  console.log('Balance:', w.balance);
+  console.log('Times: 20/25');
+  console.log('Cash gap: 2617.37 USDT');
+  console.log('Next Grab = combo #20');
 }
 
-run()
-  .then(() => pool.end())
-  .catch(async (err) => {
-    console.error('FAILED:', err.message);
-    await pool.end();
-    process.exit(1);
-  });
-
-const { query, pool } = require('./src/config/database');
-
-async function run() {
-  const userId = 37; // mostafa
-
-  console.log('=== Fix mostafa (#37) ===\n');
-
-  // 1. Check user + wallet
-  const [user] = await query('SELECT id, username, status FROM users WHERE id = ?', [userId]);
-  if (!user) { console.error('User #37 not found'); process.exit(1); }
-  const [wallet] = await query('SELECT balance FROM wallets WHERE user_id = ?', [userId]);
-  const balance = parseFloat(wallet ? wallet.balance : 0);
-  console.log(`User: ${user.username}, Balance: ${balance} USDT`);
-
-  // 2. Find most recent plan (any status)
-  const plans = await query(
-    `SELECT id, num_orders, status, current_order, start_order, combos, schedule
-     FROM sequence_plans WHERE user_id = ? ORDER BY id DESC LIMIT 1`,
-    [userId]
-  );
-  if (!plans.length) { console.error('No plan found'); process.exit(1); }
-  const plan = plans[0];
-  console.log(`Plan #${plan.id}: status=${plan.status}, current_order=${plan.current_order}`);
-  console.log(`Raw combos: ${plan.combos}`);
-
-  // Hardcode combo #20 values from the screenshot
-  const recharge20 = 2617.37;
-  const profit20   = 4844.00;
-  console.log(`Using combo #20: recharge=${recharge20}, profit=${profit20}`);
-
-  // 3. Completed task count
-  const [cnt] = await query(
-    "SELECT COUNT(*) AS n FROM tasks WHERE user_id = ? AND status = 'completed'",
-    [userId]
-  );
-  const completedNow = Number(cnt.n);
-  console.log(`Completed tasks: ${completedNow}`);
-
-  // 4. Reset cursor to run-order #20 (current_order=19)
-  // CRITICAL: also update created_at to NOW so planRunOrder only counts
-  // NEW tasks (not the 74 old ones which would push planRunOrder > 25)
-  const newCurrentOrder = 19;
-  const newStartOrder = Math.max(0, completedNow - newCurrentOrder);
-
-  await query(
-    `UPDATE sequence_plans
-       SET current_order = ?, start_order = ?, status = 'active',
-           completed_at = NULL, created_at = NOW()
-     WHERE id = ?`,
-    [newCurrentOrder, newStartOrder, plan.id]
-  );
-  console.log(`✓ Plan reset: current_order=19, start_order=${newStartOrder}, created_at=NOW`);
-
-  // 5. Cancel ALL pending tasks (combo and normal)
-  const c1 = await query(
-    `UPDATE tasks SET status = 'cancelled', completion_time = CURRENT_TIMESTAMP
-     WHERE user_id = ? AND status = 'pending'`,
-    [userId]
-  );
-  console.log(`✓ Cancelled ${c1.affectedRows} pending task(s)`);
-
-  // 6. Revoke ALL existing permissions
-  const r1 = await query(
-    `UPDATE task_permissions SET status = 'revoked'
-     WHERE user_id = ?  AND status = 'granted'`,
-    [userId]
-  );
-  console.log(`✓ Revoked ${r1.affectedRows} permission(s)`);
-
-  // 7. Grant permission: batch=25, used=21 → shows 21/25 currently
-  // Check current state first
-  const perms = await query(
-    `SELECT id, batch_size, used_count, status FROM task_permissions
-     WHERE user_id = ? ORDER BY id DESC LIMIT 3`,
-    [userId]
-  );
-  console.log('Current permissions:', JSON.stringify(perms));
-
-  // Revoke ALL active permissions
-  await query(
-    `UPDATE task_permissions SET status = 'revoked' WHERE user_id = ? AND status = 'granted'`,
-    [userId]
-  );
-
-  // Count actual tasks grabbed today under current plan to set used_count correctly
-  const planRow = await query(
-    'SELECT id, created_at, current_order FROM sequence_plans WHERE user_id = ? ORDER BY id DESC LIMIT 1',
-    [userId]
-  );
-  const currentOrder = planRow.length ? Number(planRow[0].current_order) : 20;
-  // used_count = currentOrder (how many tasks already used in this batch)
-  const usedCount = currentOrder;
-  console.log(`Setting permission: batch=25, used=${usedCount}`);
-
-  await query(
-    `INSERT INTO task_permissions (user_id, status, batch_size, used_count, granted_by, note)
-     VALUES (?, 'granted', 25, ?, 1, 'Fix: resume from combo #20')`,
-    [userId, usedCount]
-  );
-  console.log(`✓ Permission granted: 25 batch, ${usedCount} used → shows ${usedCount}/25`);
-
-  // 8. Verify
-  const [up] = await query(
-    'SELECT current_order, start_order, status FROM sequence_plans WHERE id = ?',
-    [plan.id]
-  );
-  const [perm] = await query(
-    `SELECT batch_size, used_count FROM task_permissions
-     WHERE user_id = ? AND status = 'granted' ORDER BY id DESC LIMIT 1`,
-    [userId]
-  );
-  console.log('\n=== Result ===');
-  console.log(`Plan: current_order=${up.current_order}, status=${up.status}`);
-  console.log(`Permission: ${perm.batch_size - perm.used_count} remaining (${perm.used_count}/${perm.batch_size})`);
-  console.log(`Expected Cash gap: ${recharge20} USDT`);
-  console.log('\n✅ Done! Grab → combo #20 → recharge 2617.37 USDT required');
-}
-
-run()
-  .then(() => pool.end())
-  .catch(async (err) => {
-    console.error('FAILED:', err.message);
-    await pool.end();
-    process.exit(1);
-  });
-
-
+run().then(() => pool.end()).catch(async e => { console.error(e.message); await pool.end(); process.exit(1); });
