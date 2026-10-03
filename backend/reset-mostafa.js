@@ -5,36 +5,24 @@ const p = db.pool;
 
 async function run() {
   const uid = 37;
-  console.log('=== FIX mostafa #37 — final fix ===');
+  console.log('=== FIX mostafa #37 — commission fix ===');
 
   // ── Check current state ───────────────────────────────────────────────────
   const [current] = await q(
     "SELECT COUNT(*) as n, ROUND(SUM(commission),2) as s FROM tasks WHERE user_id=? AND status='completed'",
     [uid]
   );
-  console.log('Current completed tasks:', current.n, '| sum:', current.s);
+  console.log('Completed tasks:', current.n, '| Commission sum:', current.s);
 
   const TARGET_SUM = 2135.25;
   const currentSum = parseFloat(current.s || 0);
   const diff = Math.round((TARGET_SUM - currentSum) * 100) / 100;
-  console.log('Target sum:', TARGET_SUM, '| Difference:', diff);
+  console.log('Target:', TARGET_SUM, '| Diff:', diff);
 
   // ── Fix commission sum ────────────────────────────────────────────────────
   if (Math.abs(diff) > 0.005) {
     if (diff > 0) {
-      // Missing commission — insert a task to make up the difference
-      const [sample] = await q(
-        "SELECT product_id, order_amount FROM tasks WHERE user_id=? AND status='completed' ORDER BY id DESC LIMIT 1",
-        [uid]
-      );
-      await q(
-        `INSERT INTO tasks (user_id, product_id, status, commission, order_amount, is_combo, created_at, completion_time)
-         VALUES (?, ?, 'completed', ?, ?, 0, '2026-10-03 09:00:00', '2026-10-03 09:30:00')`,
-        [uid, sample ? sample.product_id : 1, diff, sample ? sample.order_amount : 10]
-      );
-      console.log('✓ Inserted task with commission', diff, 'to reach target sum');
-    } else {
-      // Too much commission — reduce the last task's commission
+      // Need to ADD commission — update last completed task's commission
       const [lastTask] = await q(
         "SELECT id, commission FROM tasks WHERE user_id=? AND status='completed' ORDER BY id DESC LIMIT 1",
         [uid]
@@ -42,7 +30,18 @@ async function run() {
       if (lastTask) {
         const newComm = Math.round((parseFloat(lastTask.commission) + diff) * 100) / 100;
         await q("UPDATE tasks SET commission=? WHERE id=?", [newComm, lastTask.id]);
-        console.log('✓ Adjusted last task commission from', lastTask.commission, 'to', newComm);
+        console.log('✓ Updated task', lastTask.id, 'commission:', lastTask.commission, '→', newComm);
+      }
+    } else {
+      // Need to REDUCE commission — update last task
+      const [lastTask] = await q(
+        "SELECT id, commission FROM tasks WHERE user_id=? AND status='completed' ORDER BY id DESC LIMIT 1",
+        [uid]
+      );
+      if (lastTask) {
+        const newComm = Math.round((parseFloat(lastTask.commission) + diff) * 100) / 100;
+        await q("UPDATE tasks SET commission=? WHERE id=?", [newComm, lastTask.id]);
+        console.log('✓ Reduced task', lastTask.id, 'commission:', lastTask.commission, '→', newComm);
       }
     }
   } else {
@@ -54,39 +53,47 @@ async function run() {
     "UPDATE tasks SET completion_time='2026-10-03 10:00:00' WHERE user_id=? AND status='completed'",
     [uid]
   );
-  console.log('✓ All completed tasks set to Oct 3 (yesterday)');
+  console.log('✓ All completed tasks → Oct 3 (yesterday)');
 
-  // ── Ensure balance = 3289.25 ──────────────────────────────────────────────
+  // ── Balance = 3289.25 ────────────────────────────────────────────────────
   await q('UPDATE wallets SET balance=3289.25 WHERE user_id=?', [uid]);
   console.log('✓ Balance: 3289.25');
 
-  // ── Ensure pending combo task (cash gap = 2617.37) ────────────────────────
+  // ── Pending combo task (cash gap = 2617.37) ───────────────────────────────
   // order_amount = 3289.25 + 2617.37 = 5906.62
   await q("UPDATE tasks SET status='cancelled' WHERE user_id=? AND status='pending' AND is_combo=0", [uid]);
+
   const existingCombo = await q(
     "SELECT id FROM tasks WHERE user_id=? AND status='pending' AND is_combo=1 ORDER BY id DESC LIMIT 1",
     [uid]
   );
   if (existingCombo.length === 0) {
+    // Get sample data from existing tasks
     const [sample] = await q(
-      "SELECT product_id FROM tasks WHERE user_id=? AND status='completed' ORDER BY id DESC LIMIT 1",
+      "SELECT product_id, market_id FROM tasks WHERE user_id=? ORDER BY id DESC LIMIT 1",
       [uid]
     );
+    const prodId   = sample ? sample.product_id : 1;
+    const marketId = sample ? sample.market_id  : 1;
+    // order_number is required — generate a unique one
+    const orderNum = 'ORD-' + Date.now();
     await q(
-      `INSERT INTO tasks (user_id, product_id, status, commission, order_amount, is_combo, created_at)
-       VALUES (?, ?, 'pending', 1928.11, 5906.62, 1, NOW())`,
-      [uid, sample ? sample.product_id : 1]
+      `INSERT INTO tasks
+         (user_id, market_id, product_id, order_number, quantity,
+          order_amount, commission, expected_income, status, is_combo, no_freeze, created_at)
+       VALUES (?, ?, ?, ?, 1, 5906.62, 1928.11, 7834.73, 'pending', 1, 1, NOW())`,
+      [uid, marketId, prodId, orderNum]
     );
     console.log('✓ Created pending combo task (order_amount=5906.62)');
   } else {
     await q(
-      "UPDATE tasks SET order_amount=5906.62, commission=1928.11 WHERE id=?",
+      "UPDATE tasks SET order_amount=5906.62, commission=1928.11, expected_income=7834.73 WHERE id=?",
       [existingCombo[0].id]
     );
     console.log('✓ Updated pending combo task (order_amount=5906.62)');
   }
 
-  // ── Plan cursor = 20 ──────────────────────────────────────────────────────
+  // ── Plan cursor = 20 ─────────────────────────────────────────────────────
   const plans = await q(
     "SELECT id FROM sequence_plans WHERE user_id=? AND status='active' ORDER BY id DESC LIMIT 1",
     [uid]
@@ -96,17 +103,17 @@ async function run() {
       "UPDATE sequence_plans SET current_order=20, status='active', completed_at=NULL WHERE id=?",
       [plans[0].id]
     );
-    console.log('✓ Plan cursor: 20/active');
+    console.log('✓ Plan cursor: 20');
   }
 
-  // ── Permission = 20/25 ────────────────────────────────────────────────────
+  // ── Permission = 20/25 ───────────────────────────────────────────────────
   await q("UPDATE task_permissions SET status='revoked' WHERE user_id=?", [uid]);
   await q("INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'used',25,25,1,'round1')", [uid]);
   await q("INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'used',25,25,1,'round2')", [uid]);
   await q("INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'granted',25,20,1,'round3')", [uid]);
-  console.log('✓ Permission: 20/25 (5 left)');
+  console.log('✓ Permission: 20/25');
 
-  // ── Final verify ──────────────────────────────────────────────────────────
+  // ── Verify ───────────────────────────────────────────────────────────────
   const [w]      = await q('SELECT balance FROM wallets WHERE user_id=?', [uid]);
   const [tc]     = await q("SELECT COUNT(*) as n, ROUND(SUM(commission),2) as s FROM tasks WHERE user_id=? AND status='completed'", [uid]);
   const [perm]   = await q("SELECT used_count, batch_size FROM task_permissions WHERE user_id=? AND status='granted' ORDER BY id DESC LIMIT 1", [uid]);
