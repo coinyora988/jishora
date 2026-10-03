@@ -51,7 +51,45 @@ async function run() {
   );
   console.log('✓ Combo task inserted: order_amount='+orderAmt+', commission='+comm);
 
-  // 7. Verify
+  // 7. Fix Today's commission = 1938.18
+  // Get today's completed tasks and adjust their commission sum
+  const todayTasks = await q(
+    `SELECT id, commission FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)=CURDATE()`,
+    [uid]
+  );
+  const currentTodayComm = todayTasks.reduce((s,t) => s + parseFloat(t.commission||0), 0);
+  console.log('Current today commission:', currentTodayComm.toFixed(2));
+  
+  const targetTodayComm = 1938.18;
+  if (todayTasks.length > 0 && Math.abs(currentTodayComm - targetTodayComm) > 0.01) {
+    const diff = parseFloat((targetTodayComm - currentTodayComm).toFixed(2));
+    const perTask = parseFloat((diff / todayTasks.length).toFixed(4));
+    for (const t of todayTasks) {
+      const newComm = parseFloat((parseFloat(t.commission) + perTask).toFixed(4));
+      await q('UPDATE tasks SET commission=? WHERE id=?', [newComm, t.id]);
+    }
+    console.log('✓ Today commission adjusted to ~', targetTodayComm);
+  }
+
+  // 8. Fix Yesterday's buy commission = 197.07
+  const yesterdayTasks = await q(
+    `SELECT id, commission FROM tasks WHERE user_id=? AND status='completed'
+     AND DATE(completion_time) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)`,
+    [uid]
+  );
+  const currentYestComm = yesterdayTasks.reduce((s,t) => s + parseFloat(t.commission||0), 0);
+  console.log('Current yesterday commission:', currentYestComm.toFixed(2));
+
+  const targetYestComm = 197.07;
+  if (yesterdayTasks.length > 0 && Math.abs(currentYestComm - targetYestComm) > 0.01) {
+    const diff2 = parseFloat((targetYestComm - currentYestComm).toFixed(2));
+    const perTask2 = parseFloat((diff2 / yesterdayTasks.length).toFixed(4));
+    for (const t of yesterdayTasks) {
+      const newComm2 = parseFloat((parseFloat(t.commission) + perTask2).toFixed(4));
+      await q('UPDATE tasks SET commission=? WHERE id=?', [newComm2, t.id]);
+    }
+    console.log('✓ Yesterday commission adjusted to ~', targetYestComm);
+  }
   const [w] = await q('SELECT balance FROM wallets WHERE user_id=?',[uid]);
   const [perm] = await q("SELECT batch_size,used_count FROM task_permissions WHERE user_id=? AND status='granted' ORDER BY id DESC LIMIT 1",[uid]);
   const [combo] = await q("SELECT id,order_amount FROM tasks WHERE user_id=? AND status='pending' AND is_combo=1 ORDER BY id DESC LIMIT 1",[uid]);
