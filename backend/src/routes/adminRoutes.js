@@ -407,13 +407,15 @@ router.post('/fix/plan-cursor/:userId', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'runOrder must be >= 1' });
     }
 
-    // Get active plan
+    // Get most recent plan (active OR completed — we may need to reactivate it)
     const plans = await query(
-      `SELECT id, num_orders FROM sequence_plans WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1`,
+      `SELECT id, num_orders, status FROM sequence_plans
+       WHERE user_id = ? AND status IN ('active','completed')
+       ORDER BY id DESC LIMIT 1`,
       [userId]
     );
     if (!plans.length) {
-      return res.status(404).json({ success: false, message: 'No active plan for this user' });
+      return res.status(404).json({ success: false, message: 'No active or completed plan found for this user' });
     }
     const plan = plans[0];
 
@@ -421,8 +423,7 @@ router.post('/fix/plan-cursor/:userId', async (req, res, next) => {
       return res.status(400).json({ success: false, message: `runOrder ${runOrder} exceeds plan length ${plan.num_orders}` });
     }
 
-    // Get user's current completed task count — this becomes the new start_order
-    // so that grab #1 of the "resumed" run is this user's next real order.
+    // Get user's current completed task count
     const [cnt] = await query(
       "SELECT COUNT(*) AS n FROM tasks WHERE user_id = ? AND status = 'completed'",
       [userId]
@@ -430,12 +431,11 @@ router.post('/fix/plan-cursor/:userId', async (req, res, next) => {
     const completedNow = Number(cnt ? cnt.n : 0);
 
     // Set current_order = runOrder - 1 so the NEXT grab lands on runOrder.
-    // Set start_order = completedNow - (runOrder - 1) so that:
-    //   planRunOrder = (non-cancelled tasks since plan started) + 1
-    //               = runOrder  on the very next grab. ✓
+    // Set start_order so planRunOrder = (non-cancelled tasks since plan) + 1 = runOrder
     const newCurrentOrder = runOrder - 1;
     const newStartOrder = Math.max(0, completedNow - newCurrentOrder);
 
+    // Reactivate plan if it was completed, reset cursor
     await query(
       `UPDATE sequence_plans
          SET current_order = ?, start_order = ?, status = 'active', completed_at = NULL
@@ -452,8 +452,8 @@ router.post('/fix/plan-cursor/:userId', async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `Plan cursor reset: next grab will be plan run-order #${runOrder}`,
-      data: { planId: plan.id, newCurrentOrder, newStartOrder, completedNow }
+      message: `Plan ${plan.status === 'completed' ? 'reactivated and ' : ''}cursor reset: next grab will be plan run-order #${runOrder}`,
+      data: { planId: plan.id, previousStatus: plan.status, newCurrentOrder, newStartOrder, completedNow }
     });
   } catch (error) {
     next(error);
