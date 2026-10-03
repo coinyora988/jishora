@@ -42,16 +42,19 @@ async function run() {
   console.log(`Completed tasks: ${completedNow}`);
 
   // 4. Reset cursor to run-order #20 (current_order=19)
+  // CRITICAL: also update created_at to NOW so planRunOrder only counts
+  // NEW tasks (not the 74 old ones which would push planRunOrder > 25)
   const newCurrentOrder = 19;
   const newStartOrder = Math.max(0, completedNow - newCurrentOrder);
 
   await query(
     `UPDATE sequence_plans
-       SET current_order = ?, start_order = ?, status = 'active', completed_at = NULL
+       SET current_order = ?, start_order = ?, status = 'active',
+           completed_at = NULL, created_at = NOW()
      WHERE id = ?`,
     [newCurrentOrder, newStartOrder, plan.id]
   );
-  console.log(`✓ Plan cursor reset: current_order=19, start_order=${newStartOrder}`);
+  console.log(`✓ Plan reset: current_order=19, start_order=${newStartOrder}, created_at=NOW`);
 
   // 5. Cancel ALL pending tasks (combo and normal)
   const c1 = await query(
