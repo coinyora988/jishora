@@ -5,194 +5,81 @@ const p = db.pool;
 
 async function run() {
   const uid = 37;
-  console.log('=== FIX mostafa #37 ===');
-  console.log('Target:');
-  console.log('  Today Times    : 20/25  (combo grabbed, not submitted)');
-  console.log('  Today comm     : 1938.18');
-  console.log('  Yesterday comm : 197.07');
-  console.log('  Cash gap       : 2617.37');
-  console.log('  Balance        : 3289.25');
-  console.log('  Completed tasks: 69');
-  console.log('  Plan cursor    : 20 (combo grabbed)');
-  console.log('  Permission     : 20/25 (5 left)');
+  console.log('=== FIX mostafa #37 — commission dates ===');
 
-  // ── Step 1: Keep exactly 69 completed tasks ──────────────────────────────
-  const allCompleted = await q(
+  // Get all 69 completed tasks ordered by id
+  const tasks = await q(
     "SELECT id, commission FROM tasks WHERE user_id=? AND status='completed' ORDER BY id ASC",
     [uid]
   );
-  console.log('\nCurrent completed tasks:', allCompleted.length);
+  console.log('Total completed tasks:', tasks.length);
 
-  if (allCompleted.length > 69) {
-    const toDelete = allCompleted.slice(69).map(t => t.id);
-    const ph = toDelete.map(() => '?').join(',');
-    await q(`DELETE FROM tasks WHERE id IN (${ph})`, toDelete);
-    console.log('✓ Deleted', toDelete.length, 'extra tasks (kept 69)');
-  } else if (allCompleted.length < 69) {
-    // Need to insert missing tasks
-    const missing = 69 - allCompleted.length;
-    console.log('Need to insert', missing, 'missing completed tasks...');
-    // Get average commission from existing tasks
-    const [avg] = await q("SELECT AVG(commission) as a FROM tasks WHERE user_id=? AND status='completed'", [uid]);
-    const avgComm = avg && avg.a ? parseFloat(avg.a).toFixed(4) : '1.5000';
-    // Get a product_id from existing tasks
-    const [sample] = await q("SELECT product_id, order_amount FROM tasks WHERE user_id=? AND status='completed' ORDER BY id DESC LIMIT 1", [uid]);
-    const prodId = sample ? sample.product_id : 1;
-    const orderAmt = sample ? sample.order_amount : 10;
-    for (let i = 0; i < missing; i++) {
-      await q(
-        `INSERT INTO tasks (user_id, product_id, status, commission, order_amount, is_combo, created_at, completion_time)
-         VALUES (?, ?, 'completed', ?, ?, 0, '2026-10-01 08:00:00', '2026-10-01 08:30:00')`,
-        [uid, prodId, avgComm, orderAmt]
-      );
-    }
-    console.log('✓ Inserted', missing, 'missing tasks (older date)');
-  } else {
-    console.log('✓ Already 69 completed tasks');
-  }
+  // Print all tasks with running sum from end (to debug)
+  // We need today=1938.18, yesterday=197.07
+  // Find exact split by going from END backwards
 
-  // ── Step 2: Cancel all pending tasks ─────────────────────────────────────
-  await q("UPDATE tasks SET status='cancelled' WHERE user_id=? AND status='pending'", [uid]);
-  console.log('✓ Pending tasks cancelled');
-
-  // ── Step 3: Fix completion_time for today/yesterday commission ────────────
-  // today (Oct 4) commission = 1938.18
-  // yesterday (Oct 3) commission = 197.07
-  // We assign from the END of the 69 tasks going backwards
-
-  const kept = await q(
-    "SELECT id, commission FROM tasks WHERE user_id=? AND status='completed' ORDER BY id ASC",
-    [uid]
-  );
-
-  const TARGET_TODAY     = 1938.18;
+  const TARGET_TODAY = 1938.18;
   const TARGET_YESTERDAY = 197.07;
 
-  let todayIds     = [];
+  let sumToday = 0;
+  let todayIds = [];
+  let sumYest = 0;
   let yesterdayIds = [];
-  let olderIds     = [];
-  let sumToday     = 0;
-  let sumYesterday = 0;
+  let olderIds = [];
 
-  for (let i = kept.length - 1; i >= 0; i--) {
-    const comm = parseFloat(kept[i].commission);
-    if (sumToday < TARGET_TODAY - 0.005) {
-      sumToday = Math.round((sumToday + comm) * 100) / 100;
-      todayIds.unshift(kept[i].id);
-    } else if (sumYesterday < TARGET_YESTERDAY - 0.005) {
-      sumYesterday = Math.round((sumYesterday + comm) * 100) / 100;
-      yesterdayIds.unshift(kept[i].id);
+  // Go from end backwards — assign to today first, then yesterday, then older
+  for (let i = tasks.length - 1; i >= 0; i--) {
+    const c = Math.round(parseFloat(tasks[i].commission) * 10000) / 10000;
+    const roundedSumToday = Math.round((sumToday + c) * 100) / 100;
+    const roundedSumYest  = Math.round((sumYest + c) * 100) / 100;
+
+    if (roundedSumToday <= TARGET_TODAY + 0.005) {
+      sumToday = roundedSumToday;
+      todayIds.unshift(tasks[i].id);
+    } else if (roundedSumYest <= TARGET_YESTERDAY + 0.005) {
+      sumYest = roundedSumYest;
+      yesterdayIds.unshift(tasks[i].id);
     } else {
-      olderIds.unshift(kept[i].id);
+      olderIds.unshift(tasks[i].id);
     }
   }
 
-  console.log('\nToday tasks    :', todayIds.length, '| sum:', sumToday, '(target:', TARGET_TODAY + ')');
-  console.log('Yesterday tasks:', yesterdayIds.length, '| sum:', sumYesterday, '(target:', TARGET_YESTERDAY + ')');
-  console.log('Older tasks    :', olderIds.length);
+  console.log('Today   :', todayIds.length, 'tasks | sum =', sumToday, '| target =', TARGET_TODAY);
+  console.log('Yesterday:', yesterdayIds.length, 'tasks | sum =', sumYest, '| target =', TARGET_YESTERDAY);
+  console.log('Older   :', olderIds.length, 'tasks');
 
+  // First set ALL completed tasks to older date (clean slate)
+  await q("UPDATE tasks SET completion_time='2026-10-01 10:00:00' WHERE user_id=? AND status='completed'", [uid]);
+  console.log('✓ Reset all completion_time to Oct 1');
+
+  // Set today tasks → Oct 4
   if (todayIds.length > 0) {
     const ph = todayIds.map(() => '?').join(',');
     await q(`UPDATE tasks SET completion_time='2026-10-04 10:00:00' WHERE id IN (${ph})`, todayIds);
-    console.log('✓ Set', todayIds.length, 'tasks → today Oct 4');
+    console.log('✓ Set', todayIds.length, 'tasks → Oct 4 (today)');
   }
+
+  // Set yesterday tasks → Oct 3
   if (yesterdayIds.length > 0) {
     const ph = yesterdayIds.map(() => '?').join(',');
     await q(`UPDATE tasks SET completion_time='2026-10-03 10:00:00' WHERE id IN (${ph})`, yesterdayIds);
-    console.log('✓ Set', yesterdayIds.length, 'tasks → yesterday Oct 3');
-  }
-  if (olderIds.length > 0) {
-    const ph = olderIds.map(() => '?').join(',');
-    await q(`UPDATE tasks SET completion_time='2026-10-01 10:00:00' WHERE id IN (${ph})`, olderIds);
-    console.log('✓ Set', olderIds.length, 'tasks → older Oct 1');
+    console.log('✓ Set', yesterdayIds.length, 'tasks → Oct 3 (yesterday)');
   }
 
-  // ── Step 4: Set balance ───────────────────────────────────────────────────
-  await q('UPDATE wallets SET balance=3289.25 WHERE user_id=?', [uid]);
-  console.log('✓ Balance: 3289.25');
+  // Verify sums directly from DB
+  const [todayDB]  = await q("SELECT ROUND(SUM(commission),2) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-04'", [uid]);
+  const [yesterDB] = await q("SELECT ROUND(SUM(commission),2) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-03'", [uid]);
 
-  // ── Step 5: Fix sequence_plan cursor to 20 (combo grabbed) ───────────────
-  // current_order=20 means combo order #20 has been grabbed (pending submit)
-  const plans = await q(
-    "SELECT id, num_orders, start_order FROM sequence_plans WHERE user_id=? AND status='active' ORDER BY id DESC LIMIT 1",
-    [uid]
-  );
-  if (plans.length) {
-    await q(
-      "UPDATE sequence_plans SET current_order=20, status='active', completed_at=NULL WHERE id=?",
-      [plans[0].id]
-    );
-    console.log('✓ Plan cursor: 20/active (combo grabbed, awaiting recharge+submit)');
+  console.log('\n=== VERIFY ===');
+  console.log('Today commission    :', todayDB?.s,  '(need 1938.18)');
+  console.log('Yesterday commission:', yesterDB?.s, '(need 197.07)');
+
+  if (Math.abs(parseFloat(todayDB?.s) - TARGET_TODAY) > 0.10) {
+    console.log('\n⚠ Today sum off — showing all task commissions for manual check:');
+    tasks.forEach((t, i) => console.log(i + 1, 'id:' + t.id, 'comm:' + parseFloat(t.commission).toFixed(4)));
   } else {
-    console.log('⚠ No active sequence plan found');
+    console.log('\n✅ Commission dates correct!');
   }
-
-  // ── Step 6: Permission = 20/25 (5 left) — combo grab consumed slot ───────
-  // Today's Times shows 20/25 meaning 20 grabs used in this batch
-  await q("UPDATE task_permissions SET status='revoked' WHERE user_id=?", [uid]);
-  await q(
-    "INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'used',25,25,1,'round1')",
-    [uid]
-  );
-  await q(
-    "INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'used',25,25,1,'round2')",
-    [uid]
-  );
-  await q(
-    "INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'granted',25,20,1,'round3')",
-    [uid]
-  );
-  console.log('✓ Permissions: 3 rounds, active=20/25 (5 left)');
-
-  // ── Step 7: Insert pending combo task for order #20 ───────────────────────
-  // The combo order must exist as a pending task so customer sees it
-  // and the cash_gap (2617.37) is calculated correctly
-  const existingCombo = await q(
-    "SELECT id FROM tasks WHERE user_id=? AND status='pending' AND is_combo=1 ORDER BY id DESC LIMIT 1",
-    [uid]
-  );
-  if (existingCombo.length === 0) {
-    // combo_amount = balance_needed = 3289.25 + 2617.37 = 5906.62
-    const comboOrderAmount = 5906.62;
-    const comboCommission  = 1928.11; // combo commission shown in admin
-    await q(
-      `INSERT INTO tasks (user_id, product_id, status, commission, order_amount, is_combo, created_at)
-       VALUES (?, 1, 'pending', ?, ?, 1, NOW())`,
-      [uid, comboCommission, comboOrderAmount]
-    );
-    console.log('✓ Inserted pending combo task (order_amount=5906.62, commission=1928.11)');
-  } else {
-    // Update existing combo task with correct amount
-    await q(
-      "UPDATE tasks SET order_amount=5906.62, commission=1928.11 WHERE id=?",
-      [existingCombo[0].id]
-    );
-    console.log('✓ Updated existing pending combo task');
-  }
-
-  // ── Verify ────────────────────────────────────────────────────────────────
-  const [w]      = await q('SELECT balance FROM wallets WHERE user_id=?', [uid]);
-  const [plan]   = await q("SELECT current_order, num_orders, status FROM sequence_plans WHERE user_id=? AND status='active' ORDER BY id DESC LIMIT 1", [uid]);
-  const [perm]   = await q("SELECT batch_size, used_count, (batch_size-used_count) AS remaining FROM task_permissions WHERE user_id=? AND status='granted' ORDER BY id DESC LIMIT 1", [uid]);
-  const [tc]     = await q("SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed'", [uid]);
-  const [rounds] = await q("SELECT COUNT(*) as n FROM task_permissions WHERE user_id=? AND status IN ('used','granted')", [uid]);
-  const [todayC] = await q("SELECT COALESCE(SUM(commission),0) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-04'", [uid]);
-  const [yestC]  = await q("SELECT COALESCE(SUM(commission),0) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-03'", [uid]);
-  const [combo]  = await q("SELECT id, order_amount FROM tasks WHERE user_id=? AND status='pending' AND is_combo=1 ORDER BY id DESC LIMIT 1", [uid]);
-  const balVal   = w ? parseFloat(w.balance) : 0;
-  const comboAmt = combo ? parseFloat(combo.order_amount) : 0;
-  const cashGap  = comboAmt > balVal ? Math.round((comboAmt - balVal) * 100) / 100 : 0;
-
-  console.log('\n=== FINAL STATE ===');
-  console.log('Balance              :', w?.balance,    '✓ (3289.25)');
-  console.log('Completed tasks      :', tc?.n,         '✓ (69)');
-  console.log('Plan cursor          :', plan ? plan.current_order+'/'+plan.num_orders : 'N/A', '✓ (20/25)');
-  console.log('Permission (Times)   :', perm ? perm.used_count+'/'+perm.batch_size : 'N/A', '✓ (20/25)');
-  console.log('Rounds requested     :', rounds?.n,     '✓ (3)');
-  console.log('Today commission     :', todayC?.s,     '✓ (1938.18)');
-  console.log('Yesterday commission :', yestC?.s,      '✓ (197.07)');
-  console.log('Cash gap             :', cashGap,       '✓ (2617.37)');
-  console.log('\n✅ Customer sees: 20/25 | balance 3289.25 | combo pending | recharge 2617.37');
 }
 
 run()
