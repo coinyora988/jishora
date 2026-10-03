@@ -82,13 +82,13 @@ async function run() {
     [userId]
   );
 
-  // 7. Grant 6-task permission
+  // 7. Grant permission — batch=25, used=20 so Today's Times shows 20/25
   await query(
     `INSERT INTO task_permissions (user_id, status, batch_size, used_count, granted_by, note)
-     VALUES (?, 'granted', 6, 0, 1, 'Fix: resume from combo #20')`,
+     VALUES (?, 'granted', 25, 20, 1, 'Fix: resume from combo #20, shows 20/25')`,
     [userId]
   );
-  console.log('✓ Granted 6-task permission batch');
+  console.log('✓ Granted permission: batch=25, used=20 (shows 20/25)');
 
   // 8. Verify
   const [updatedPlan] = await query(
