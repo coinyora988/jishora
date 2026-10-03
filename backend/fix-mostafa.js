@@ -72,13 +72,37 @@ async function run() {
   );
   console.log(`✓ Revoked ${r1.affectedRows} permission(s)`);
 
-  // 7. Grant permission: batch=25, used=20 → shows 20/25
-  await query(
-    `INSERT INTO task_permissions (user_id, status, batch_size, used_count, granted_by, note)
-     VALUES (?, 'granted', 25, 20, 1, 'Fix: resume from combo #20')`,
+  // 7. Grant permission: batch=25, used=21 → shows 21/25 currently
+  // Check current state first
+  const perms = await query(
+    `SELECT id, batch_size, used_count, status FROM task_permissions
+     WHERE user_id = ? ORDER BY id DESC LIMIT 3`,
     [userId]
   );
-  console.log('✓ Permission granted: 25 batch, 20 used → shows 20/25');
+  console.log('Current permissions:', JSON.stringify(perms));
+
+  // Revoke ALL active permissions
+  await query(
+    `UPDATE task_permissions SET status = 'revoked' WHERE user_id = ? AND status = 'granted'`,
+    [userId]
+  );
+
+  // Count actual tasks grabbed today under current plan to set used_count correctly
+  const planRow = await query(
+    'SELECT id, created_at, current_order FROM sequence_plans WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+    [userId]
+  );
+  const currentOrder = planRow.length ? Number(planRow[0].current_order) : 20;
+  // used_count = currentOrder (how many tasks already used in this batch)
+  const usedCount = currentOrder;
+  console.log(`Setting permission: batch=25, used=${usedCount}`);
+
+  await query(
+    `INSERT INTO task_permissions (user_id, status, batch_size, used_count, granted_by, note)
+     VALUES (?, 'granted', 25, ?, 1, 'Fix: resume from combo #20')`,
+    [userId, usedCount]
+  );
+  console.log(`✓ Permission granted: 25 batch, ${usedCount} used → shows ${usedCount}/25`);
 
   // 8. Verify
   const [up] = await query(
