@@ -1,8 +1,93 @@
 /**
  * One-time fix script for mostafa (#37)
- * Run: node fix-mostafa.js
+ * Target state (from screenshot):
+ *   Balance: 3289.25 USDT
+ *   Today's Times: 20/25
+ *   Cash gap: 2617.37 USDT
+ *   Today's commission: 1938.18 USDT
+ *   Yesterday's buy commission: 197.07 USDT
  */
 require('dotenv').config();
+const { query, pool } = require('./src/config/database');
+
+async function run() {
+  const userId = 37; // mostafa
+
+  console.log('=== Fix mostafa (#37) — exact screenshot state ===\n');
+
+  // 1. Restore balance to 3289.25
+  const targetBalance = 3289.25;
+  await query(
+    'UPDATE wallets SET balance = ? WHERE user_id = ?',
+    [targetBalance, userId]
+  );
+  console.log(`✓ Balance restored to ${targetBalance} USDT`);
+
+  // 2. Find most recent plan
+  const plans = await query(
+    'SELECT id, num_orders, status FROM sequence_plans WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+    [userId]
+  );
+  if (!plans.length) { console.error('No plan found'); process.exit(1); }
+  const plan = plans[0];
+
+  // 3. Reset plan cursor to run-order #20 (current_order=19)
+  await query(
+    `UPDATE sequence_plans
+       SET current_order = 19, status = 'active', completed_at = NULL,
+           created_at = DATE_SUB(NOW(), INTERVAL 1 SECOND)
+     WHERE id = ?`,
+    [plan.id]
+  );
+  console.log('✓ Plan cursor reset to order #20 (current_order=19)');
+
+  // 4. Cancel all pending tasks
+  await query(
+    `UPDATE tasks SET status = 'cancelled', completion_time = CURRENT_TIMESTAMP
+     WHERE user_id = ? AND status = 'pending'`,
+    [userId]
+  );
+  console.log('✓ Pending tasks cancelled');
+
+  // 5. Revoke all active permissions
+  await query(
+    `UPDATE task_permissions SET status = 'revoked' WHERE user_id = ? AND status = 'granted'`,
+    [userId]
+  );
+
+  // 6. Grant permission: batch=25, used=20 → shows 20/25
+  await query(
+    `INSERT INTO task_permissions (user_id, status, batch_size, used_count, granted_by, note)
+     VALUES (?, 'granted', 25, 20, 1, 'Fix: exact screenshot state, combo #20 next')`,
+    [userId]
+  );
+  console.log('✓ Permission: 25 batch, 20 used → 20/25');
+
+  // 7. Verify
+  const [w] = await query('SELECT balance FROM wallets WHERE user_id = ?', [userId]);
+  const [p] = await query('SELECT current_order, status FROM sequence_plans WHERE id = ?', [plan.id]);
+  const [perm] = await query(
+    `SELECT batch_size, used_count FROM task_permissions
+     WHERE user_id = ? AND status = 'granted' ORDER BY id DESC LIMIT 1`,
+    [userId]
+  );
+
+  console.log('\n=== Result ===');
+  console.log(`Balance: ${w.balance} USDT`);
+  console.log(`Plan: current_order=${p.current_order}, status=${p.status}`);
+  console.log(`Times: ${perm.used_count}/${perm.batch_size}`);
+  console.log('Cash gap will show: 2617.37 USDT');
+  console.log('\n✅ Done! Grab → combo #20 → recharge 2617.37 USDT required');
+}
+
+run()
+  .then(() => pool.end())
+  .catch(async (err) => {
+    console.error('FAILED:', err.message);
+    await pool.end();
+    process.exit(1);
+  });
+
 const { query, pool } = require('./src/config/database');
 
 async function run() {
