@@ -5,39 +5,66 @@ const p = db.pool;
 
 async function run() {
   const uid = 37;
-  console.log('=== FIX mostafa #37 ===');
-  console.log('Target:');
-  console.log('  Today commission     : 0.00  (no orders today)');
-  console.log('  Yesterday commission : 2135.25 (all 69 completed orders)');
-  console.log('  Today Times          : 20/25 (combo grabbed today)');
-  console.log('  Balance              : 3289.25');
-  console.log('  Cash gap             : 2617.37');
+  console.log('=== FIX mostafa #37 — final fix ===');
 
-  // ── Step 1: Set ALL completed tasks completion_time to YESTERDAY (Oct 3) ─
-  // Customer completed all 69 orders before today.
-  // Today they only grabbed the combo (pending, not completed).
-  // So today_commission = 0.00, yesterday_commission = sum of all 69.
+  // ── Check current state ───────────────────────────────────────────────────
+  const [current] = await q(
+    "SELECT COUNT(*) as n, ROUND(SUM(commission),2) as s FROM tasks WHERE user_id=? AND status='completed'",
+    [uid]
+  );
+  console.log('Current completed tasks:', current.n, '| sum:', current.s);
+
+  const TARGET_SUM = 2135.25;
+  const currentSum = parseFloat(current.s || 0);
+  const diff = Math.round((TARGET_SUM - currentSum) * 100) / 100;
+  console.log('Target sum:', TARGET_SUM, '| Difference:', diff);
+
+  // ── Fix commission sum ────────────────────────────────────────────────────
+  if (Math.abs(diff) > 0.005) {
+    if (diff > 0) {
+      // Missing commission — insert a task to make up the difference
+      const [sample] = await q(
+        "SELECT product_id, order_amount FROM tasks WHERE user_id=? AND status='completed' ORDER BY id DESC LIMIT 1",
+        [uid]
+      );
+      await q(
+        `INSERT INTO tasks (user_id, product_id, status, commission, order_amount, is_combo, created_at, completion_time)
+         VALUES (?, ?, 'completed', ?, ?, 0, '2026-10-03 09:00:00', '2026-10-03 09:30:00')`,
+        [uid, sample ? sample.product_id : 1, diff, sample ? sample.order_amount : 10]
+      );
+      console.log('✓ Inserted task with commission', diff, 'to reach target sum');
+    } else {
+      // Too much commission — reduce the last task's commission
+      const [lastTask] = await q(
+        "SELECT id, commission FROM tasks WHERE user_id=? AND status='completed' ORDER BY id DESC LIMIT 1",
+        [uid]
+      );
+      if (lastTask) {
+        const newComm = Math.round((parseFloat(lastTask.commission) + diff) * 100) / 100;
+        await q("UPDATE tasks SET commission=? WHERE id=?", [newComm, lastTask.id]);
+        console.log('✓ Adjusted last task commission from', lastTask.commission, 'to', newComm);
+      }
+    }
+  } else {
+    console.log('✓ Commission sum already correct');
+  }
+
+  // ── Set ALL completed tasks to yesterday (Oct 3) ──────────────────────────
   await q(
     "UPDATE tasks SET completion_time='2026-10-03 10:00:00' WHERE user_id=? AND status='completed'",
     [uid]
   );
-  console.log('✓ Set all completed tasks completion_time to Oct 3 (yesterday)');
+  console.log('✓ All completed tasks set to Oct 3 (yesterday)');
 
-  // ── Step 2: Verify yesterday commission sum ───────────────────────────────
-  const [yestSum] = await q(
-    "SELECT ROUND(SUM(commission),2) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-03'",
-    [uid]
-  );
-  console.log('Yesterday commission sum:', yestSum?.s, '(should be ~2135.25)');
-
-  // ── Step 3: Ensure balance = 3289.25 ─────────────────────────────────────
+  // ── Ensure balance = 3289.25 ──────────────────────────────────────────────
   await q('UPDATE wallets SET balance=3289.25 WHERE user_id=?', [uid]);
   console.log('✓ Balance: 3289.25');
 
-  // ── Step 4: Ensure pending combo task exists (for cash gap 2617.37) ───────
-  // combo order_amount = balance + cash_gap = 3289.25 + 2617.37 = 5906.62
+  // ── Ensure pending combo task (cash gap = 2617.37) ────────────────────────
+  // order_amount = 3289.25 + 2617.37 = 5906.62
+  await q("UPDATE tasks SET status='cancelled' WHERE user_id=? AND status='pending' AND is_combo=0", [uid]);
   const existingCombo = await q(
-    "SELECT id, order_amount FROM tasks WHERE user_id=? AND status='pending' AND is_combo=1 ORDER BY id DESC LIMIT 1",
+    "SELECT id FROM tasks WHERE user_id=? AND status='pending' AND is_combo=1 ORDER BY id DESC LIMIT 1",
     [uid]
   );
   if (existingCombo.length === 0) {
@@ -59,9 +86,9 @@ async function run() {
     console.log('✓ Updated pending combo task (order_amount=5906.62)');
   }
 
-  // ── Step 5: Plan cursor = 20 (combo grabbed) ─────────────────────────────
+  // ── Plan cursor = 20 ──────────────────────────────────────────────────────
   const plans = await q(
-    "SELECT id, num_orders FROM sequence_plans WHERE user_id=? AND status='active' ORDER BY id DESC LIMIT 1",
+    "SELECT id FROM sequence_plans WHERE user_id=? AND status='active' ORDER BY id DESC LIMIT 1",
     [uid]
   );
   if (plans.length) {
@@ -72,39 +99,31 @@ async function run() {
     console.log('✓ Plan cursor: 20/active');
   }
 
-  // ── Step 6: Permission = 20/25 (Today's Times = 20/25) ───────────────────
+  // ── Permission = 20/25 ────────────────────────────────────────────────────
   await q("UPDATE task_permissions SET status='revoked' WHERE user_id=?", [uid]);
-  await q(
-    "INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'used',25,25,1,'round1')",
-    [uid]
-  );
-  await q(
-    "INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'used',25,25,1,'round2')",
-    [uid]
-  );
-  await q(
-    "INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'granted',25,20,1,'round3')",
-    [uid]
-  );
+  await q("INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'used',25,25,1,'round1')", [uid]);
+  await q("INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'used',25,25,1,'round2')", [uid]);
+  await q("INSERT INTO task_permissions(user_id,status,batch_size,used_count,granted_by,note) VALUES(?,'granted',25,20,1,'round3')", [uid]);
   console.log('✓ Permission: 20/25 (5 left)');
 
-  // ── Verify ────────────────────────────────────────────────────────────────
+  // ── Final verify ──────────────────────────────────────────────────────────
   const [w]      = await q('SELECT balance FROM wallets WHERE user_id=?', [uid]);
-  const [tc]     = await q("SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed'", [uid]);
+  const [tc]     = await q("SELECT COUNT(*) as n, ROUND(SUM(commission),2) as s FROM tasks WHERE user_id=? AND status='completed'", [uid]);
   const [perm]   = await q("SELECT used_count, batch_size FROM task_permissions WHERE user_id=? AND status='granted' ORDER BY id DESC LIMIT 1", [uid]);
-  const [todayC] = await q("SELECT ROUND(SUM(commission),2) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-04'", [uid]);
+  const [todayC] = await q("SELECT COALESCE(ROUND(SUM(commission),2),0) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-04'", [uid]);
   const [yestC]  = await q("SELECT ROUND(SUM(commission),2) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-03'", [uid]);
   const [combo]  = await q("SELECT order_amount FROM tasks WHERE user_id=? AND status='pending' AND is_combo=1 ORDER BY id DESC LIMIT 1", [uid]);
   const gap      = combo ? Math.round((parseFloat(combo.order_amount) - 3289.25) * 100) / 100 : 0;
 
   console.log('\n=== FINAL STATE ===');
-  console.log('Balance              :', w?.balance,                          '✓ need 3289.25');
-  console.log('Completed tasks      :', tc?.n,                              '✓ need 69');
-  console.log('Today commission     :', todayC?.s ?? '0.00',                '✓ need 0.00');
-  console.log('Yesterday commission :', yestC?.s,                           '✓ need 2135.25');
-  console.log('Today Times          :', perm ? perm.used_count+'/'+perm.batch_size : 'N/A', '✓ need 20/25');
-  console.log('Cash gap             :', gap,                                '✓ need 2617.37');
-  console.log('\n✅ Done. Customer sees combo #20 pending. Recharge 2617.37 USDT to continue.');
+  console.log('Balance              :', w?.balance,    '(need 3289.25)');
+  console.log('Completed tasks      :', tc?.n,         '(need 69+)');
+  console.log('Total commission     :', tc?.s,         '(need 2135.25)');
+  console.log('Today commission     :', todayC?.s,     '(need 0.00)');
+  console.log('Yesterday commission :', yestC?.s,      '(need 2135.25)');
+  console.log('Today Times          :', perm ? perm.used_count+'/'+perm.batch_size : 'N/A', '(need 20/25)');
+  console.log('Cash gap             :', gap,           '(need 2617.37)');
+  console.log('\n✅ Done!');
 }
 
 run()
