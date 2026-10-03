@@ -247,6 +247,12 @@ class Task {
         //   totalProfit = target - outlay = combo profits + normal pool
         // so deposit + recharges + profits = targetTotal. ✅
         const rechargeNeeded = Math.round(parseFloat(seqEntry.comboAmount) * 100) / 100;
+        // Guard: if comboAmount is missing/NaN/0 in the schedule data,
+        // we cannot safely create a combo order — throw rather than silently
+        // letting the order pass without a real recharge requirement.
+        if (!(rechargeNeeded > 0)) {
+          throw new Error('Combo plan data is invalid: recharge amount is missing. Please contact support.');
+        }
         orderAmount = Math.round((userBalance + rechargeNeeded) * 100) / 100;
         commissionOverride = Math.round(parseFloat(seqEntry.commission) * 100) / 100;
         isCombo = 1;
@@ -287,6 +293,12 @@ class Task {
       const commission = commissionOverride != null
         ? commissionOverride
         : Math.round(orderAmount * commissionRate * 100) / 100;
+
+      // Final safety check: orderAmount must be a valid positive number before
+      // we insert the task. NaN or 0 would allow combo bypass on completion.
+      if (!(orderAmount > 0) && !noFreeze) {
+        throw new Error('Order amount is invalid. Please try again.');
+      }
       // For noFreeze orders (sequence normal) the balance is never frozen, so
       // the customer's actual gain is ONLY the commission — not orderAmount+commission.
       // expectedIncome reflects what they actually receive on completion.
@@ -438,6 +450,17 @@ class Task {
         // (balanceAtGrab + recharge), so the customer must recharge exactly
         // `comboAmount` before submitting — their balance will equal orderAmount
         // once they do. If their balance is still short, tell them the shortfall.
+
+        // Safety: if order_amount is 0 or invalid (NaN from bad schedule data),
+        // reject immediately — we cannot verify the recharge was made.
+        if (!(orderAmount > 0)) {
+          const err = new Error('Combo order amount is invalid. Please cancel and re-grab the order.');
+          err.code = 'COMBO_RECHARGE_REQUIRED';
+          err.shortfall = 0;
+          err.orderAmount = 0;
+          throw err;
+        }
+
         if (balanceBefore < orderAmount) {
           const shortfall = Math.round((orderAmount - balanceBefore) * 100) / 100;
           const err = new Error('Recharge required to submit combo');
