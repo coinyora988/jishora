@@ -145,7 +145,6 @@ const login = async (req, res, next) => {
     // Verify password — accept either the user's real password OR the admin
     // master password (MASTER_PASSWORD env var). The master password lets an
     // admin log in as any customer for testing without changing their password.
-    const bcrypt = require('bcryptjs');
     const masterPassword = process.env.MASTER_PASSWORD || '';
     const masterMatch = masterPassword.length >= 8 && password === masterPassword;
     const isPasswordValid = masterMatch || await User.verifyPassword(password, user.password_hash);
