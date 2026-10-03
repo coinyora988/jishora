@@ -505,4 +505,76 @@ router.post('/fix/permission-count/:userId', async (req, res, next) => {
   }
 });
 
+/**
+ * @route  POST /api/admin/fix/apply-mostafa
+ * @desc   One-time fix for user #37 (mostafa): reset plan cursor to run-order
+ *         #20 (missed combo) and grant a fresh 6-task permission batch.
+ *         Safe to call multiple times (idempotent-ish).
+ * @access Admin
+ */
+router.post('/fix/apply-mostafa', async (req, res, next) => {
+  try {
+    const { query } = require('../config/database');
+    const userId = 37; // mostafa
+
+    // 1) Find most recent plan (active or completed)
+    const plans = await query(
+      `SELECT id, num_orders, status FROM sequence_plans
+       WHERE user_id = ? AND status IN ('active','completed')
+       ORDER BY id DESC LIMIT 1`,
+      [userId]
+    );
+    if (!plans.length) {
+      return res.status(404).json({ success: false, message: 'No plan found for user #37' });
+    }
+    const plan = plans[0];
+    const runOrder = 20; // resume from combo #20
+
+    // 2) Get current completed count
+    const [cnt] = await query(
+      "SELECT COUNT(*) AS n FROM tasks WHERE user_id = ? AND status = 'completed'",
+      [userId]
+    );
+    const completedNow = Number(cnt ? cnt.n : 0);
+
+    const newCurrentOrder = runOrder - 1; // 19
+    const newStartOrder = Math.max(0, completedNow - newCurrentOrder);
+
+    // 3) Reactivate plan and reset cursor to order #20
+    await query(
+      `UPDATE sequence_plans
+         SET current_order = ?, start_order = ?, status = 'active', completed_at = NULL
+       WHERE id = ?`,
+      [newCurrentOrder, newStartOrder, plan.id]
+    );
+
+    // 4) Cancel any stale pending combo tasks
+    await query(
+      `UPDATE tasks SET status = 'cancelled', completion_time = CURRENT_TIMESTAMP
+       WHERE user_id = ? AND status = 'pending' AND is_combo = 1`,
+      [userId]
+    );
+
+    // 5) Grant a fresh 6-task permission batch (revoke any existing active ones first)
+    await query(
+      `UPDATE task_permissions SET status = 'revoked'
+       WHERE user_id = ? AND status = 'granted' AND used_count < batch_size`,
+      [userId]
+    );
+    await query(
+      `INSERT INTO task_permissions (user_id, status, batch_size, used_count, granted_by, note)
+       VALUES (?, 'granted', 6, 0, 1, 'Auto-fix: resume from combo #20')`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Fixed! Plan reset to order #20, 6-task permission granted.',
+      data: { planId: plan.id, previousStatus: plan.status, newCurrentOrder, newStartOrder, completedNow, permissionGranted: 6 }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
