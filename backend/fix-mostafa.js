@@ -46,8 +46,8 @@ async function run() {
     [uid, marketId, productId, 'ORD-FIX-COMBO20', orderAmount, commission, orderAmount+commission]
   );
 
-  // Use one permission slot
-  await q("UPDATE task_permissions SET used_count=21 WHERE user_id=? AND status='granted' ORDER BY id DESC LIMIT 1", [uid]);
+  // Use permission slot = 20 (19 completed + 1 combo grabbed but not submitted)
+  await q("UPDATE task_permissions SET used_count=20 WHERE user_id=? AND status='granted' ORDER BY id DESC LIMIT 1", [uid]);
   console.log('✓ Combo task created (pending) - order_amount:', orderAmount);
 
   // 6. Verify
