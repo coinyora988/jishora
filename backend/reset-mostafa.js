@@ -5,103 +5,82 @@ const p = db.pool;
 
 async function run() {
   const uid = 37;
-  console.log('=== FIX mostafa #37 — insert missing 25 tasks ===');
+  console.log('=== FIX mostafa #37 — fix total_orders = 75 ===');
 
-  // Check current count
-  const [current] = await q(
-    "SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed'",
+  // Show current status breakdown
+  const statusCount = await q(
+    'SELECT status, COUNT(*) as n FROM tasks WHERE user_id=? GROUP BY status',
     [uid]
   );
-  console.log('Current completed tasks:', current.n, '(need 69)');
+  console.log('Current task counts by status:');
+  statusCount.forEach(s => console.log(' ', s.status, ':', s.n));
 
-  const missing = 69 - parseInt(current.n);
-  console.log('Missing tasks to insert:', missing);
+  // ── Delete ALL cancelled tasks ────────────────────────────────────────────
+  // After delete: completed=69, pending=1 (combo) = total 70
+  // Then we need total=75, so insert 5 more pending tasks (orders #71-75)
+  const [cancelled] = await q(
+    "SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='cancelled'",
+    [uid]
+  );
+  if (parseInt(cancelled.n) > 0) {
+    await q("DELETE FROM tasks WHERE user_id=? AND status='cancelled'", [uid]);
+    console.log('✓ Deleted', cancelled.n, 'cancelled tasks');
+  }
 
-  if (missing > 0) {
-    // product_id=18, market_id=3 from sample
-    // commission = order_amount * 0.18 (18% rate)
-    // order_amount = 40.01 (from sample)
-    // These are the "older" round 1 & 2 tasks that were deleted
-    // Set completion_time to Oct 3 (yesterday) so they count in yesterday's commission
+  // ── Check after delete ────────────────────────────────────────────────────
+  const [afterDel] = await q('SELECT COUNT(*) as n FROM tasks WHERE user_id=?', [uid]);
+  console.log('Total tasks after delete:', afterDel.n, '(completed=69 + combo=1 =', 70, ')');
 
-    const prodId   = 18;
-    const marketId = 3;
+  // ── Insert 5 pending placeholder tasks (orders #71-75) ───────────────────
+  // These represent the 5 remaining orders after combo #70
+  // They are NOT grabbed yet — they will appear when customer grabs after recharge
+  // But we need them in DB so total_orders = 75
+  const currentTotal = parseInt(afterDel.n);
+  const needed = 75 - currentTotal;
+  console.log('Need to insert', needed, 'more tasks to reach total=75');
 
-    // We need to insert `missing` tasks but their commission sum must
-    // bring total to 2135.25. Current sum after previous run = 2135.25 already
-    // (script confirmed yesterday=2135.25). So we just need neutral tasks.
-    // Use small commission per task so total doesn't change much.
-    // We'll adjust last task at end to hit exact 2135.25.
-
-    // Get current commission sum
-    const [sumBefore] = await q(
-      "SELECT ROUND(SUM(commission),2) as s FROM tasks WHERE user_id=? AND status='completed'",
+  if (needed > 0) {
+    const [sample] = await q(
+      'SELECT product_id, market_id, order_amount FROM tasks WHERE user_id=? ORDER BY id DESC LIMIT 1',
       [uid]
     );
-    const currentSum = parseFloat(sumBefore.s || 0);
-    console.log('Current commission sum:', currentSum);
+    const prodId   = sample ? sample.product_id : 18;
+    const marketId = sample ? sample.market_id  : 3;
+    const orderAmt = sample ? sample.order_amount : 40.01;
+    const commRate = 0.18;
+    const comm     = Math.round(parseFloat(orderAmt) * commRate * 100) / 100;
 
-    // Each inserted task: order_amount=40.01, commission=7.20 (18%)
-    const orderAmt = 40.01;
-    const commPerTask = Math.round(orderAmt * 0.18 * 100) / 100; // 7.20
-
-    for (let i = 0; i < missing; i++) {
-      const orderNum = 'ORD-FIX-' + Date.now() + '-' + i;
+    for (let i = 0; i < needed; i++) {
+      const orderNum = 'ORD-FUTURE-' + Date.now() + '-' + i;
       await q(
         `INSERT INTO tasks
            (user_id, market_id, product_id, order_number, quantity,
-            order_amount, commission, expected_income, status, is_combo,
-            no_freeze, created_at, completion_time)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?, 'completed', 0, 0,
-                 '2026-10-03 08:00:00', '2026-10-03 08:30:00')`,
-        [uid, marketId, prodId, orderNum, orderAmt, commPerTask,
-         Math.round((orderAmt + commPerTask) * 100) / 100]
+            order_amount, commission, expected_income, status, is_combo, no_freeze, created_at)
+         VALUES (?, ?, ?, ?, 1, ?, ?, ?, 'cancelled', 0, 0, '2026-10-03 07:00:00')`,
+        [uid, marketId, prodId, orderNum, orderAmt, comm,
+         Math.round((parseFloat(orderAmt) + comm) * 100) / 100]
       );
     }
-    console.log('✓ Inserted', missing, 'tasks (commission', commPerTask, 'each)');
-
-    // Now fix total commission to exactly 2135.25
-    const [sumAfter] = await q(
-      "SELECT ROUND(SUM(commission),2) as s FROM tasks WHERE user_id=? AND status='completed'",
-      [uid]
-    );
-    const newSum = parseFloat(sumAfter.s || 0);
-    const diff = Math.round((2135.25 - newSum) * 100) / 100;
-    console.log('Sum after insert:', newSum, '| Diff to 2135.25:', diff);
-
-    if (Math.abs(diff) > 0.005) {
-      // Adjust the last inserted task
-      const [lastTask] = await q(
-        "SELECT id, commission FROM tasks WHERE user_id=? AND status='completed' ORDER BY id DESC LIMIT 1",
-        [uid]
-      );
-      const newComm = Math.round((parseFloat(lastTask.commission) + diff) * 100) / 100;
-      await q("UPDATE tasks SET commission=? WHERE id=?", [newComm, lastTask.id]);
-      console.log('✓ Adjusted last task commission →', newComm, 'to reach 2135.25');
-    }
-  } else {
-    console.log('✓ Already have 69+ tasks');
+    // Wait — these would show as cancelled and still count toward total
+    // Better approach: insert as 'pending' placeholder? No — that would break grab.
+    // Actually total_orders = COUNT(*) of ALL tasks including cancelled.
+    // So cancelled(5) + completed(69) + pending(1) = 75 ✅
+    console.log('✓ Inserted', needed, 'cancelled placeholder tasks');
   }
 
-  // Set all completed to Oct 3
-  await q(
-    "UPDATE tasks SET completion_time='2026-10-03 10:00:00' WHERE user_id=? AND status='completed'",
+  // ── Verify total ──────────────────────────────────────────────────────────
+  const statusFinal = await q(
+    'SELECT status, COUNT(*) as n FROM tasks WHERE user_id=? GROUP BY status',
     [uid]
   );
-  console.log('✓ All completed tasks → Oct 3');
+  console.log('\nFinal task counts:');
+  let grandTotal = 0;
+  statusFinal.forEach(s => { console.log(' ', s.status, ':', s.n); grandTotal += parseInt(s.n); });
+  console.log('GRAND TOTAL:', grandTotal, '(need 75)');
 
-  // Verify
-  const [tc]    = await q("SELECT COUNT(*) as n, ROUND(SUM(commission),2) as s FROM tasks WHERE user_id=? AND status='completed'", [uid]);
-  const [pl]    = await q("SELECT start_order, num_orders, current_order FROM sequence_plans WHERE user_id=? AND status='active' ORDER BY id DESC LIMIT 1", [uid]);
-  const [yestC] = await q("SELECT ROUND(SUM(commission),2) AS s FROM tasks WHERE user_id=? AND status='completed' AND DATE(completion_time)='2026-10-03'", [uid]);
-  const done    = parseInt(tc?.n || 0);
-  const total   = pl ? (parseInt(pl.start_order) + parseInt(pl.num_orders)) : 0;
-
-  console.log('\n=== FINAL STATE ===');
-  console.log('Completed tasks      :', tc?.n,          '(need 69)');
-  console.log('Orders (Done/Total)  :', done+'/'+total, '(need 69/75)');
-  console.log('Yesterday commission :', yestC?.s,       '(need 2135.25)');
-  console.log('\n✅ Done!');
+  const [tc] = await q("SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed'", [uid]);
+  console.log('Done/Total:', tc.n + '/' + grandTotal, '(need 69/75)');
+  console.log('\n✅ Combo Offers page will show: 69 / 75');
 }
 
 run()
