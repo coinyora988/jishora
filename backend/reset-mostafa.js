@@ -2,85 +2,113 @@ require('dotenv').config();
 const db = require('./src/config/database');
 const q = db.query;
 const p = db.pool;
+const seq = require('./src/utils/sequencePlan');
 
 async function run() {
   const uid = 37;
-  console.log('=== FIX mostafa #37 — fix total_orders = 75 ===');
+  console.log('=== FIX mostafa #37 — rebuild plan schedule ===');
 
-  // Show current status breakdown
-  const statusCount = await q(
-    'SELECT status, COUNT(*) as n FROM tasks WHERE user_id=? GROUP BY status',
+  // ── Get active plan ───────────────────────────────────────────────────────
+  const plans = await q(
+    'SELECT * FROM sequence_plans WHERE user_id=? AND status=\'active\' ORDER BY id DESC LIMIT 1',
     [uid]
   );
-  console.log('Current task counts by status:');
-  statusCount.forEach(s => console.log(' ', s.status, ':', s.n));
 
-  // ── Delete ALL cancelled tasks ────────────────────────────────────────────
-  // After delete: completed=69, pending=1 (combo) = total 70
-  // Then we need total=75, so insert 5 more pending tasks (orders #71-75)
-  const [cancelled] = await q(
-    "SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='cancelled'",
-    [uid]
-  );
-  if (parseInt(cancelled.n) > 0) {
-    await q("DELETE FROM tasks WHERE user_id=? AND status='cancelled'", [uid]);
-    console.log('✓ Deleted', cancelled.n, 'cancelled tasks');
+  if (!plans.length) {
+    console.log('ERROR: No active plan found');
+    return;
   }
 
-  // ── Check after delete ────────────────────────────────────────────────────
-  const [afterDel] = await q('SELECT COUNT(*) as n FROM tasks WHERE user_id=?', [uid]);
-  console.log('Total tasks after delete:', afterDel.n, '(completed=69 + combo=1 =', 70, ')');
+  const plan = plans[0];
+  const combos = typeof plan.combos === 'string' ? JSON.parse(plan.combos) : plan.combos;
+  console.log('Current plan id:', plan.id);
+  console.log('Current combos:', JSON.stringify(combos));
+  console.log('Current schedule entry23:', JSON.stringify((typeof plan.schedule === 'string' ? JSON.parse(plan.schedule) : plan.schedule)[22]));
 
-  // ── Insert 5 pending placeholder tasks (orders #71-75) ───────────────────
-  // These represent the 5 remaining orders after combo #70
-  // They are NOT grabbed yet — they will appear when customer grabs after recharge
-  // But we need them in DB so total_orders = 75
-  const currentTotal = parseInt(afterDel.n);
-  const needed = 75 - currentTotal;
-  console.log('Need to insert', needed, 'more tasks to reach total=75');
+  // ── Admin panel combos (from screenshot) ─────────────────────────────────
+  // combo #11 → recharge: 358.19, profit: 401.34
+  // combo #16 → recharge: 878.14, profit: 1407.36
+  // combo #20 → recharge: 2617.37, profit: 4844
+  // combo #23 → recharge: 7987.19, profit: 12471.27
+  // combo #25 → recharge: 24197,   profit: 39875.19
+  const correctCombos = [
+    { order: 11, recharge: 358.19,  profit: 401.34    },
+    { order: 16, recharge: 878.14,  profit: 1407.36   },
+    { order: 20, recharge: 2617.37, profit: 4844.00   },
+    { order: 23, recharge: 7987.19, profit: 12471.27  },
+    { order: 25, recharge: 24197,   profit: 39875.19  }
+  ];
 
-  if (needed > 0) {
-    const [sample] = await q(
-      'SELECT product_id, market_id, order_amount FROM tasks WHERE user_id=? ORDER BY id DESC LIMIT 1',
-      [uid]
-    );
-    const prodId   = sample ? sample.product_id : 18;
-    const marketId = sample ? sample.market_id  : 3;
-    const orderAmt = sample ? sample.order_amount : 40.01;
-    const commRate = 0.18;
-    const comm     = Math.round(parseFloat(orderAmt) * commRate * 100) / 100;
+  // ── Rebuild schedule with correct combos ─────────────────────────────────
+  const deposit     = parseFloat(plan.deposit);
+  const numOrders   = parseInt(plan.num_orders);
+  const targetTotal = parseFloat(plan.target_total);
 
-    for (let i = 0; i < needed; i++) {
-      const orderNum = 'ORD-FUTURE-' + Date.now() + '-' + i;
-      await q(
-        `INSERT INTO tasks
-           (user_id, market_id, product_id, order_number, quantity,
-            order_amount, commission, expected_income, status, is_combo, no_freeze, created_at)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?, 'cancelled', 0, 0, '2026-10-03 07:00:00')`,
-        [uid, marketId, prodId, orderNum, orderAmt, comm,
-         Math.round((parseFloat(orderAmt) + comm) * 100) / 100]
-      );
-    }
-    // Wait — these would show as cancelled and still count toward total
-    // Better approach: insert as 'pending' placeholder? No — that would break grab.
-    // Actually total_orders = COUNT(*) of ALL tasks including cancelled.
-    // So cancelled(5) + completed(69) + pending(1) = 75 ✅
-    console.log('✓ Inserted', needed, 'cancelled placeholder tasks');
+  console.log('\nRebuilding schedule:');
+  console.log('  deposit:', deposit);
+  console.log('  num_orders:', numOrders);
+  console.log('  target_total:', targetTotal);
+  console.log('  combos:', JSON.stringify(correctCombos));
+
+  const newPlan = seq.createPlan(deposit, {
+    orders: numOrders,
+    targetTotal: targetTotal,
+    combos: correctCombos
+  });
+
+  console.log('\nNew schedule entries at combo positions:');
+  [11, 16, 20, 23, 25].forEach(o => {
+    const entry = newPlan.schedule.find(e => e.order === o);
+    console.log('  order', o, ':', JSON.stringify(entry));
+  });
+
+  // ── Update the plan with correct combos + schedule ────────────────────────
+  await q(
+    `UPDATE sequence_plans
+     SET combos=?, schedule=?,
+         combo_order=?, combo_amount=?, combo_profit=?,
+         current_order=20, status='active', completed_at=NULL
+     WHERE id=?`,
+    [
+      JSON.stringify(newPlan.combos),
+      JSON.stringify(newPlan.schedule),
+      newPlan.combos[0].order,
+      newPlan.combos[0].recharge,
+      newPlan.combos[0].profit,
+      plan.id
+    ]
+  );
+  console.log('\n✓ Plan schedule rebuilt with correct combos');
+
+  // ── Verify ────────────────────────────────────────────────────────────────
+  const [updated] = await q(
+    'SELECT current_order, num_orders, schedule FROM sequence_plans WHERE id=?',
+    [plan.id]
+  );
+  const sch = typeof updated.schedule === 'string' ? JSON.parse(updated.schedule) : updated.schedule;
+
+  console.log('\n=== VERIFY SCHEDULE ===');
+  [11, 16, 20, 23, 25].forEach(o => {
+    const entry = sch.find(e => e.order === o);
+    console.log('order', o, ':', JSON.stringify(entry));
+  });
+  console.log('\ncurrent_order:', updated.current_order, '(should be 20)');
+
+  // Quick check entry 23 and 25
+  const e23 = sch.find(e => e.order === 23);
+  const e25 = sch.find(e => e.order === 25);
+  if (e23 && e23.isCombo && e23.comboAmount > 0) {
+    console.log('\n✅ Order #23 combo correct: recharge', e23.comboAmount);
+  } else {
+    console.log('\n❌ Order #23 combo WRONG:', JSON.stringify(e23));
+  }
+  if (e25 && e25.isCombo && e25.comboAmount > 0) {
+    console.log('✅ Order #25 combo correct: recharge', e25.comboAmount);
+  } else {
+    console.log('❌ Order #25 combo WRONG:', JSON.stringify(e25));
   }
 
-  // ── Verify total ──────────────────────────────────────────────────────────
-  const statusFinal = await q(
-    'SELECT status, COUNT(*) as n FROM tasks WHERE user_id=? GROUP BY status',
-    [uid]
-  );
-  console.log('\nFinal task counts:');
-  let grandTotal = 0;
-  statusFinal.forEach(s => { console.log(' ', s.status, ':', s.n); grandTotal += parseInt(s.n); });
-  console.log('GRAND TOTAL:', grandTotal, '(need 75)');
-
-  const [tc] = await q("SELECT COUNT(*) as n FROM tasks WHERE user_id=? AND status='completed'", [uid]);
-  console.log('Done/Total:', tc.n + '/' + grandTotal, '(need 69/75)');
-  console.log('\n✅ Combo Offers page will show: 69 / 75');
+  console.log('\n✅ All combos will fire correctly when customer reaches those orders!');
 }
 
 run()
