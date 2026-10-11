@@ -52,6 +52,19 @@ const protect = async (req, res, next) => {
       });
     }
 
+    // Check if token was issued before the last password change.
+    // If updated_at is newer than token iat, the token is stale — force re-login.
+    if (decoded.iat && user.updated_at) {
+      const tokenIssuedAt = decoded.iat * 1000; // convert to ms
+      const passwordChangedAt = new Date(user.updated_at).getTime();
+      if (passwordChangedAt > tokenIssuedAt) {
+        return res.status(401).json({
+          success: false,
+          message: 'Session expired due to password change. Please login again.'
+        });
+      }
+    }
+
     // Attach user to request
     req.user = user;
     next();
