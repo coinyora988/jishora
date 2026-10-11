@@ -20,6 +20,30 @@ function checkAuth() {
         return;
     }
 
+    // Verify token is still valid on every page load (catches password changes)
+    fetch(`${API_URL}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success || data.data.user.role !== 'admin') {
+            // Token invalid or session expired — force logout
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminRefreshToken');
+            localStorage.removeItem('adminUser');
+            localStorage.removeItem('rememberAdmin');
+            window.location.href = 'login.html';
+        }
+    })
+    .catch(() => {
+        // Network error — clear and redirect
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminRefreshToken');
+        localStorage.removeItem('adminUser');
+        localStorage.removeItem('rememberAdmin');
+        window.location.href = 'login.html';
+    });
+
     // Display admin name
     const adminNameEl = document.getElementById('adminName');
     if (adminNameEl && adminUser.username) {
@@ -83,15 +107,13 @@ async function apiRequest(endpoint, options = {}) {
 
         // Handle unauthorized
         if (response.status === 401) {
-            // Try to refresh token
-            const refreshed = await refreshToken();
-            if (refreshed) {
-                // Retry request with new token
-                return apiRequest(endpoint, options);
-            } else {
-                logout();
-                return null;
-            }
+            // Session expired or password changed — force logout immediately
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminRefreshToken');
+            localStorage.removeItem('adminUser');
+            localStorage.removeItem('rememberAdmin');
+            window.location.href = 'login.html';
+            return null;
         }
 
         return data;
